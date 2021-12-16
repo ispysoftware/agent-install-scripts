@@ -9,8 +9,18 @@ echo "$ABSOLUTE_PATH"
 #sudo apt-get update \
 #	&& apt-get install -y unzip python3 curl make g++ build-essential
 
+
+FILE=$ABSOLUTE_PATH/start_agent.sh
+if [ ! -f $FILE ]
+then
+	echo "downloading start script"
+	curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/start_agent.sh" -o "start_agent.sh"
+	chmod +x ./start_agent.sh
+fi
+
 mkdir AgentDVR
 cd AgentDVR
+
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent.dll
 if [ ! -f $FILE ]
 then
@@ -43,6 +53,8 @@ then
 	cd ffmpeg-build
 	curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 fi
+
+cd $ABSOLUTE_PATH
 
 ./start_agent.sh
 exit
