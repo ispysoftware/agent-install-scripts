@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Homebrew Script for AgentDVR/ Linux
-# To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
+# To execute: save and `chmod +x ./linux_setup.sh` then `./linux_setup.sh`
 
 ABSOLUTE_PATH="${PWD}"
 echo "$ABSOLUTE_PATH"
