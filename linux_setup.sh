@@ -6,8 +6,8 @@
 ABSOLUTE_PATH="${PWD}"
 echo "$ABSOLUTE_PATH"
 
-#sudo apt-get update \
-#	&& apt-get install -y unzip python3 curl make g++ build-essential
+sudo apt-get update \
+	&& apt-get install -y unzip python3 curl make g++ build-essential
 
 
 FILE=$ABSOLUTE_PATH/start_agent.sh
