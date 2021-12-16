@@ -1,0 +1,24 @@
+[Unit]
+Description=AgentDVR
+
+[Service]
+# see https://www.ispyconnect.com/userguide-agent-service.aspx for instructions
+# systemd will run this executable to start the service. AGENT_LOCATION needs to be the absolute path
+# DOT_NET_LOCATION should point to where the dotnet executable is - this might be different on your computer. 
+# For Raspberry Pi YOUR_USERNAME is usually pi
+#
+
+ExecStart=AGENT_LOCATION/start_agent.sh
+
+# to query logs using journalctl, set a logical name here
+SyslogIdentifier=AgentDVR
+
+User=YOUR_USERNAME
+
+# ensure the service automatically restarts
+Restart=always
+# amount of time to wait before restarting the service                        
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
