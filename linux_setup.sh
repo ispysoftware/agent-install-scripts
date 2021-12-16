@@ -37,7 +37,7 @@ then
 	curl -s "https://dot.net/v1/dotnet-install.sh" | bash -s -- --version "3.1.300" --install-dir "$ABSOLUTE_PATH/.dotnet"
 fi
 
-if [ ! -d $ABSOLUTE_PATH/ffmpeg-build ]
+if [ ! -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
 then
 	mkdir ffmpeg-build
 	cd ffmpeg-build
