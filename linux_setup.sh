@@ -15,7 +15,7 @@ if [ ! -f $FILE ]
 then
 	echo "downloading start script"
 	curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/start_agent.sh" -o "start_agent.sh"
-	chmod +x ./start_agent.sh
+	chmod a+x ./start_agent.sh
 fi
 
 mkdir AgentDVR
