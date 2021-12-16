@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# INFO: Modified for shared builds from https://github.com/markus-perl/ffmpeg-build-script
+# LICENSE: https://github.com/markus-perl/ffmpeg-build-script/blob/master/LICENSE
+
 PROGNAME=$(basename "$0")
 FFMPEG_VERSION=4.4
 SCRIPT_VERSION=1.33
