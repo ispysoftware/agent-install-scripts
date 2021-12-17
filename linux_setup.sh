@@ -103,7 +103,7 @@ then
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/AgentDVR.service" -o "AgentDVR.service"
 		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
 		sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
-		sudo chmod a+x ./AgentDVR.service
+		sudo chmod 644 ./AgentDVR.service
 		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
 		sudo systemctl daemon-reload
@@ -116,6 +116,7 @@ then
 	fi
 else
 	echo "Found service definition in /etc/systemd/system/AgentDVR.service - delete it to disable"
+	echo "Go to http://localhost:8090
 fi
 
 exit
