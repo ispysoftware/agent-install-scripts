@@ -26,5 +26,6 @@ On Linux:
 
     ./start_agent.sh
    
-Known Issues:
+**Known Issues:**
+
 On Raspberry Pi please ensure you are using a recent OS - older versions of Raspbian do not support modern SSL certificates.
