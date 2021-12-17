@@ -13,4 +13,3 @@ to install on linux open a terminal and call
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/linux_setup.sh")
 
-(you may need to install curl: sudo apt-get install curl)
