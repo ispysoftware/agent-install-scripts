@@ -11,25 +11,36 @@ mkdir AgentDVR
 cd AgentDVR
 
 
-echo "Downloading brew..."
-cd ~/Downloads
-mkdir homebrew
-curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
+FILE=$ABSOLUTE_PATH/AgentDVR/homebrew
+if [ ! -f $FILE ]
+then
+	echo "Downloading brew..."
+	cd ~/Downloads
+	mkdir homebrew
+	curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 
-mv homebrew "$ABSOLUTE_PATH/AgentDVR/homebrew"
+	mv homebrew "$ABSOLUTE_PATH/AgentDVR/homebrew"
+else
+	echo "Found homebrew in $ABSOLUTE_PATH/AgentDVR/homebrew"
+fi
 
 echo "Setting brew alias"
 alias axbrew='arch -x86_64 $ABSOLUTE_PATH/AgentDVR/homebrew/bin/brew'
 
-echo "Installing dotnet"
+if axbrew list dotnet-sdk3-1-300 &>/dev/null; then
+	echo "dotnet installed"
+else
+	echo "Installing dotnet"
+	axbrew tap isen-ng/dotnet-sdk-versions
+	axbrew install --cask dotnet-sdk3-1-300
+fi
 
-axbrew tap isen-ng/dotnet-sdk-versions
-axbrew install --cask dotnet-sdk3-1-300
-
-
-echo "Installing ffmpeg"
-
-axbrew install ffmpeg@4
+if axbrew list ffmpeg@4 &>/dev/null; then
+	echo "ffmpeg installed"
+else
+	echo "Installing ffmpeg"
+	axbrew install ffmpeg@4
+fi
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent.dll
 if [ ! -f $FILE ]
