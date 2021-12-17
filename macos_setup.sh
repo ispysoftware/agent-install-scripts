@@ -2,6 +2,7 @@
 
 # Homebrew Script for AgentDVR/ OSX
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
+shopt -s expand_aliases
 
 ABSOLUTE_PATH="${PWD}"
 echo "$ABSOLUTE_PATH"
@@ -18,7 +19,6 @@ curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C ho
 mv homebrew "$ABSOLUTE_PATH/AgentDVR/homebrew"
 
 echo "Setting brew alias"
-
 alias axbrew='arch -x86_64 $ABSOLUTE_PATH/AgentDVR/homebrew/bin/brew'
 
 echo "Installing dotnet"
