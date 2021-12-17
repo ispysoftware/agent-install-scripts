@@ -30,7 +30,7 @@ then
 	then
 		purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=ARM"
 	fi
-	if [ $arch = 'arm' ] || [ $arch = 'armv7l' ]
+	if [ $arch = 'arm' ] || [ $arch = 'armv7l' || [ $arch = 'armv6l' ]
 	then
 		purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=false&platform=ARM32"
 	fi
@@ -56,5 +56,24 @@ fi
 
 cd $ABSOLUTE_PATH
 
-./start_agent.sh
+echo -n "Install AgentDVR as system service (y/n)? "
+read answer
+if [ "$answer" != "${answer#[Yy]}" ] ;then 
+	echo Yes
+	read -p "Enter your username [$(whoami)]: " name
+	name=${name:-$(whoami)}
+	curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/AgentDVR.service" -o "AgentDVR.service"
+	sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
+	sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
+	sudo chmod a+x ./AgentDVR.service
+	sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
+	sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
+	sudo systemctl daemon-reload
+	sudo systemctl start AgentDVR
+	echo "started service"
+	echo "go to http://localhost:8090 to configure"
+else
+	./start_agent.sh
+fi
+
 exit
