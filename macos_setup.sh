@@ -82,8 +82,6 @@ then
 		sed -i '' "s|AGENT_LOCATION|${ABSOLUTE_PATH}/AgentDVR|" com.ispy.agent.dvr.plist
 		sed -i '' "s|YOUR_USERNAME|${name}|" com.ispy.agent.dvr.plist
 		sudo chmod a+x ./com.ispy.agent.dvr.plist
-		
-		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
 		rm -f com.ispy.agent.dvr.plist
 		sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
