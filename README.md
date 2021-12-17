@@ -14,3 +14,11 @@ You may need to install curl first:
     sudo apt-get install curl
 
 When Agent is installed you can access it on the local computer at http://localhost:8090
+
+
+If Agent doesn't start or you want to run Agent manually (provides console output for debugging):
+On macOS in the AgentDVR folder run:
+    dotnet Agent.dll
+On Linux:
+    ./start_agent.sh
+   
