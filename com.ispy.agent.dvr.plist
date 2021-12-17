@@ -1,0 +1,19 @@
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ispy.agent.dvr</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/share/dotnet/dotnet</string>
+    <string>AGENT_LOCATION/Agent.dll</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>UserName</key>
+  <string>YOUR_USERNAME</string>
+</dict>
+</plist>
