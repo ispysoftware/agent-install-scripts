@@ -3,6 +3,13 @@
 # Install script for AgentDVR/ Linux
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
 
+if [[ ("$OSTYPE" == "darwin"*) ]]; then
+  # If arm64 AND darwin (macOS)
+  echo "Use use macos_setup.sh instead"
+  exit
+fi
+
+
 ABSOLUTE_PATH="${PWD}"
 machine_has() {
     eval $invocation
