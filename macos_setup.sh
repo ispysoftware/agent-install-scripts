@@ -12,7 +12,7 @@ cd AgentDVR
 
 
 FILE=$ABSOLUTE_PATH/AgentDVR/homebrew
-if [ ! -f $FILE ]
+if [ ! -d $FILE ]
 then
 	echo "Downloading brew..."
 	cd ~/Downloads
@@ -40,6 +40,13 @@ if axbrew list ffmpeg@4 &>/dev/null; then
 else
 	echo "Installing ffmpeg"
 	axbrew install ffmpeg@4
+fi
+
+if axbrew list gnu-sed &>/dev/null; then
+	echo "gnu-sed installed"
+else
+	echo "Installing gnu-sed"
+	axbrew install gnu-sed
 fi
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent.dll
@@ -80,8 +87,8 @@ then
 		read -p "Enter your username [$(whoami)]: " name
 		name=${name:-$(whoami)}
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/com.ispy.agent.dvr.plist" -o "com.ispy.agent.dvr.plist"
-		sed -i 's|AGENT_LOCATION|$ABSOLUTE_PATH/AgentDVR|' com.ispy.agent.dvr.plist
-		sed -i 's|YOUR_USERNAME|$name|' com.ispy.agent.dvr.plist
+		gsed -i 's|AGENT_LOCATION|$ABSOLUTE_PATH/AgentDVR|' com.ispy.agent.dvr.plist
+		gsed -i 's|YOUR_USERNAME|$name|' com.ispy.agent.dvr.plist
 		sudo chmod a+x ./com.ispy.agent.dvr.plist
 		sudo chown root:wheel ./com.ispy.agent.dvr.plist
 		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
