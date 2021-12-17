@@ -1,11 +1,11 @@
 # agent-install-scripts
-Setup scripts for Agent DVR on macos/ linux
+Setup scripts for Agent DVR on macOS/ Linux
 For Windows download the installer from the website
 For Docker see the download page below
 
 https://www.ispyconnect.com/download.aspx
 
-To install on mac osx (Requires: macOS >= 10.14) or linux (x64, arm and raspberry pi) open a terminal and call
+To install on macOS (Requires: macOS >= 10.14) or Linux (x64, arm and raspberry pi) open a terminal and call
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/install.sh")
 
