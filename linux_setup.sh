@@ -1,13 +1,24 @@
 #!/bin/sh
 
 # Homebrew Script for AgentDVR/ Linux
-# To execute: save and `chmod +x ./linux_setup.sh` then `./linux_setup.sh`
+# To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
 
 ABSOLUTE_PATH="${PWD}"
-echo "$ABSOLUTE_PATH"
 
-sudo apt-get update \
-	&& apt-get install -y unzip python3 curl make g++ build-essential
+machine_has() {
+    eval $invocation
+
+    command -v "$1" > /dev/null 2>&1
+    return $?
+}
+
+if machine_has "apt-get"; then
+	sudo apt-get update \
+		&& apt-get install -y unzip python3 curl make g++ build-essential
+else
+	sudo yum update \
+		&& yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel
+fi
 
 
 FILE=$ABSOLUTE_PATH/start_agent.sh
