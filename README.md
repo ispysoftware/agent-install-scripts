@@ -13,4 +13,4 @@ You may need to install curl first:
 
     sudo apt-get install curl
 
-When Agent is installed you can access it on the local computer at jttp://localhost:8090
+When Agent is installed you can access it on the local computer at http://localhost:8090
