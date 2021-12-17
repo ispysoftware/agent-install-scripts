@@ -17,7 +17,7 @@ machine_has() {
     command -v "$1" > /dev/null 2>&1
     return $?
 }
-
+echo "installing build tools"
 if machine_has "apt-get"; then
 	sudo apt-get update \
 		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev
