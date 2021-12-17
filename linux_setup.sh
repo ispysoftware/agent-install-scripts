@@ -107,6 +107,7 @@ then
 		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
 		sudo systemctl daemon-reload
+		sudo systemctl enable AgentDVR.service
 		sudo systemctl start AgentDVR
 		echo "started service"
 		echo "go to http://localhost:8090 to configure"
@@ -115,7 +116,7 @@ then
 		./start_agent.sh
 	fi
 else
-	echo "Found service definition in /etc/systemd/system/AgentDVR.service - delete it to disable"
+	echo "Found service definition in /etc/systemd/system/AgentDVR.service"
 	echo "Go to http://localhost:8090
 fi
 
