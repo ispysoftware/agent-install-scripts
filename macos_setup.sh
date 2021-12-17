@@ -84,7 +84,7 @@ then
 		sed -i '' 's|YOUR_USERNAME|$name|' com.ispy.agent.dvr.plist
 		sudo chmod a+x ./com.ispy.agent.dvr.plist
 		sudo chown root:wheel ./com.ispy.agent.dvr.plist
-		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
+		sudo chown $(name) -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
 		sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 		echo "Started service"
