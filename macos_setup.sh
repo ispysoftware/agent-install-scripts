@@ -77,12 +77,13 @@ then
 		echo Yes
 		read -p "Enter your username [$(whoami)]: " name
 		name=${name:-$(whoami)}
+		cd $ABSOLUTE_PATH/
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/com.ispy.agent.dvr.plist" -o "com.ispy.agent.dvr.plist"
-		sed -i '' 's|AGENT_LOCATION|$(ABSOLUTE_PATH)/AgentDVR|' com.ispy.agent.dvr.plist
-		sed -i '' 's|YOUR_USERNAME|$(name)|' com.ispy.agent.dvr.plist
+		sed -i '' "s|AGENT_LOCATION|${ABSOLUTE_PATH}/AgentDVR|" com.ispy.agent.dvr.plist
+		sed -i '' "s|YOUR_USERNAME|${name}|" com.ispy.agent.dvr.plist
 		sudo chmod a+x ./com.ispy.agent.dvr.plist
 		
-		sudo chown $(name) -R $(ABSOLUTE_PATH)/AgentDVR
+		sudo chown $(name) -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
 		
 		sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
