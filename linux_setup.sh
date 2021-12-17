@@ -20,10 +20,10 @@ machine_has() {
 
 if machine_has "apt-get"; then
 	sudo apt-get update \
-		&& sudo apt-get install -y unzip python3 curl make g++ build-essential
+		&& sudo apt-get install -y curl unzip python3 curl make g++ build-essential
 else
 	sudo yum update \
-		&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel
+		&& sudo yum install -y curl autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel
 fi
 
 
