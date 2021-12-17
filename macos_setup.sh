@@ -83,7 +83,7 @@ then
 		sed -i '' "s|YOUR_USERNAME|${name}|" com.ispy.agent.dvr.plist
 		sudo chmod a+x ./com.ispy.agent.dvr.plist
 		
-		sudo chown $(name) -R $ABSOLUTE_PATH/AgentDVR
+		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
 		
 		sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
@@ -98,7 +98,9 @@ then
 		dotnet Agent.dll
 	fi
 else
-	echo "Found service definition in /Library/LaunchDaemons/com.ispy.agent.dvr.plist - delete it to disable"
+	echo "Found service definition in /Library/LaunchDaemons/com.ispy.agent.dvr.plist"
+	echo "To disable, run: sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist"
+	echo "Then delete the file /Library/LaunchDaemons/com.ispy.agent.dvr.plist"
 fi
 
 
