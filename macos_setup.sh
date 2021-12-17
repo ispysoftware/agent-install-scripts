@@ -37,7 +37,10 @@ then
     URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
     echo "Downloading $URL"
     curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
+else
+    echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 fi
+
 #this is needed for M1 compat
 FILE=/usr/local/opt/openjpeg/lib/libopenjp2.7.dylib
 if [ ! -f $FILE ]
@@ -53,8 +56,6 @@ then
 		echo "Warning - could not find libopenjp2.7"
 	fi
 fi
-
-echo "Starting AgentDVR"
 
 cd $ABSOLUTE_PATH/AgentDVR
 
@@ -75,10 +76,11 @@ then
 		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
 		sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-		echo "started service"
+		echo "Started service"
 		echo "go to http://localhost:8090 to configure"
 		exit
 	else
+		echo "Starting AgentDVR"
 		dotnet Agent.dll
 	fi
 else
