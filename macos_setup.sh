@@ -34,7 +34,7 @@ axbrew install ffmpeg@4
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent.dll
 if [ ! -f $FILE ]
 then
-    URL=$((curl -s "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
+    URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
     echo "Downloading $URL"
     curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
 fi
@@ -57,4 +57,32 @@ fi
 echo "Starting AgentDVR"
 
 cd $ABSOLUTE_PATH/AgentDVR
-dotnet Agent.dll
+
+FILE=/Library/LaunchDaemons/com.ispy.agent.dvr.plist
+if [ ! -f $FILE ]
+then
+	echo -n "Install AgentDVR as system service (y/n)? "
+	read answer
+	if [ "$answer" != "${answer#[Yy]}" ] ;then 
+		echo Yes
+		read -p "Enter your username [$(whoami)]: " name
+		name=${name:-$(whoami)}
+		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/com.ispy.agent.dvr.plist" -o "com.ispy.agent.dvr.plist"
+		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH/AgentDVR|" com.ispy.agent.dvr.plist
+		sed -i "s|YOUR_USERNAME|$name|" com.ispy.agent.dvr.plist
+		sudo chmod a+x ./com.ispy.agent.dvr.plist
+		sudo chown root:wheel ./com.ispy.agent.dvr.plist
+		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
+		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
+		sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+		echo "started service"
+		echo "go to http://localhost:8090 to configure"
+		exit
+	else
+		dotnet Agent.dll
+	fi
+else
+	echo "Found service definition in /Library/LaunchDaemons/com.ispy.agent.dvr.plist - delete it to disable"
+fi
+
+
