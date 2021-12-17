@@ -68,8 +68,6 @@ then
 	fi
 fi
 
-cd $ABSOLUTE_PATH/AgentDVR
-
 FILE=/Library/LaunchDaemons/com.ispy.agent.dvr.plist
 if [ ! -f $FILE ]
 then
@@ -83,15 +81,19 @@ then
 		sed -i '' 's|AGENT_LOCATION|$(ABSOLUTE_PATH)/AgentDVR|' com.ispy.agent.dvr.plist
 		sed -i '' 's|YOUR_USERNAME|$(name)|' com.ispy.agent.dvr.plist
 		sudo chmod a+x ./com.ispy.agent.dvr.plist
-		sudo chown root:wheel ./com.ispy.agent.dvr.plist
+		
 		sudo chown $(name) -R $(ABSOLUTE_PATH)/AgentDVR
 		sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
+		
+		sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 		sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+		
 		echo "Started service"
 		echo "go to http://localhost:8090 to configure"
 		exit
 	else
 		echo "Starting AgentDVR"
+		cd $ABSOLUTE_PATH/AgentDVR
 		dotnet Agent.dll
 	fi
 else
