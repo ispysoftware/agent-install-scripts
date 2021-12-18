@@ -7,4 +7,4 @@ assignees: ''
 
 ---
 
-
+For issues with AgentDVR itself please use the [Reddit Forum](https://www.reddit.com/r/ispyconnect/) - This repo is for issues with installing and starting Agent DVR.
