@@ -22,7 +22,7 @@ On macOS in the AgentDVR folder run:
 
     dotnet Agent.dll
     
-On Linux:
+On Linux in the parent folder:
 
     ./start_agent.sh
    
