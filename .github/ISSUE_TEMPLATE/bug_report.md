@@ -8,31 +8,26 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+A clear and concise description of what the bug is. For issues with AgentDVR itself please use the [Reddit Forum](https://www.reddit.com/r/ispyconnect/) - This repo is for issues with installing and starting Agent DVR.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**Information**
+- OS name
+- OS version
+- OS bitness (32/64)
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Console output from installer**
+Please paste the output from the installer showing the error messages
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**If the install script completed successfully but Agent doesn't start and complains about a file not found**
+Change to the AgentDVR directory in terminal and run:
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+    ldd libcvextern.so (or whatever library is causing issues). 
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+The output should tell you which dependencies need to be installed.  Try installing this dependencies using:
+
+    sudo apt-get install xxxx
+
+.. and update this report with the missing libraries.
 
 **Additional context**
 Add any other context about the problem here.
