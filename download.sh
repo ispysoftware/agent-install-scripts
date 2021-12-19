@@ -36,7 +36,7 @@ if [ ! machine_has "unzip" ]; then
   fi
 fi
 
-if [ -f AgentDVR.zip ]
+if [ -f AgentDVR.zip ]; then
   echo "Removing old AgentDVR.zip"
   rm -y AgentDVR.zip
 fi
