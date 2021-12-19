@@ -27,7 +27,7 @@ else
   esac
 fi
 
-if [ ! machine_has "unzip" ]; then
+if ! machine_has "unzip"; then
   echo "installing unzip"
   if machine_has "apt-get"; then
     sudo apt-get install unzip
@@ -36,7 +36,7 @@ if [ ! machine_has "unzip" ]; then
   fi
 fi
 
-if [ -f AgentDVR.zip ]; then
+if -f AgentDVR.zip; then
   echo "Removing old AgentDVR.zip"
   rm -y AgentDVR.zip
 fi
