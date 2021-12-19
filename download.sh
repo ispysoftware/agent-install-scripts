@@ -28,17 +28,17 @@ else
 fi
 
 AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
-filename=${AGENTURL##*/}
+Filename=${AGENTURL##*/}
 
-if [ -f filename ]; then
-  echo "Latest file already downloaded ($filename)"
+if [ -f $Filename ]; then
+  echo "Latest file already downloaded ($Filename)"
   exit
 fi
 
 echo "Downloading $AGENTURL"
 
-curl --show-error --location "$AGENTURL" -o "$filename"
-echo "Saved to $filename"
+curl --show-error --location "$AGENTURL" -o "$Filename"
+echo "Saved to $Filename"
 
 if ! [[ machine_has "unzip" == true ]]; then
   echo "installing unzip"
