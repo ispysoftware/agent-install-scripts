@@ -117,7 +117,7 @@ then
 	fi
 else
 	echo "Found service definition in /etc/systemd/system/AgentDVR.service"
-	echo "Go to http://localhost:8090
+	echo "Go to http://localhost:8090"
 fi
 
 exit
