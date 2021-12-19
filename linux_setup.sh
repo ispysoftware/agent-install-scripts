@@ -120,4 +120,4 @@ else
 	echo "Go to http://localhost:8090"
 fi
 
-exit
+exit 0
