@@ -5,9 +5,13 @@ For Docker see the download page below
 
 https://www.ispyconnect.com/download.aspx
 
-To install on macOS (Requires: macOS >= 10.14) or Linux (x64, arm and raspberry pi) open a terminal and call
+To install on **macOS** (Requires: macOS >= 10.14) or **Linux** (x64, arm and raspberry pi) open a terminal and call
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/install.sh")
+
+To download the latest Agent DVR zip file for your platform (installs unzip if needed)
+
+    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/download.sh")
 
 You may need to install curl first:
 
