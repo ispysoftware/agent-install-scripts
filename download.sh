@@ -39,12 +39,3 @@ echo "Downloading $AGENTURL"
 
 curl --show-error --location "$AGENTURL" -o "$Filename"
 echo "Saved to $Filename"
-
-if ! [[ machine_has "unzip" == true ]]; then
-  echo "installing unzip"
-  if machine_has "apt-get"; then
-    sudo apt-get install unzip
-  else
-    sudo yum install unzip
-  fi
-fi
