@@ -28,17 +28,19 @@ else
 fi
 
 AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
-echo "Downloading $AGENTURL"
+filename=${AGENTURL##*/}
 
-if [ -f AgentDVR.zip ]; then
-  echo "Removing old AgentDVR.zip"
-  rm -y AgentDVR.zip
+if [ -f filename ]; then
+  echo "Latest file already downloaded ($filename)"
+  exit
 fi
 
-curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
-echo "Saved to AgentDVR.zip"
+echo "Downloading $AGENTURL"
 
-if [ ! machine_has "unzip" ]; then
+curl --show-error --location "$AGENTURL" -o "$filename"
+echo "Saved to $filename"
+
+if ! [[ machine_has "unzip" ]]; then
   echo "installing unzip"
   if machine_has "apt-get"; then
     sudo apt-get install unzip
