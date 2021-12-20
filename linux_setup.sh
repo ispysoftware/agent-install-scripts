@@ -55,7 +55,7 @@ then
 	AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
-	unzip AgentDVR.zip && \ 
+	unzip AgentDVR.zip
 	rm AgentDVR.zip
 else
 	echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
