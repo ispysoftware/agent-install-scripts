@@ -63,8 +63,7 @@ fi
 
 if [ ! -d $ABSOLUTE_PATH/AgentDVR/.dotnet ]
 then
-	echo -n "Install dotnet 3.1.300 for Agent (y/n)? "
-	read answer
+	read -p "Install dotnet 3.1.300 for Agent (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
 		echo "Installing dotnet"
@@ -76,8 +75,7 @@ fi
 
 if [ ! -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
 then
-	echo -n "Build ffmpeg for Agent (y/n)? "
-	read answer
+	read -p "Build ffmpeg for Agent (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
 		mkdir ffmpeg-build
@@ -94,8 +92,7 @@ cd $ABSOLUTE_PATH
 FILE=/etc/systemd/system/AgentDVR.service
 if [ ! -f $FILE ]
 then
-	echo -n "Install AgentDVR as system service (y/n)? "
-	read answer
+	read -p "Install AgentDVR as system service (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
 		read -p "Enter your username [$(whoami)]: " name
