@@ -29,5 +29,11 @@ The output should tell you which dependencies need to be installed.  Try install
 
 .. and update this report with the missing libraries.
 
+If that doesn't resolve the issue start agent by calling:
+
+LD_DEBUG=libs ./start_agent.sh
+
+and attach the output to this ticket
+
 **Additional context**
 Add any other context about the problem here.
