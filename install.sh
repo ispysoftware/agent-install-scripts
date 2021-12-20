@@ -5,8 +5,8 @@
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If darwin (macOS)
-  curl -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/macos_setup.sh" | bash
+  bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/macos_setup.sh")
   exit
 fi
 
-curl -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/linux_setup.sh" | bash
+bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/linux_setup.sh")
