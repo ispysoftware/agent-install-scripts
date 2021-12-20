@@ -23,7 +23,7 @@ Change to the Agent DVR directory in terminal and run:
 
     ldd libcvextern.so (or whatever library is causing issues). 
 
-The output should tell you which dependencies need to be installed.  Try installing this dependencies using (replace xxxx with the missing dependency name):
+The output should tell you which dependencies need to be installed.  Try installing these dependencies using (replace xxxx with the missing dependency name):
 
     sudo apt-get install xxxx
 
