@@ -109,7 +109,7 @@ then
 		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 	fi
 else
-	echo "Found ffmpeg in $ABSOLUTE_PATH/AgentDVR/ffmpeg-build - delete it to reinstall"
+	echo "Found ffmpeg"
 fi
 
 cd $ABSOLUTE_PATH
