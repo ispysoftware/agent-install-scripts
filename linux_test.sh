@@ -77,9 +77,9 @@ else
 	echo "Found dotnet in $ABSOLUTE_PATH/AgentDVR/.dotnet - delete it to reinstall"
 fi
 
-ffmpeg_installed = false
+ffmpeg_installed=false
 if [ $DISTRIB_ID == "Ubuntu" ] ;then
-	if [ $DISTRIB_RELEASE -gt "20" ] ;then
+	if [ $DISTRIB_RELEASE -gt 20 ] ;then
 		echo "Installing ffmpeg from default package manager (Ubuntu 20+)"
 		sudo apt install ffmpeg
 	else
@@ -94,7 +94,7 @@ else
 	echo "No default ffmpeg package option - build from source"
 fi
 
-if [ "$ffmpeg_installed" = false ] && ! [ -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
+if [ $ffmpeg_installed = false ] && ! [ -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
 then
 	read -p "Build ffmpeg for Agent (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
