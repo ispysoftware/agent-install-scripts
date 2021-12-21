@@ -80,7 +80,7 @@ fi
 ffmpeg_installed=false
 
 if [ $DISTRIB_ID == "Ubuntu" ] ;then
-	if (( $(echo "$DISTRIB_RELEASE > 20" | bc -l) )); then
+	if (( $(echo "$DISTRIB_RELEASE > 21" | bc -l) )); then
 		echo "Installing ffmpeg from default package manager (Ubuntu 20+)"
 		sudo apt install ffmpeg
 		# ubuntu 20+ needs a symlink to libdl to run properly
