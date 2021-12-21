@@ -98,6 +98,8 @@ elif cat /etc/*release | grep ^NAME | grep Debian ; then
 		echo "Installing ffmpeg from default package manager (Debian 9+)"
 		sudo apt-get install -y ffmpeg
 		ffmpeg_installed=true
+	else
+		echo "No default ffmpeg package option - build from source"
 	fi
 else
 	echo "No default ffmpeg package option - build from source"
