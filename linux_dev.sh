@@ -67,12 +67,8 @@ fi
 
 if [ ! -d $ABSOLUTE_PATH/AgentDVR/.dotnet ]
 then
-	read -p "Install dotnet 3.1.300 for Agent (y/n)? " answer
-	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		echo Yes
-		echo "Installing dotnet"
-		curl -s -L "https://dot.net/v1/dotnet-install.sh" | bash -s -- --version "3.1.300" --install-dir "$ABSOLUTE_PATH/AgentDVR/.dotnet"
-	fi
+	echo "Installing dotnet 3.1.300"
+	curl -s -L "https://dot.net/v1/dotnet-install.sh" | bash -s -- --version "3.1.300" --install-dir "$ABSOLUTE_PATH/AgentDVR/.dotnet"
 else
 	echo "Found dotnet in $ABSOLUTE_PATH/AgentDVR/.dotnet - delete it to reinstall"
 fi
@@ -121,8 +117,8 @@ then
 	read -p "Install AgentDVR as system service (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
-		read -p "Enter your username [$(whoami)]: " name
-		name=${name:-$(whoami)}
+		echo "Installing service as [$(whoami)]"
+		name=$(whoami)
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/AgentDVR.service" -o "AgentDVR.service"
 		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
 		sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
