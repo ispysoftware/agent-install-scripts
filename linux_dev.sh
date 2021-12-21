@@ -92,9 +92,12 @@ if [ $DISTRIB_ID == "Ubuntu" ] ; then
 	fi
 	ffmpeg_installed=true
 elif cat /etc/*release | grep ^NAME | grep Debian ; then
+
 	sudo wget http://security.ubuntu.com/ubuntu/pool/main/libj/libjpeg-turbo/libjpeg-turbo8_1.5.2-0ubuntu5.18.04.4_amd64.deb
 	sudo wget http://fr.archive.ubuntu.com/ubuntu/pool/main/libj/libjpeg8-empty/libjpeg8_8c-2ubuntu8_amd64.deb
-	sudo apt install multiarch-support
+	sudo wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1_amd64.deb
+	sudo apt-get install ./multiarch-support_2.27-3ubuntu1_amd64.deb
+
 	sudo dpkg -i libjpeg-turbo8_1.5.2-0ubuntu5.18.04.4_amd64.deb
 	sudo dpkg -i libjpeg8_8c-2ubuntu8_amd64.deb
 	
