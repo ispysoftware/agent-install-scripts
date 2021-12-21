@@ -67,19 +67,15 @@ fi
 
 if [ ! -d $ABSOLUTE_PATH/AgentDVR/.dotnet ]
 then
-	read -p "Install dotnet 3.1.300 for Agent (y/n)? " answer
-	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		echo Yes
-		echo "Installing dotnet"
-		curl -s -L "https://dot.net/v1/dotnet-install.sh" | bash -s -- --version "3.1.300" --install-dir "$ABSOLUTE_PATH/AgentDVR/.dotnet"
-	fi
+	echo "Installing dotnet 3.1.300"
+	curl -s -L "https://dot.net/v1/dotnet-install.sh" | bash -s -- --version "3.1.300" --install-dir "$ABSOLUTE_PATH/AgentDVR/.dotnet"
 else
 	echo "Found dotnet in $ABSOLUTE_PATH/AgentDVR/.dotnet - delete it to reinstall"
 fi
 
 ffmpeg_installed=false
 
-if [ $DISTRIB_ID == "Ubuntu" ] ;then
+if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	if (( $(echo "$DISTRIB_RELEASE > 21" | bc -l) )); then
 		echo "Installing ffmpeg from default package manager (Ubuntu 21+)"
 		sudo apt install ffmpeg
@@ -94,6 +90,9 @@ if [ $DISTRIB_ID == "Ubuntu" ] ;then
 		sudo apt-get update
 		sudo apt-get install -y ffmpeg
 	fi
+	ffmpeg_installed=true
+elif cat /etc/*release | grep ^NAME | grep Debian ; then
+	sudo apt-get install -y apt-transport-https ffmpeg
 	ffmpeg_installed=true
 else
 	echo "No default ffmpeg package option - build from source"
@@ -121,8 +120,8 @@ then
 	read -p "Install AgentDVR as system service (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
-		read -p "Enter your username [$(whoami)]: " name
-		name=${name:-$(whoami)}
+		echo "Installing service as [$(whoami)]"
+		name=$(whoami)
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/AgentDVR.service" -o "AgentDVR.service"
 		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
 		sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
@@ -134,7 +133,7 @@ then
 		sudo systemctl start AgentDVR
 		echo "started service"
 		echo "go to http://localhost:8090 to configure"
-		exit
+		exit 0
 	else
 		./start_agent.sh
 	fi
