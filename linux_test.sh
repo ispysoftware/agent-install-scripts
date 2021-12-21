@@ -90,6 +90,8 @@ if [ $DISTRIB_ID == "Ubuntu" ] ;then
 		sudo apt-get install -y ffmpeg
 	fi
 	ffmpeg_installed = true
+else
+	echo "No default ffmpeg package option - build from source"
 fi
 
 if [ "$ffmpeg_installed" = false ] && ! [ -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
