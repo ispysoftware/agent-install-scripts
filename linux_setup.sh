@@ -23,7 +23,7 @@ machine_has() {
 echo "installing build tools"
 if machine_has "apt-get"; then
 	sudo apt-get update \
-		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev
+		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https
 else
 	sudo yum update \
 		&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev
@@ -92,7 +92,6 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	fi
 	ffmpeg_installed=true
 elif cat /etc/*release | grep ^NAME | grep Debian ; then
-	sudo apt-get install -y apt-transport-https
 	read -d . debver < /etc/debian_version
 	if (( $(echo "$debver > 8" | bc -l) )); then
 		echo "Installing ffmpeg from default package manager (Debian 9+)"
