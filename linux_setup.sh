@@ -92,8 +92,13 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	fi
 	ffmpeg_installed=true
 elif cat /etc/*release | grep ^NAME | grep Debian ; then
-	sudo apt-get install -y apt-transport-https ffmpeg
-	ffmpeg_installed=true
+	sudo apt-get install -y apt-transport-https
+	read -d . debver < /etc/debian_version
+	if (( $(echo "$debver > 8" | bc -l) )); then
+		echo "Installing ffmpeg from default package manager (Debian 9+)"
+		sudo apt-get install -y ffmpeg
+		ffmpeg_installed=true
+	fi
 else
 	echo "No default ffmpeg package option - build from source"
 fi
