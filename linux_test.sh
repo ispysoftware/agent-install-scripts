@@ -78,6 +78,7 @@ else
 fi
 
 ffmpeg_installed=false
+
 if [ $DISTRIB_ID == "Ubuntu" ] ;then
 	if [ $DISTRIB_RELEASE -gt 20 ] ;then
 		echo "Installing ffmpeg from default package manager (Ubuntu 20+)"
@@ -89,12 +90,12 @@ if [ $DISTRIB_ID == "Ubuntu" ] ;then
 		sudo apt-get update
 		sudo apt-get install -y ffmpeg
 	fi
-	ffmpeg_installed = true
+	ffmpeg_installed=true
 else
 	echo "No default ffmpeg package option - build from source"
 fi
 
-if [ $ffmpeg_installed = false ] && ! [ -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
+if [ "$ffmpeg_installed" = false ] && ! [ -d $ABSOLUTE_PATH/AgentDVR/ffmpeg-build ]
 then
 	read -p "Build ffmpeg for Agent (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
