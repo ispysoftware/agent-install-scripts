@@ -92,7 +92,8 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	fi
 	ffmpeg_installed=true
 elif cat /etc/*release | grep ^NAME | grep Debian ; then
-	echo "Debian - need to build ffmpeg from source"
+	sudo apt-get install -y ffmpeg
+	ffmpeg_installed=true
 else
 	echo "No default ffmpeg package option - build from source"
 fi
