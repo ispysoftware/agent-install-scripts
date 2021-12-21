@@ -80,7 +80,7 @@ fi
 ffmpeg_installed=false
 
 if [ $DISTRIB_ID == "Ubuntu" ] ;then
-	if [ $DISTRIB_RELEASE -gt 20 ] ;then
+	if [ "$DISTRIB_RELEASE" -gt "20" ] ;then
 		echo "Installing ffmpeg from default package manager (Ubuntu 20+)"
 		sudo apt install ffmpeg
 	else
