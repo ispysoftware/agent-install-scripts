@@ -84,7 +84,9 @@ if [ $DISTRIB_ID == "Ubuntu" ] ;then
 		echo "Installing ffmpeg from default package manager (Ubuntu 20+)"
 		sudo apt install ffmpeg
 		# ubuntu 20+ needs a symlink to libdl to run properly
-		sudo ln -s /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so
+		if [ ! -f /lib/x86_64-linux-gnu/libdl.so ]; then
+			sudo ln -s /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so
+		fi
 	else
 		echo "Installing ffmpeg from jonathonf repo"
 		sudo apt-get update
