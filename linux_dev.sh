@@ -140,7 +140,7 @@ then
 		sudo systemctl start AgentDVR
 		echo "started service"
 		echo "go to http://localhost:8090 to configure"
-		exit
+		exit 0
 	else
 		./start_agent.sh
 	fi
