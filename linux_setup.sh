@@ -5,6 +5,7 @@
 
 . /etc/lsb-release
 
+ffmpeg_installed=false
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If arm64 AND darwin (macOS)
@@ -23,7 +24,7 @@ machine_has() {
 echo "installing build tools"
 if machine_has "apt-get"; then
 	sudo apt-get update \
-		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https
+		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev
 else
 	sudo yum update \
 		&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev
@@ -50,9 +51,17 @@ then
 	case $(arch) in
 		'aarch64' | 'arm64')
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=ARM"
+			# Install ffmpeg for arm from default package manager
+			sudo apt-get install -y ffmpeg
+			echo "installing ffmpeg for aarch64/arm64"
+			ffmpeg_installed = true
 		;;
 		'arm' | 'armv6l' | 'armv7l')
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=false&platform=ARM32"
+			# Install ffmpeg for arm from default package manager
+			sudo apt-get install -y ffmpeg
+			echo "installing ffmpeg for arm"
+			ffmpeg_installed = true
 		;;
 	esac
 
@@ -72,8 +81,6 @@ then
 else
 	echo "Found dotnet in $ABSOLUTE_PATH/AgentDVR/.dotnet - delete it to reinstall"
 fi
-
-ffmpeg_installed=false
 
 if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	if (( $(echo "$DISTRIB_RELEASE > 21" | bc -l) )); then
