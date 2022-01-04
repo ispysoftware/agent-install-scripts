@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Install script for AgentDVR/ Linux
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
