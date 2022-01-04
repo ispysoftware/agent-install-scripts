@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Install script for AgentDVR/ Linux
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
@@ -24,7 +24,7 @@ machine_has() {
 echo "installing build tools"
 if machine_has "apt-get"; then
 	sudo apt-get update \
-		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev
+		&& sudo apt-get install --no-install-recommends -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev
 else
 	sudo yum update \
 		&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev
