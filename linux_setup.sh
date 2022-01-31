@@ -90,14 +90,17 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 		if [ ! -f /lib/x86_64-linux-gnu/libdl.so ]; then
 			sudo ln -s /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so
 		fi
-	else
-		echo "Installing ffmpeg from jonathonf repo"
+		ffmpeg_installed=true
+	elif [ "$DISTRIB_RELEASE" == "18.04" -o "$DISTRIB_RELEASE" == "16.04" ]; then
+		echo "Installing ffmpeg from jonathonf repo (Ubuntu 18/16)"
 		sudo apt-get update
 		sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 		sudo apt-get update
 		sudo apt-get install -y ffmpeg
+		ffmpeg_installed=true
+	else
+		echo "No default ffmpeg package option - build from source (Ubuntu $DISTRIB_RELEASE)"
 	fi
-	ffmpeg_installed=true
 elif cat /etc/*release | grep ^NAME | grep Debian ; then
 	read -d . debver < /etc/debian_version
 	if (( $(echo "$debver > 8" | bc -l) )); then
