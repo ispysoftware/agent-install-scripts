@@ -4,6 +4,7 @@
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
 
 . /etc/lsb-release
+arch=`uname -m`
 
 ffmpeg_installed=false
 
@@ -29,7 +30,6 @@ else
 	sudo yum update \
 		&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev
 fi
-
 
 
 FILE=$ABSOLUTE_PATH/start_agent.sh
@@ -87,8 +87,8 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 		echo "Installing ffmpeg from default package manager (Ubuntu 21+)"
 		sudo apt install ffmpeg
 		# ubuntu 20+ needs a symlink to libdl to run properly
-		if [ ! -f /lib/x86_64-linux-gnu/libdl.so ]; then
-			sudo ln -s /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so
+		if [ ! -f /lib/$(arch)-linux-gnu/libdl.so ]; then
+			sudo ln -s /lib/$(arch)-linux-gnu/libdl.so.2 /lib/$(arch)-linux-gnu/libdl.so
 		fi
 	else
 		echo "Installing ffmpeg from jonathonf repo"
