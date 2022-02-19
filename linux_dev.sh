@@ -1,10 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
 # Install script for AgentDVR/ Linux
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
 
 . /etc/lsb-release
+arch=`uname -m`
 
+ffmpeg_installed=false
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If arm64 AND darwin (macOS)
@@ -23,12 +25,11 @@ machine_has() {
 echo "installing build tools"
 if machine_has "apt-get"; then
 	sudo apt-get update \
-		&& sudo apt-get install -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev
+		&& sudo apt-get install --no-install-recommends -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev alsa-utils
 else
 	sudo yum update \
 		&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev
 fi
-
 
 
 FILE=$ABSOLUTE_PATH/start_agent.sh
@@ -50,9 +51,17 @@ then
 	case $(arch) in
 		'aarch64' | 'arm64')
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=ARM"
+			# Install ffmpeg for arm from default package manager
+			echo "installing ffmpeg for aarch64/arm64"
+			sudo apt-get install -y ffmpeg
+			ffmpeg_installed=true
 		;;
 		'arm' | 'armv6l' | 'armv7l')
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=false&platform=ARM32"
+			# Install ffmpeg for arm from default package manager
+			echo "installing ffmpeg for arm"
+			sudo apt-get install -y ffmpeg
+			ffmpeg_installed=true
 		;;
 	esac
 
@@ -73,27 +82,34 @@ else
 	echo "Found dotnet in $ABSOLUTE_PATH/AgentDVR/.dotnet - delete it to reinstall"
 fi
 
-ffmpeg_installed=false
-
 if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	if (( $(echo "$DISTRIB_RELEASE > 21" | bc -l) )); then
 		echo "Installing ffmpeg from default package manager (Ubuntu 21+)"
 		sudo apt install ffmpeg
 		# ubuntu 20+ needs a symlink to libdl to run properly
-		if [ ! -f /lib/x86_64-linux-gnu/libdl.so ]; then
-			sudo ln -s /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so
+		if [ ! -f /lib/$(arch)-linux-gnu/libdl.so ]; then
+			sudo ln -s /lib/$(arch)-linux-gnu/libdl.so.2 /lib/$(arch)-linux-gnu/libdl.so
 		fi
-	else
-		echo "Installing ffmpeg from jonathonf repo"
+		ffmpeg_installed=true
+	elif [ "$DISTRIB_RELEASE" == "18.04" -o "$DISTRIB_RELEASE" == "16.04" ]; then
+		echo "Installing ffmpeg from jonathonf repo (Ubuntu 18/16)"
 		sudo apt-get update
 		sudo add-apt-repository ppa:jonathonf/ffmpeg-4
 		sudo apt-get update
 		sudo apt-get install -y ffmpeg
+		ffmpeg_installed=true
+	else
+		echo "No default ffmpeg package option - build from source (Ubuntu $DISTRIB_RELEASE)"
 	fi
-	ffmpeg_installed=true
 elif cat /etc/*release | grep ^NAME | grep Debian ; then
-	sudo apt-get install -y ffmpeg
-	ffmpeg_installed=true
+	read -d . debver < /etc/debian_version
+	if (( $(echo "$debver > 8" | bc -l) )); then
+		echo "Installing ffmpeg from default package manager (Debian 9+)"
+		sudo apt-get install -y ffmpeg
+		ffmpeg_installed=true
+	else
+		echo "No default ffmpeg package option - build from source"
+	fi
 else
 	echo "No default ffmpeg package option - build from source"
 fi
@@ -113,24 +129,32 @@ fi
 
 cd $ABSOLUTE_PATH
 
+name=$(whoami)
+#add permissions for local device access
+echo "Adding permission for local device access"
+sudo adduser $name video
+sudo usermod -a -G video $name
 
 FILE=/etc/systemd/system/AgentDVR.service
 if [ ! -f $FILE ]
 then
+	
+
 	read -p "Install AgentDVR as system service (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
-		echo "Installing service as [$(whoami)]"
-		name=$(whoami)
+		echo "Installing service as $name"
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/AgentDVR.service" -o "AgentDVR.service"
 		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
 		sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
 		sudo chmod 644 ./AgentDVR.service
 		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
+		
 		sudo systemctl daemon-reload
 		sudo systemctl enable AgentDVR.service
 		sudo systemctl start AgentDVR
+		
 		echo "started service"
 		echo "go to http://localhost:8090 to configure"
 		exit 0
