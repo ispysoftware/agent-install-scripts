@@ -35,6 +35,8 @@ else
 	axbrew install --cask dotnet-sdk3-1-300
 fi
 
+axbrew install curl ca-certificates
+
 if axbrew list ffmpeg@4 &>/dev/null; then
 	echo "ffmpeg installed"
 else
