@@ -108,6 +108,7 @@ elif cat /etc/*release | grep ^NAME | grep Debian ; then
 		sudo apt-get install -y ffmpeg
 		ffmpeg_installed=true
 	else
+		sudo apt-get install -y libxext-dev
 		echo "No default ffmpeg package option - build from source"
 	fi
 else
