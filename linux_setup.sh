@@ -108,6 +108,7 @@ elif cat /etc/*release | grep ^NAME | grep Debian ; then
 		sudo apt-get install -y ffmpeg
 		ffmpeg_installed=true
 	else
+		sudo apt-get install -y libxext-dev
 		echo "No default ffmpeg package option - build from source"
 	fi
 else
@@ -129,24 +130,32 @@ fi
 
 cd $ABSOLUTE_PATH
 
+name=$(whoami)
+#add permissions for local device access
+echo "Adding permission for local device access"
+sudo adduser $name video
+sudo usermod -a -G video $name
 
 FILE=/etc/systemd/system/AgentDVR.service
 if [ ! -f $FILE ]
 then
+	
+
 	read -p "Install AgentDVR as system service (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
-		echo "Installing service as [$(whoami)]"
-		name=$(whoami)
+		echo "Installing service as $name"
 		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/AgentDVR.service" -o "AgentDVR.service"
 		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
 		sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
 		sudo chmod 644 ./AgentDVR.service
 		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 		sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
+		
 		sudo systemctl daemon-reload
 		sudo systemctl enable AgentDVR.service
 		sudo systemctl start AgentDVR
+		
 		echo "started service"
 		echo "go to http://localhost:8090 to configure"
 		exit 0
