@@ -58,7 +58,7 @@ fi
 FILE=/usr/local/opt/openjpeg/lib/libopenjp2.7.dylib
 if [ ! -f $FILE ]
 then
-	File=$ABSOLUTE_PATH/AgentDVR/homebrew/Cellar/openjpeg/2.4.0/lib/libopenjp2.7.dylib
+	File=$ABSOLUTE_PATH/AgentDVR/homebrew/Cellar/openjpeg/2.5.0/lib/libopenjp2.7.dylib
 	if [ ! -f $FILE ]
 	then
 		echo "Installing openjpeg"
@@ -69,7 +69,7 @@ then
 		echo "I need to run as root to copy openjpeg library to /usr/local/opt/openjpeg/lib"
 		sudo echo "Copying openjpeg to local lib"
 		sudo mkdir -p /usr/local/opt/openjpeg/lib
-		for file in $ABSOLUTE_PATH/AgentDVR/homebrew/Cellar/openjpeg/2.4.0/lib/*.dylib; do sudo cp "$file" "/usr/local/opt/openjpeg/lib";done
+		for file in $ABSOLUTE_PATH/AgentDVR/homebrew/Cellar/openjpeg/2.5.0/lib/*.dylib; do sudo cp "$file" "/usr/local/opt/openjpeg/lib";done
 	else
 		echo "Warning - could not find libopenjp2.7"
 	fi
