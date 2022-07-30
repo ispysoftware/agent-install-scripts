@@ -16,13 +16,6 @@ fi
 
 
 ABSOLUTE_PATH="${PWD}"
-machine_has() {
-    eval $invocation
-
-    command -v "$1" > /dev/null 2>&1
-    return $?
-}
- 
 mkdir AgentDVR
 cd AgentDVR
 
