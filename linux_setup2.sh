@@ -26,9 +26,6 @@ machine_has() {
 mkdir AgentDVR
 cd AgentDVR
 
-#install ffmpeg 5 
-
-
 #download latest version
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
@@ -93,8 +90,6 @@ sudo chmod +x ./CoreUpdater
 FILE=/etc/systemd/system/AgentDVR.service
 if [ ! -f $FILE ]
 then
-	
-
 	read -p "Install AgentDVR as system service (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
@@ -118,7 +113,7 @@ then
 	fi
 else
 	echo "Found service definition in /etc/systemd/system/AgentDVR.service"
-	echo "Go to http://localhost:8090"
+	echo "Go to http://localhost:8090 to configure"
 fi
 
 exit 0
