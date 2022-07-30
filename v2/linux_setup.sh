@@ -87,33 +87,27 @@ echo "Adding execute permissions"
 sudo chmod +x ./Agent
 sudo chmod +x ./CoreUpdater
 
-FILE=/etc/systemd/system/AgentDVR.service
-if [ ! -f $FILE ]
-then
-	read -p "Install AgentDVR as system service (y/n)? " answer
-	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		echo Yes
-		echo "Installing service as $name"
-		curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/AgentDVR.service" -o "AgentDVR.service"
-		sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
-		sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
-		sudo chmod 644 ./AgentDVR.service
-		sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
-		sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
-		
-		sudo systemctl daemon-reload
-		sudo systemctl enable AgentDVR.service
-		sudo systemctl start AgentDVR
-		
-		echo "started service"
-		echo "go to http://localhost:8090 to configure"
-		exit 0
-	else
-		./start_agent.sh
-	fi
+
+read -p "Install AgentDVR as system service (y/n)? " answer
+if [ "$answer" != "${answer#[Yy]}" ] ;then 
+	echo Yes
+	echo "Installing service as $name"
+	curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/AgentDVR.service" -o "AgentDVR.service"
+	sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
+	sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
+	sudo chmod 644 ./AgentDVR.service
+	sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
+	sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
+
+	sudo systemctl daemon-reload
+	sudo systemctl enable AgentDVR.service
+	sudo systemctl start AgentDVR
+
+	echo "started service"
+	echo "go to http://localhost:8090 to configure"
+	exit 0
 else
-	echo "Found service definition in /etc/systemd/system/AgentDVR.service"
-	echo "Go to http://localhost:8090 to configure"
+	./start_agent.sh
 fi
 
 exit 0
