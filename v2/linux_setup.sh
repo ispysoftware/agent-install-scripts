@@ -10,7 +10,7 @@ ffmpeg_installed=false
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If arm64 AND darwin (macOS)
-  echo "Use use macos_setup.sh instead"
+  echo "Use use osx_setup.sh instead"
   exit
 fi
 
@@ -78,7 +78,7 @@ sudo usermod -a -G video $name
 
 echo "Adding execute permissions"
 sudo chmod +x ./Agent
-sudo chmod +x ./CoreUpdater
+sudo chmod +x ./start_agent.sh
 
 
 read -p "Install AgentDVR as system service (y/n)? " answer
