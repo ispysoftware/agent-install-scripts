@@ -100,7 +100,7 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
 	echo "go to http://localhost:8090 to configure"
 	exit 0
 else
-	./start_agent.sh
+	./Agent
 fi
 
 exit 0
