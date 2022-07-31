@@ -78,6 +78,9 @@ sudo usermod -a -G video $name
 
 echo "Adding execute permissions"
 sudo chmod +x ./Agent
+sudo chmod +x ./agent-register.sh
+sudo chmod +x ./agent-reset.sh
+sudo chmod +x ./agent-reset-local-login.sh
 
 read -p "Install AgentDVR as system service (y/n)? " answer
 if [ "$answer" != "${answer#[Yy]}" ] ;then 
