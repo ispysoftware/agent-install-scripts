@@ -37,6 +37,9 @@ then
     echo "Downloading $URL"
     curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
     sudo chmod +x Agent
+    sudo chmod +x ./agent-register.sh
+    sudo chmod +x ./agent-reset.sh
+    sudo chmod +x ./agent-reset-local-login.sh
 else
     echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 fi
