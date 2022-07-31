@@ -65,7 +65,7 @@ then
 		;;
 	esac
 
-	AGENTURL=purl
+	AGENTURL=$purl
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
 	unzip AgentDVR.zip
