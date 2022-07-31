@@ -87,6 +87,11 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
 	sed -i "s|AGENT_LOCATION|$ABSOLUTE_PATH|" AgentDVR.service
 	sed -i "s|YOUR_USERNAME|$name|" AgentDVR.service
 	sudo chmod 644 ./AgentDVR.service
+	
+	sudo systemctl stop AgentDVR.service
+  	sudo systemctl disable AgentDVR.service
+  	sudo rm /etc/systemd/system/AgentDVR.service
+  
 	sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 	sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
 
