@@ -47,7 +47,7 @@ fi
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent.dll
 if [ ! -f $FILE ]
 then
-    URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
+    URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_1_0.zip"
     echo "Downloading $URL"
     curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
 else
