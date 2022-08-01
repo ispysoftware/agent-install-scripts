@@ -790,6 +790,19 @@ download "https://github.com/FFmpeg/FFmpeg/archive/refs/heads/release/$FFMPEG_VE
 echo "cflags: ${CFLAGS}"
 echo "configure: ${CONFIGURE_OPTIONS}"
 
+march=" -m64"
+
+case $(arch) in
+	'aarch64' | 'arm64')
+		march=""
+		CONFIGURE_OPTIONS+=("--arch=aarch64")
+		CONFIGURE_OPTIONS+=("--enable-neon")
+		
+	;;
+	'arm' | 'armv6l' | 'armv7l')
+		march=""
+	;;
+esac
 # shellcheck disable=SC2086
 ./configure "${CONFIGURE_OPTIONS[@]}" \
   --disable-debug \
@@ -798,7 +811,10 @@ echo "configure: ${CONFIGURE_OPTIONS}"
   --enable-pthreads \
   --enable-small \
   --enable-version3 \
-  --extra-cflags="-fPIC -m64 ${CFLAGS}" \
+  --enable-hwaccel=h264_vaapi \
+  --enable-hwaccel=h264_dxva2 \
+  --enable-hwaccel=mpeg4_vaapi \
+  --extra-cflags="-fPIC ${march} ${CFLAGS}" \
   --extra-ldexeflags="${LDEXEFLAGS}" \
   --extra-ldflags="${LDFLAGS}" \
   --extra-libs="${EXTRALIBS}" \
