@@ -426,7 +426,6 @@ fi
 
 if ! $MACOS_M1; then
   if build "svtav1" "0.9.0"; then
-    execute rm -f "${PACKAGES}/SVT-AV1-master.tar.gz" "${PACKAGES}/svtav1-1a3e32b.tar.gz"
     # Last known working commit which passed CI Tests from HEAD branch
     download "https://github.com/AOMediaCodec/SVT-AV1/archive/refs/tags/v0.9.0.tar.gz" "svtav1-0.9.0.tar.gz" "svtav1-0.9.0.tar.gz"
     cd "${PACKAGES}"/svtav1-0.9.0//Build/linux || exit
