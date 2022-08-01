@@ -664,18 +664,6 @@ if build "libvorbis" "1.3.6"; then
 fi
 CONFIGURE_OPTIONS+=("--enable-libvorbis")
 
-if build "libtheora" "1.1.1"; then
-  download "https://ftp.osuosl.org/pub/xiph/releases/theora/libtheora-1.1.1.tar.gz"
-  sed "s/-fforce-addr//g" configure >configure.patched
-  chmod +x configure.patched
-  mv configure.patched configure
-  execute ./configure --prefix="${WORKSPACE}" --with-ogg-libraries="${WORKSPACE}"/lib --with-ogg-includes="${WORKSPACE}"/include/ --with-vorbis-libraries="${WORKSPACE}"/lib --with-vorbis-includes="${WORKSPACE}"/include/ --disable-static --enable-shared --disable-oggtest --disable-vorbistest --disable-examples --disable-asm --disable-spec
-  execute make -j $MJOBS
-  execute make install
-
-  build_done "libtheora" "1.1.1"
-fi
-CONFIGURE_OPTIONS+=("--enable-libtheora")
 
 if $NONFREE_AND_GPL; then
   if build "fdk_aac" "2.0.2"; then
