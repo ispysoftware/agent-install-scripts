@@ -19,6 +19,36 @@ ABSOLUTE_PATH="${PWD}"
 mkdir AgentDVR
 cd AgentDVR
 
+if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
+  sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
+  sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
+  sudo apt update
+  sudo apt upgrade -y
+  sudo apt install ffmpeg -y
+  ffmpeg_installed=true
+else
+	echo "No default ffmpeg package option - build from source"
+fi
+
+if [ "$ffmpeg_installed" = false ]
+then
+	read -p "Build ffmpeg v5 for Agent (y/n)? " answer
+	if [ "$answer" != "${answer#[Yy]}" ] ;then 
+		echo Yes
+		rmdir -rf ffmpeg-build
+		mkdir ffmpeg-build
+		cd ffmpeg-build
+		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
+		
+		subScriptExitCode="$?"
+		if [ "$subScriptExitCode" -ne 0 ]; then
+		    return 1
+		fi
+	fi
+else
+	echo "Found ffmpeg"
+fi
+
 #download latest version
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
@@ -49,34 +79,15 @@ else
 fi
 
 #for backward compat with existing service files
-echo "downloading start script"
+echo "downloading start script for back compat"
 curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/start_agent.sh" -o "start_agent.sh"
 chmod a+x ./start_agent.sh
 
-if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
-  sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
-  sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
-  sudo apt update
-  sudo apt upgrade -y
-  sudo apt install ffmpeg -y
-  ffmpeg_installed=true
-else
-	echo "No default ffmpeg package option - build from source"
-fi
-
-if [ "$ffmpeg_installed" = false ]
-then
-	read -p "Build ffmpeg v5 for Agent (y/n)? " answer
-	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		echo Yes
-		rmdir -rf ffmpeg-build
-		mkdir ffmpeg-build
-		cd ffmpeg-build
-		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
-	fi
-else
-	echo "Found ffmpeg"
-fi
+echo "Adding execute permissions"
+sudo chmod +x ./Agent
+sudo chmod +x ./agent-register.sh
+sudo chmod +x ./agent-reset.sh
+sudo chmod +x ./agent-reset-local-login.sh
 
 cd $ABSOLUTE_PATH
 
@@ -86,11 +97,7 @@ echo "Adding permission for local device access"
 sudo adduser $name video
 sudo usermod -a -G video $name
 
-echo "Adding execute permissions"
-sudo chmod +x ./Agent
-sudo chmod +x ./agent-register.sh
-sudo chmod +x ./agent-reset.sh
-sudo chmod +x ./agent-reset-local-login.sh
+
 
 read -p "Setup AgentDVR as system service (y/n)? " answer
 if [ "$answer" != "${answer#[Yy]}" ] ;then 
