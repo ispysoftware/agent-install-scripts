@@ -389,7 +389,7 @@ if $NONFREE_AND_GPL; then
 fi
 
 if build "cmake" "3.23.1"; then
-  download "https://github.com/Kitware/CMake/releases/download/v3.22.0/cmake-3.23.1.tar.gz"
+  download "https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --parallel="${MJOBS}" -- -DCMAKE_USE_OPENSSL=OFF
   execute make -j $MJOBS
   execute make install
