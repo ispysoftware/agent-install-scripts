@@ -800,6 +800,7 @@ build "ffmpeg" "$FFMPEG_VERSION"
 download "https://github.com/FFmpeg/FFmpeg/archive/refs/heads/release/$FFMPEG_VERSION.tar.gz" "FFmpeg-release-$FFMPEG_VERSION.tar.gz"
 
 echo "cflags: ${CFLAGS}"
+echo "configure: ${CONFIGURE_OPTIONS}"
 
 # shellcheck disable=SC2086
 ./configure "${CONFIGURE_OPTIONS[@]}" \
