@@ -48,6 +48,11 @@ else
 	echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 fi
 
+#for backward compat with existing service files
+echo "downloading start script"
+curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/start_agent.sh" -o "start_agent.sh"
+chmod a+x ./start_agent.sh
+
 if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
   sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
   sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
