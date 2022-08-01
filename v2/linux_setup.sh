@@ -62,7 +62,7 @@ then
 		echo Yes
 		mkdir ffmpeg-build
 		cd ffmpeg-build
-		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/ffmpeg_build_v5.sh" | bash -s -- --build --enable-gpl-and-non-free
+		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 	fi
 else
 	echo "Found ffmpeg"
