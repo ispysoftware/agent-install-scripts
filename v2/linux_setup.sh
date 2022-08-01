@@ -123,6 +123,7 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
 	echo "go to http://localhost:8090 to configure"
 	exit 0
 else
+	cd AgentDVR
 	./Agent
 fi
 
