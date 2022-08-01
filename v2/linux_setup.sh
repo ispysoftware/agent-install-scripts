@@ -42,7 +42,7 @@ then
 		
 		subScriptExitCode="$?"
 		if [ "$subScriptExitCode" -ne 0 ]; then
-		    return 1
+		    exit 1
 		fi
 	fi
 else
