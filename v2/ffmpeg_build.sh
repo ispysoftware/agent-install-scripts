@@ -18,12 +18,27 @@ CONFIGURE_OPTIONS=()
 NONFREE_AND_GPL=false
 LATEST=false
 
+. /etc/lsb-release
+arch=`uname -m`
+
+
+
+
 # Check for Apple Silicon
 if [[ ("$(uname -m)" == "arm64") && ("$OSTYPE" == "darwin"*) ]]; then
   # If arm64 AND darwin (macOS)
   export ARCH=arm64
   export MACOSX_DEPLOYMENT_TARGET=11.0
   MACOS_M1=true
+else
+    case $(arch) in
+		'aarch64' | 'arm64')
+			CONFIGURE_OPTIONS+=("--build=aarch64-unknown-linux-gnu")
+		;;
+		'arm' | 'armv6l' | 'armv7l')
+			CONFIGURE_OPTIONS+=("--build=x86_64-unknown-linux-gnu")
+		;;
+	esac
 fi
 
 # Speed up the process
@@ -34,7 +49,7 @@ elif [[ -f /proc/cpuinfo ]]; then
   MJOBS=$(grep -c processor /proc/cpuinfo)
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   MJOBS=$(sysctl -n machdep.cpu.thread_count)
-  CONFIGURE_OPTIONS=("--enable-videotoolbox")
+  CONFIGURE_OPTIONS+=("--enable-videotoolbox")
   MACOS_LIBTOOL="$(which libtool)" # gnu libtool is installed in this script and need to avoid name conflict
 else
   MJOBS=4
@@ -472,7 +487,7 @@ fi
 
 if $NONFREE_AND_GPL; then
   if build "x265" "3.5"; then
-    #changed source to try to fix issue building on aarch64
+    #changed source to fix issue building on aarch64
     download "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/x265_3.5.tar.gz" "x265-3.5.tar.gz"
     cd build/linux || exit
     rm -rf 8bit 10bit 12bit 2>/dev/null
