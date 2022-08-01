@@ -33,7 +33,7 @@ axbrew install ffmpeg
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ ! -f $FILE ]
 then
-    URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
+    URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
     echo "Downloading $URL"
     curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
     sudo chmod +x Agent
@@ -45,7 +45,7 @@ else
 fi
 
 
-echo -n "Install AgentDVR as system service (y/n)? "
+echo -n "Setup AgentDVR as system service (y/n)? "
 read answer
 if [ "$answer" != "${answer#[Yy]}" ] ;then 
 	echo Yes
