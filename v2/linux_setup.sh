@@ -35,9 +35,9 @@ then
 	read -p "Build ffmpeg v5 for Agent (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
-		rmdir -rf ffmpeg-build
-		mkdir ffmpeg-build
-		cd ffmpeg-build
+		rmdir -rf ffmpeg-v5
+		mkdir ffmpeg-v5
+		cd ffmpeg-v5
 		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 		
 		subScriptExitCode="$?"
