@@ -473,7 +473,7 @@ fi
 if $NONFREE_AND_GPL; then
   if build "x265" "3.5"; then
     #changed source to try to fix issue building on aarch64
-    download "https://bitbucket.org/multicoreware/x265_git/downloads/x265_3.5.tar.gz" "x265-3.5.tar.gz"
+    download "https://github.com/ispysoftware/agent-install-scripts/blob/main/v2/x265_3.5.tar.gz" "x265-3.5.tar.gz"
     cd build/linux || exit
     rm -rf 8bit 10bit 12bit 2>/dev/null
     mkdir -p 8bit 10bit 12bit
