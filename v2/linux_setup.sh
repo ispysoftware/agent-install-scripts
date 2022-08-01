@@ -84,10 +84,10 @@ curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/age
 chmod a+x ./start_agent.sh
 
 echo "Adding execute permissions"
-sudo chmod +x ./Agent
-sudo chmod +x ./agent-register.sh
-sudo chmod +x ./agent-reset.sh
-sudo chmod +x ./agent-reset-local-login.sh
+chmod +x ./Agent
+chmod +x ./agent-register.sh
+chmod +x ./agent-reset.sh
+chmod +x ./agent-reset-local-login.sh
 
 cd $ABSOLUTE_PATH
 
