@@ -380,8 +380,8 @@ if build "libtool" "2.4.6"; then
 fi
 
 if $NONFREE_AND_GPL; then
-  if build "openssl" "1.1.1p"; then
-    download "https://www.openssl.org/source/openssl-1.1.1p.tar.gz"
+  if build "openssl" "3.0.5"; then
+    download "https://www.openssl.org/source/openssl-3.0.5.tar.gz"
     if $MACOS_M1; then
       sed -n 's/\(##### GNU Hurd\)/"darwin64-arm64-cc" => { \n    inherit_from     => [ "darwin-common", asm("aarch64_asm") ],\n    CFLAGS           => add("-Wall"),\n    cflags           => add("-arch arm64 "),\n    lib_cppflags     => add("-DL_ENDIAN"),\n    bn_ops           => "SIXTY_FOUR_BIT_LONG", \n    perlasm_scheme   => "macosx", \n}, \n\1/g' Configurations/10-main.conf
       execute ./Configure --prefix="${WORKSPACE}" no-shared no-asm darwin64-arm64-cc
@@ -390,7 +390,7 @@ if $NONFREE_AND_GPL; then
     fi
     execute make -j $MJOBS
     execute make install_sw
-    build_done "openssl" "1.1.1p"
+    build_done "openssl" "3.0.5"
   fi
   CONFIGURE_OPTIONS+=("--enable-openssl")
 fi
@@ -727,6 +727,7 @@ fi
 ##
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  CONFIGURE_OPTIONS+=("--target-os=linux")
   if command_exists "nvcc"; then
     if build "nv-codec" "11.1.5.0"; then
       download "https://github.com/FFmpeg/nv-codec-headers/releases/download/n11.1.5.0/nv-codec-headers-11.1.5.0.tar.gz"
@@ -790,6 +791,7 @@ case $(arch) in
 		CONFIGURE_OPTIONS+=("--arch=aarch64")
 		CONFIGURE_OPTIONS+=("--enable-neon")
 		CONFIGURE_OPTIONS+=("--enable-omx")
+		CONFIGURE_OPTIONS+=("--enable-mmal")
     		CONFIGURE_OPTIONS+=("--enable-omx-rpi")
 		EXTRALIBS+=" -lrtmp"
 		
