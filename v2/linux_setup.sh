@@ -26,19 +26,23 @@ mkdir AgentDVR
 cd AgentDVR
 
 if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
-  sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
-  sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
-  sudo apt update
-  sudo apt upgrade -y
-  sudo apt install ffmpeg -y
-  ffmpeg_installed=true
+	read -p "Install ffmpeg v5 from package manager (y/n)? " answer
+	if [ "$answer" != "${answer#[Yy]}" ] ;then 
+	  echo Yes
+	  sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
+	  sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
+	  sudo apt update
+	  sudo apt upgrade -y
+	  sudo apt install ffmpeg -y
+	  ffmpeg_installed=true
+	fi
 else
 	echo "No default ffmpeg package option - build from source"
 fi
 
 if [ "$ffmpeg_installed" = false ]
 then
-	read -p "Build ffmpeg v5 for Agent (y/n)? " answer
+	read -p "Build ffmpeg v5 for Agent DVR (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
 		
