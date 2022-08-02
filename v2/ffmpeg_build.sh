@@ -430,6 +430,27 @@ if build "zimg" "3.0.4"; then
 fi
 CONFIGURE_OPTIONS+=("--enable-libzimg")
 
+if $NONFREE_AND_GPL; then
+
+  if build "x264" "5db6aa6"; then
+    download "https://code.videolan.org/videolan/x264/-/archive/5db6aa6cab1b146e07b60cc1736a01f21da01154/x264-5db6aa6cab1b146e07b60cc1736a01f21da01154.tar.gz" "x264-5db6aa6.tar.gz"
+    cd "${PACKAGES}"/x264-5db6aa6 || exit
+
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+      execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic CXXFLAGS="-fPIC"
+    else
+      execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic
+    fi
+
+    execute make -j $MJOBS
+    execute make install
+    execute make install-lib-static
+
+    build_done "x264" "5db6aa6"
+  fi
+  CONFIGURE_OPTIONS+=("--enable-libx264")
+fi
+
 if build "lame" "3.100"; then
   download "https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz/download?use_mirror=gigenet" "lame-3.100.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
