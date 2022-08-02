@@ -56,7 +56,7 @@ then
 		#rmdir -r ffmpeg-build
 		mkdir ffmpeg-v5
 		cd ffmpeg-v5
-		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
+		curl -H 'Cache-Control: no-cache, no-store' -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 		
 		subScriptExitCode="$?"
 		if [ "$subScriptExitCode" -ne 0 ]; then
