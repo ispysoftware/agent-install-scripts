@@ -368,22 +368,6 @@ if build "libtool" "2.4.6"; then
   build_done "libtool" "2.4.6"
 fi
 
-if $NONFREE_AND_GPL; then
-  if build "openssl" "3.0.5"; then
-    download "https://www.openssl.org/source/openssl-3.0.5.tar.gz"
-    if $MACOS_M1; then
-      sed -n 's/\(##### GNU Hurd\)/"darwin64-arm64-cc" => { \n    inherit_from     => [ "darwin-common", asm("aarch64_asm") ],\n    CFLAGS           => add("-Wall"),\n    cflags           => add("-arch arm64 "),\n    lib_cppflags     => add("-DL_ENDIAN"),\n    bn_ops           => "SIXTY_FOUR_BIT_LONG", \n    perlasm_scheme   => "macosx", \n}, \n\1/g' Configurations/10-main.conf
-      execute ./Configure --prefix="${WORKSPACE}" no-shared no-asm darwin64-arm64-cc
-    else
-      execute ./config --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib no-shared zlib
-    fi
-    execute make -j $MJOBS
-    execute make install
-    build_done "openssl" "3.0.5"
-  fi
-  CONFIGURE_OPTIONS+=("--enable-openssl")
-fi
-
 if build "cmake" "3.23.1"; then
   download "https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --parallel="${MJOBS}" -- -DCMAKE_USE_OPENSSL=OFF
