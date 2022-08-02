@@ -273,7 +273,7 @@ mkdir -p "$PACKAGES"
 mkdir -p "$WORKSPACE"
 
 export PATH="${WORKSPACE}/bin:$PATH"
-PKG_CONFIG_PATH="/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig"
+PKG_CONFIG_PATH="/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:${WORKSPACE}/lib/pkgconfig"
 PKG_CONFIG_PATH+=":/usr/local/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib64/pkgconfig"
 export PKG_CONFIG_PATH
 
@@ -384,9 +384,9 @@ if $NONFREE_AND_GPL; then
     download "https://www.openssl.org/source/openssl-3.0.5.tar.gz"
     if $MACOS_M1; then
       sed -n 's/\(##### GNU Hurd\)/"darwin64-arm64-cc" => { \n    inherit_from     => [ "darwin-common", asm("aarch64_asm") ],\n    CFLAGS           => add("-Wall"),\n    cflags           => add("-arch arm64 "),\n    lib_cppflags     => add("-DL_ENDIAN"),\n    bn_ops           => "SIXTY_FOUR_BIT_LONG", \n    perlasm_scheme   => "macosx", \n}, \n\1/g' Configurations/10-main.conf
-      execute ./Configure --prefix="${WORKSPACE}" no-shared no-asm darwin64-arm64-cc
+      execute --fPIC -shared ./Configure --prefix="${WORKSPACE}" no-asm darwin64-arm64-cc
     else
-      execute ./config --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib no-shared zlib
+      execute --fPIC -shared ./config --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib zlib
     fi
     execute make -j $MJOBS
     execute make install
