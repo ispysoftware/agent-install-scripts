@@ -797,10 +797,15 @@ case $(arch) in
 		march=""
 		CONFIGURE_OPTIONS+=("--arch=aarch64")
 		CONFIGURE_OPTIONS+=("--enable-neon")
+		CONFIGURE_OPTIONS+=("--enable-librtmp")
+		CONFIGURE_OPTIONS+=("--enable-omx")
+    		CONFIGURE_OPTIONS+=("--enable-omx-rpi")
+		EXTRALIBS+=" -lrtmp"
 		
 	;;
 	'arm' | 'armv6l' | 'armv7l')
 		march=""
+		CONFIGURE_OPTIONS+=("--arch=arm")
 	;;
 esac
 # shellcheck disable=SC2086
@@ -814,6 +819,7 @@ esac
   --enable-hwaccel=h264_vaapi \
   --enable-hwaccel=h264_dxva2 \
   --enable-hwaccel=mpeg4_vaapi \
+  --enable-hwaccels \
   --extra-cflags="-fPIC ${march} ${CFLAGS}" \
   --extra-ldexeflags="${LDEXEFLAGS}" \
   --extra-ldflags="${LDFLAGS}" \
