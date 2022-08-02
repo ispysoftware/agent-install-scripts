@@ -597,7 +597,7 @@ CONFIGURE_OPTIONS+=("--enable-libaom")
 
 if build "zimg" "3.0.4"; then
   download "https://github.com/sekrit-twc/zimg/archive/refs/tags/release-3.0.4.tar.gz" "zimg-3.0.4.tar.gz" "zimg"
-  cd zimg-release-3.0.3 || exit
+  cd zimg-release-3.0.4 || exit
   execute "${WORKSPACE}/bin/libtoolize" -i -f -q
   execute ./autogen.sh --prefix="${WORKSPACE}"
   execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-shared
