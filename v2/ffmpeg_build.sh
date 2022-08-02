@@ -10,8 +10,7 @@ CWD=$(pwd)
 PACKAGES="$CWD/packages"
 WORKSPACE="$CWD/workspace"
 CFLAGS="-I$WORKSPACE/include"
-#LDFLAGS="-L$WORKSPACE/lib"
-LDFLAGS="-Wl,-rpath '-Wl,\$\$ORIGIN'"
+LDFLAGS="-L$WORKSPACE/lib"
 LDEXEFLAGS=""
 EXTRALIBS="-ldl -lpthread -lm -lz"
 MACOS_M1=false
@@ -24,6 +23,7 @@ arch=`uname -m`
 
 
 echo "Building for $OSTYPE"
+echo "LDFLAGS are $LDFLAGS"
 
 # Check for Apple Silicon
 if [[ ("$(uname -m)" == "arm64") && ("$OSTYPE" == "darwin"*) ]]; then
