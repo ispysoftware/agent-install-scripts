@@ -819,7 +819,7 @@ esac
   --extra-cflags="-fPIC ${march} ${CFLAGS}" \
   --extra-ldexeflags="${LDEXEFLAGS}" \
   --extra-ldflags="${LDFLAGS}" \
-  --extra-ldsoflags="${LDFLAGS}" \
+  --extra-ldsoflags="-Wl,-rpath,$WORKSPACE/lib" \
   --extra-libs="${EXTRALIBS}" \
   --pkgconfigdir="$WORKSPACE/lib/pkgconfig" \
   --pkg-config-flags="--static" \
