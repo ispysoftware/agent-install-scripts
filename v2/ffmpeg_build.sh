@@ -30,15 +30,6 @@ if [[ ("$(uname -m)" == "arm64") && ("$OSTYPE" == "darwin"*) ]]; then
   export ARCH=arm64
   export MACOSX_DEPLOYMENT_TARGET=11.0
   MACOS_M1=true
-#else
-#    case $(arch) in
-		#'aarch64' | 'arm64')
-			#CONFIGURE_OPTIONS+=("--build=aarch64-unknown-linux-gnu")
-		#;;
-		#'arm' | 'armv6l' | 'armv7l')
-			#CONFIGURE_OPTIONS+=("--build=x86_64-unknown-linux-gnu")
-		#;;
-	#esac
 fi
 
 # Speed up the process
