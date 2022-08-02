@@ -10,7 +10,8 @@ CWD=$(pwd)
 PACKAGES="$CWD/packages"
 WORKSPACE="$CWD/workspace"
 CFLAGS="-I$WORKSPACE/include"
-LDFLAGS="-L$WORKSPACE/lib"
+#LDFLAGS="-L$WORKSPACE/lib"
+LDFLAGS="-Wl,-rpath '-Wl,\$\$ORIGIN'"
 LDEXEFLAGS=""
 EXTRALIBS="-ldl -lpthread -lm -lz"
 MACOS_M1=false
@@ -22,7 +23,7 @@ LATEST=false
 arch=`uname -m`
 
 
-
+echo "Building for $OSTYPE"
 
 # Check for Apple Silicon
 if [[ ("$(uname -m)" == "arm64") && ("$OSTYPE" == "darwin"*) ]]; then
@@ -788,7 +789,6 @@ case $(arch) in
 		march=""
 		CONFIGURE_OPTIONS+=("--arch=aarch64")
 		CONFIGURE_OPTIONS+=("--enable-neon")
-		CONFIGURE_OPTIONS+=("--enable-librtmp")
 		CONFIGURE_OPTIONS+=("--enable-omx")
     		CONFIGURE_OPTIONS+=("--enable-omx-rpi")
 		EXTRALIBS+=" -lrtmp"
@@ -797,11 +797,12 @@ case $(arch) in
 	'arm' | 'armv6l' | 'armv7l')
 		march=""
 		CONFIGURE_OPTIONS+=("--arch=armel")
-		CONFIGURE_OPTIONS+=("--enable-librtmp")
 		CONFIGURE_OPTIONS+=("--enable-mmal")
 		EXTRALIBS+=" -lrtmp"
 	;;
 esac
+
+
 # shellcheck disable=SC2086
 ./configure "${CONFIGURE_OPTIONS[@]}" \
   --disable-debug \
