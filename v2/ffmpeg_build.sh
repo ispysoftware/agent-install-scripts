@@ -10,7 +10,7 @@ CWD=$(pwd)
 PACKAGES="$CWD/packages"
 WORKSPACE="$CWD/workspace"
 CFLAGS="-I$WORKSPACE/include"
-LDFLAGS="-L$WORKSPACE/lib -Wl,-Bsymbolic"
+LDFLAGS="-L$WORKSPACE/lib"
 LDEXEFLAGS=""
 EXTRALIBS="-ldl -lpthread -lm -lz"
 MACOS_M1=false
@@ -819,6 +819,7 @@ esac
   --extra-cflags="-fPIC ${march} ${CFLAGS}" \
   --extra-ldexeflags="${LDEXEFLAGS}" \
   --extra-ldflags="${LDFLAGS}" \
+  --extra-ldsoflags="${LDFLAGS}" \
   --extra-libs="${EXTRALIBS}" \
   --pkgconfigdir="$WORKSPACE/lib/pkgconfig" \
   --pkg-config-flags="--static" \
