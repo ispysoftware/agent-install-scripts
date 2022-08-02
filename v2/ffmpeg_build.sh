@@ -384,9 +384,9 @@ if $NONFREE_AND_GPL; then
     download "https://www.openssl.org/source/openssl-3.0.5.tar.gz"
     if $MACOS_M1; then
       sed -n 's/\(##### GNU Hurd\)/"darwin64-arm64-cc" => { \n    inherit_from     => [ "darwin-common", asm("aarch64_asm") ],\n    CFLAGS           => add("-Wall"),\n    cflags           => add("-arch arm64 "),\n    lib_cppflags     => add("-DL_ENDIAN"),\n    bn_ops           => "SIXTY_FOUR_BIT_LONG", \n    perlasm_scheme   => "macosx", \n}, \n\1/g' Configurations/10-main.conf
-      execute --fPIC -shared ./Configure --prefix="${WORKSPACE}" no-asm darwin64-arm64-cc
+      execute ./Configure --prefix="${WORKSPACE}" no-shared no-asm darwin64-arm64-cc
     else
-      execute --fPIC -shared ./config --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib zlib
+      execute ./config --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib no-shared zlib
     fi
     execute make -j $MJOBS
     execute make install
