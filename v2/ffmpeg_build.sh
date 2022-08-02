@@ -380,17 +380,17 @@ if build "libtool" "2.4.6"; then
 fi
 
 if $NONFREE_AND_GPL; then
-  if build "openssl" "3.0.5"; then
-    download "https://www.openssl.org/source/openssl-3.0.5.tar.gz"
+  if build "openssl" "1.1.1p"; then
+    download "https://www.openssl.org/source/openssl-1.1.1p.tar.gz"
     if $MACOS_M1; then
       sed -n 's/\(##### GNU Hurd\)/"darwin64-arm64-cc" => { \n    inherit_from     => [ "darwin-common", asm("aarch64_asm") ],\n    CFLAGS           => add("-Wall"),\n    cflags           => add("-arch arm64 "),\n    lib_cppflags     => add("-DL_ENDIAN"),\n    bn_ops           => "SIXTY_FOUR_BIT_LONG", \n    perlasm_scheme   => "macosx", \n}, \n\1/g' Configurations/10-main.conf
-      execute ./Configure -fPIC -shared --prefix="${WORKSPACE}" no-asm darwin64-arm64-cc
+      execute ./Configure --prefix="${WORKSPACE}" no-shared no-asm darwin64-arm64-cc
     else
-      execute ./config -fPIC -shared --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib zlib
+      execute ./config --prefix="${WORKSPACE}" --openssldir="${WORKSPACE}" --with-zlib-include="${WORKSPACE}"/include/ --with-zlib-lib="${WORKSPACE}"/lib no-shared zlib
     fi
     execute make -j $MJOBS
     execute make install_sw
-    build_done "openssl" "3.0.5"
+    build_done "openssl" "1.1.1p"
   fi
   CONFIGURE_OPTIONS+=("--enable-openssl")
 fi
@@ -704,8 +704,8 @@ if build "libsdl" "2.0.20"; then
 fi
 
 if $NONFREE_AND_GPL; then
-  if build "srt" "1.5.0"; then
-    download "https://github.com/Haivision/srt/archive/v1.5.0.tar.gz" "srt-1.5.0.tar.gz"
+  if build "srt" "1.4.3"; then
+    download "https://github.com/Haivision/srt/archive/v1.4.3.tar.gz" "srt-1.4.3.tar.gz"
     export OPENSSL_ROOT_DIR="${WORKSPACE}"
     export OPENSSL_LIB_DIR="${WORKSPACE}"/lib
     export OPENSSL_INCLUDE_DIR="${WORKSPACE}"/include/
@@ -716,7 +716,7 @@ if $NONFREE_AND_GPL; then
       sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}"/lib/pkgconfig/srt.pc # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
     fi
 
-    build_done "srt" "1.5.0"
+    build_done "srt" "1.4.3"
   fi
   CONFIGURE_OPTIONS+=("--enable-libsrt")
 fi
