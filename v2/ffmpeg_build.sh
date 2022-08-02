@@ -594,15 +594,15 @@ if build "av1" "ae2be80"; then
 fi
 CONFIGURE_OPTIONS+=("--enable-libaom")
 
-if build "zimg" "3.0.3"; then
-  download "https://github.com/sekrit-twc/zimg/archive/refs/tags/release-3.0.3.tar.gz" "zimg-3.0.3.tar.gz" "zimg"
+if build "zimg" "3.0.4"; then
+  download "https://github.com/sekrit-twc/zimg/archive/refs/tags/release-3.0.4.tar.gz" "zimg-3.0.4.tar.gz" "zimg"
   cd zimg-release-3.0.3 || exit
   execute "${WORKSPACE}/bin/libtoolize" -i -f -q
   execute ./autogen.sh --prefix="${WORKSPACE}"
   execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-shared
   execute make -j $MJOBS
   execute make install
-  build_done "zimg" "3.0.3"
+  build_done "zimg" "3.0.4"
 fi
 CONFIGURE_OPTIONS+=("--enable-libzimg")
 
@@ -796,7 +796,10 @@ case $(arch) in
 	;;
 	'arm' | 'armv6l' | 'armv7l')
 		march=""
-		CONFIGURE_OPTIONS+=("--arch=arm")
+		CONFIGURE_OPTIONS+=("--arch=armel")
+		CONFIGURE_OPTIONS+=("--enable-librtmp")
+		CONFIGURE_OPTIONS+=("--enable-mmal")
+		EXTRALIBS+=" -lrtmp"
 	;;
 esac
 # shellcheck disable=SC2086
@@ -811,6 +814,7 @@ esac
   --enable-hwaccel=h264_dxva2 \
   --enable-hwaccel=mpeg4_vaapi \
   --enable-hwaccels \
+  --enable-hardcoded-tables \
   --extra-cflags="-fPIC ${march} ${CFLAGS}" \
   --extra-ldexeflags="${LDEXEFLAGS}" \
   --extra-ldflags="${LDFLAGS}" \
