@@ -304,17 +304,6 @@ fi
 ## build tools
 ##
 
-if build "giflib" "5.2.1"; then
-  download "https://sourceforge.net/projects/giflib/files/giflib-5.2.1.tar.gz"
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      download "https://sourceforge.net/p/giflib/bugs/_discuss/thread/4e811ad29b/c323/attachment/Makefile.patch"
-      execute patch "${PACKAGES}/giflib-5.2.1/Makefile" ${PACKAGES}/Makefile.patch""
-    fi
-  execute make -j $MJOBS
-  execute make PREFIX="${WORKSPACE}" install
-  build_done "giflib" "5.2.1"
-fi
-
 if build "pkg-config" "0.29.2"; then
   download "https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
   execute ./configure --silent --prefix="${WORKSPACE}" --with-pc-path="${WORKSPACE}"/lib/pkgconfig --with-internal-glib
@@ -407,121 +396,6 @@ fi
 ## video library
 ##
 
-if command_exists "python3"; then
-  # dav1d needs meson and ninja along with nasm to be built
-  if command_exists "pip3"; then
-    # meson and ninja can be installed via pip3
-    execute pip3 install pip setuptools --quiet --upgrade --no-cache-dir --disable-pip-version-check
-    for r in meson ninja; do
-      if ! command_exists ${r}; then
-        execute pip3 install ${r} --quiet --upgrade --no-cache-dir --disable-pip-version-check
-      fi
-    done
-  fi
-  if command_exists "meson"; then
-    if build "dav1d" "1.0.0"; then
-      download "https://code.videolan.org/videolan/dav1d/-/archive/1.0.0/dav1d-1.0.0.tar.gz"
-      make_dir build
-      execute meson build --prefix="${WORKSPACE}" --buildtype=release --default-library=static --libdir="${WORKSPACE}"/lib
-      execute ninja -C build
-      execute ninja -C build install
-      build_done "dav1d" "1.0.0"
-    fi
-    CONFIGURE_OPTIONS+=("--enable-libdav1d")
-  fi
-fi
-
-if ! $MACOS_M1; then
-  if build "svtav1" "0.9.0"; then
-    # Last known working commit which passed CI Tests from HEAD branch
-    download "https://github.com/AOMediaCodec/SVT-AV1/archive/refs/tags/v0.9.0.tar.gz" "svtav1-0.9.0.tar.gz"
-    cd "${PACKAGES}"/svtav1-0.9.0//Build/linux || exit
-    execute cmake -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=off -DBUILD_SHARED_LIBS=OFF ../.. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-    execute make -j $MJOBS
-    execute make install
-    execute cp SvtAv1Enc.pc "${WORKSPACE}/lib/pkgconfig/"
-    execute cp SvtAv1Dec.pc "${WORKSPACE}/lib/pkgconfig/"
-    build_done "svtav1" "0.9.0";
-  fi
-  CONFIGURE_OPTIONS+=("--enable-libsvtav1")
-fi
-
-if command_exists "cargo"; then
-  if build "rav1e" "0.5.0-beta"; then
-    execute cargo install cargo-c
-    download "https://github.com/xiph/rav1e/archive/refs/tags/v0.5.0-beta.tar.gz"
-    execute cargo cinstall --prefix="${WORKSPACE}" --library-type=staticlib --crt-static --release
-    build_done "rav1e" "0.5.0-beta"
-  fi
-  CONFIGURE_OPTIONS+=("--enable-librav1e")
-fi
-
-if $NONFREE_AND_GPL; then
-
-  if build "x264" "5db6aa6"; then
-    download "https://code.videolan.org/videolan/x264/-/archive/5db6aa6cab1b146e07b60cc1736a01f21da01154/x264-5db6aa6cab1b146e07b60cc1736a01f21da01154.tar.gz" "x264-5db6aa6.tar.gz"
-    cd "${PACKAGES}"/x264-5db6aa6 || exit
-
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic CXXFLAGS="-fPIC"
-    else
-      execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic
-    fi
-
-    execute make -j $MJOBS
-    execute make install
-    execute make install-lib-static
-
-    build_done "x264" "5db6aa6"
-  fi
-  CONFIGURE_OPTIONS+=("--enable-libx264")
-fi
-
-if $NONFREE_AND_GPL; then
-  if build "x265" "3.5"; then
-    #changed source to fix issue building on aarch64
-    download "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/x265_3.5.tar.gz" "x265-3.5.tar.gz"
-    cd build/linux || exit
-    rm -rf 8bit 10bit 12bit 2>/dev/null
-    mkdir -p 8bit 10bit 12bit
-    cd 12bit || exit
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF -DMAIN12=ON
-    execute make -j $MJOBS
-    cd ../10bit || exit
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF
-    execute make -j $MJOBS
-    cd ../8bit || exit
-    ln -sf ../10bit/libx265.a libx265_main10.a
-    ln -sf ../12bit/libx265.a libx265_main12.a
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DEXTRA_LIB="x265_main10.a;x265_main12.a;-ldl" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON
-    execute make -j $MJOBS
-
-    mv libx265.a libx265_main.a
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      execute "${MACOS_LIBTOOL}" -static -o libx265.a libx265_main.a libx265_main10.a libx265_main12.a 2>/dev/null
-    else
-      execute ar -M <<EOF
-CREATE libx265.a
-ADDLIB libx265_main.a
-ADDLIB libx265_main10.a
-ADDLIB libx265_main12.a
-SAVE
-END
-EOF
-    fi
-
-    execute make install
-
-    #if [ -n "$LDEXEFLAGS" ]; then
-      sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}/lib/pkgconfig/x265.pc" # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
-    #fi
-
-    build_done "x265" "3.5"
-  fi
-  CONFIGURE_OPTIONS+=("--enable-libx265")
-fi
-
 if build "libvpx" "1.10.0"; then
   download "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz" "libvpx-1.10.0.tar.gz"
 
@@ -560,41 +434,6 @@ if $NONFREE_AND_GPL; then
   CONFIGURE_OPTIONS+=("--enable-libxvid")
 fi
 
-if $NONFREE_AND_GPL; then
-  if build "vid_stab" "1.1.0"; then
-    download "https://github.com/georgmartius/vid.stab/archive/v1.1.0.tar.gz" "vid.stab-1.1.0.tar.gz"
-
-    if $MACOS_M1; then
-      curl -s -o "$PACKAGES/vid.stab-1.1.0/fix_cmake_quoting.patch" https://raw.githubusercontent.com/Homebrew/formula-patches/5bf1a0e0cfe666ee410305cece9c9c755641bfdf/libvidstab/fix_cmake_quoting.patch
-      patch -p1 <fix_cmake_quoting.patch
-    fi
-
-    execute cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DUSE_OMP=OFF -DENABLE_SHARED=ON .
-    execute make
-    execute make install
-
-    build_done "vid_stab" "1.1.0"
-  fi
-  CONFIGURE_OPTIONS+=("--enable-libvidstab")
-fi
-
-if build "av1" "ae2be80"; then
-  # libaom ae2be80 == v3.1.2
-  download "https://aomedia.googlesource.com/aom/+archive/ae2be8030200925895fa6e98bd274ffdb595cbf6.tar.gz" "av1.tar.gz" "av1"
-  make_dir "$PACKAGES"/aom_build
-  cd "$PACKAGES"/aom_build || exit
-  if $MACOS_M1; then
-    execute cmake -DBUILD_SHARED_LIBS=1 -DENABLE_TESTS=0 -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DCMAKE_INSTALL_LIBDIR=lib -DCONFIG_RUNTIME_CPU_DETECT=0 "$PACKAGES"/av1
-  else
-    execute cmake -DBUILD_SHARED_LIBS=1 -DENABLE_TESTS=0 -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DCMAKE_INSTALL_LIBDIR=lib "$PACKAGES"/av1
-  fi
-  execute make -j $MJOBS
-  execute make install
-
-  build_done "av1" "ae2be80"
-fi
-CONFIGURE_OPTIONS+=("--enable-libaom")
-
 if build "zimg" "3.0.4"; then
   download "https://github.com/sekrit-twc/zimg/archive/refs/tags/release-3.0.4.tar.gz" "zimg-3.0.4.tar.gz" "zimg"
   cd zimg-release-3.0.4 || exit
@@ -607,17 +446,6 @@ if build "zimg" "3.0.4"; then
 fi
 CONFIGURE_OPTIONS+=("--enable-libzimg")
 
-
-if build "opencore" "0.1.5"; then
-  download "https://sourceforge.net/projects/opencore-amr/files/opencore-amr/opencore-amr-0.1.5.tar.gz/download?use_mirror=gigenet" "opencore-amr-0.1.5.tar.gz"
-  execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
-  execute make -j $MJOBS
-  execute make install
-
-  build_done "opencore" "0.1.5"
-fi
-CONFIGURE_OPTIONS+=("--enable-libopencore_amrnb" "--enable-libopencore_amrwb")
-
 if build "lame" "3.100"; then
   download "https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz/download?use_mirror=gigenet" "lame-3.100.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
@@ -627,16 +455,6 @@ if build "lame" "3.100"; then
   build_done "lame" "3.100"
 fi
 CONFIGURE_OPTIONS+=("--enable-libmp3lame")
-
-if build "opus" "1.3.1"; then
-  download "https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz"
-  execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
-  execute make -j $MJOBS
-  execute make install
-
-  build_done "opus" "1.3.1"
-fi
-CONFIGURE_OPTIONS+=("--enable-libopus")
 
 if build "libogg" "1.3.3"; then
   download "https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.3.tar.gz"
@@ -673,13 +491,6 @@ fi
 ## image library
 ##
 
-if build "libtiff" "4.2.0"; then
-  download "https://download.osgeo.org/libtiff/tiff-4.2.0.tar.gz"
-  execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static --disable-dependency-tracking --disable-lzma --disable-webp --disable-zstd --without-x
-  execute make -j $MJOBS
-  execute make install
-  build_done "libtiff" "4.2.0"
-fi
 if build "libpng" "1.6.37"; then
   download "https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/libpng-1.6.37.tar.gz/download?use_mirror=gigenet" "libpng-1.6.37.tar.gz"
   export LDFLAGS="${LDFLAGS}"
@@ -688,19 +499,6 @@ if build "libpng" "1.6.37"; then
   execute make -j $MJOBS
   execute make install
   build_done "libpng" "1.6.37"
-fi
-
-##
-## other library
-##
-
-if build "libsdl" "2.0.20"; then
-  download "https://www.libsdl.org/release/SDL2-2.0.20.tar.gz"
-  execute ./configure --prefix="${WORKSPACE}" --disable-shared --enable-static
-  execute make -j $MJOBS
-  execute make install
-
-  build_done "libsdl" "2.0.20"
 fi
 
 if $NONFREE_AND_GPL; then
