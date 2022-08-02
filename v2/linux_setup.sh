@@ -25,7 +25,7 @@ ABSOLUTE_PATH="${PWD}"
 mkdir AgentDVR
 cd AgentDVR
 
-if [ "$DISTRIB_ID" = "Ubuntu-ignore" ] ; then
+if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
   sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
   sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
   sudo apt update
