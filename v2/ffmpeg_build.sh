@@ -782,11 +782,11 @@ download "https://github.com/FFmpeg/FFmpeg/archive/refs/heads/release/$FFMPEG_VE
 echo "cflags: ${CFLAGS}"
 echo "configure: ${CONFIGURE_OPTIONS}"
 
-march=" -m64"
+mparam=" -m64"
 
 case $(arch) in
 	'aarch64' | 'arm64')
-		march=""
+		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=aarch64")
 		CONFIGURE_OPTIONS+=("--enable-neon")
 		CONFIGURE_OPTIONS+=("--enable-omx")
@@ -795,7 +795,7 @@ case $(arch) in
 		
 	;;
 	'arm' | 'armv6l' | 'armv7l')
-		march=""
+		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=armel")
 		CONFIGURE_OPTIONS+=("--enable-mmal")
 		EXTRALIBS+=" -lrtmp"
@@ -811,12 +811,9 @@ esac
   --enable-pthreads \
   --enable-small \
   --enable-version3 \
-  --enable-hwaccel=h264_vaapi \
-  --enable-hwaccel=h264_dxva2 \
-  --enable-hwaccel=mpeg4_vaapi \
   --enable-hwaccels \
   --enable-hardcoded-tables \
-  --extra-cflags="-fPIC ${march} ${CFLAGS}" \
+  --extra-cflags="-fPIC ${mparam} ${CFLAGS}" \
   --extra-ldexeflags="${LDEXEFLAGS}" \
   --extra-ldflags="${LDFLAGS}" \
   --extra-ldsoflags="-Wl,-rpath,$WORKSPACE/lib" \
