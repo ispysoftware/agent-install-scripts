@@ -79,6 +79,7 @@ else
 fi
 
 #for backward compat with existing service files
+cd $ABSOLUTE_PATH/AgentDVR/
 echo "downloading start script for back compat"
 curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/start_agent.sh" -o "start_agent.sh"
 chmod a+x ./start_agent.sh
