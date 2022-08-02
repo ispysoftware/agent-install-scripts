@@ -704,8 +704,8 @@ if build "libsdl" "2.0.20"; then
 fi
 
 if $NONFREE_AND_GPL; then
-  if build "srt" "1.4.3"; then
-    download "https://github.com/Haivision/srt/archive/v1.4.3.tar.gz" "srt-1.4.3.tar.gz"
+  if build "srt" "1.5.0"; then
+    download "https://github.com/Haivision/srt/archive/v1.5.0.tar.gz" "srt-1.5.0.tar.gz"
     export OPENSSL_ROOT_DIR="${WORKSPACE}"
     export OPENSSL_LIB_DIR="${WORKSPACE}"/lib
     export OPENSSL_INCLUDE_DIR="${WORKSPACE}"/include/
@@ -716,7 +716,7 @@ if $NONFREE_AND_GPL; then
       sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}"/lib/pkgconfig/srt.pc # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
     fi
 
-    build_done "srt" "1.4.3"
+    build_done "srt" "1.5.0"
   fi
   CONFIGURE_OPTIONS+=("--enable-libsrt")
 fi
