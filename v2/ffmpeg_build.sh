@@ -513,9 +513,9 @@ EOF
 
     execute make install
 
-    if [ -n "$LDEXEFLAGS" ]; then
+    #if [ -n "$LDEXEFLAGS" ]; then
       sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}/lib/pkgconfig/x265.pc" # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
-    fi
+    #fi
 
     build_done "x265" "3.5"
   fi
