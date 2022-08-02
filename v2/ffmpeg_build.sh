@@ -501,25 +501,6 @@ if build "libpng" "1.6.37"; then
   build_done "libpng" "1.6.37"
 fi
 
-if $NONFREE_AND_GPL; then
-  if build "srt" "1.5.0"; then
-    download "https://github.com/Haivision/srt/archive/v1.5.0.tar.gz" "srt-1.5.0.tar.gz"
-    export OPENSSL_ROOT_DIR="${WORKSPACE}"
-    export OPENSSL_LIB_DIR="${WORKSPACE}"/lib
-    export OPENSSL_INCLUDE_DIR="${WORKSPACE}"/include/
-    execute cmake . -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_BINDIR=bin -DCMAKE_INSTALL_INCLUDEDIR=include -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DENABLE_APPS=OFF -DUSE_STATIC_LIBSTDCXX=ON
-    execute make install
-
-    if [ -n "$LDEXEFLAGS" ]; then
-      sed -i.backup 's/-lgcc_s/-lgcc_eh/g' "${WORKSPACE}"/lib/pkgconfig/srt.pc # The -i.backup is intended and required on MacOS: https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
-    fi
-
-    build_done "srt" "1.5.0"
-  fi
-  CONFIGURE_OPTIONS+=("--enable-libsrt")
-fi
-
-
 ##
 ## HWaccel library
 ##
