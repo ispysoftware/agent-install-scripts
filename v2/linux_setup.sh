@@ -14,6 +14,12 @@ if [[ ("$OSTYPE" == "darwin"*) ]]; then
   exit
 fi
 
+machine_has() {
+    eval $invocation
+
+    command -v "$1" > /dev/null 2>&1
+    return $?
+}
 
 ABSOLUTE_PATH="${PWD}"
 mkdir AgentDVR
@@ -35,9 +41,21 @@ then
 	read -p "Build ffmpeg v5 for Agent (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
+		
+		
+		echo "installing build tools"
+		if machine_has "apt-get"; then
+			sudo apt-get update \
+				&& sudo apt-get install --no-install-recommends -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev alsa-utils
+		else
+			sudo yum update \
+				&& sudo yum install -y autoconf automake bzip2 bzip2-devel cmake freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev
+		fi
+
+		
 		#rmdir -r ffmpeg-build
-		mkdir ffmpeg-build
-		cd ffmpeg-build
+		mkdir ffmpeg-v5
+		cd ffmpeg-v5
 		curl -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 		
 		subScriptExitCode="$?"
