@@ -16,7 +16,7 @@ FILE=/usr/local/bin/brew
 if [[ ("$(arch)" == "arm64") ]]; then
 	FILE=/opt/homebrew/bin/brew
 fi
-if [ -d $FILE ]; then
+if [ -f $FILE ]; then
 	echo "Using installed homebrew at $FILE"
 	alias brewdvr='$FILE'
 else
@@ -29,7 +29,9 @@ echo "Installing ffmpeg v5"
 brewdvr install ffmpeg@5
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
-if [ ! -f $FILE ]; then
+if [ -f $FILE ]; then
+	echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
+else
 	if [[ ("$(arch)" == "arm64") ]]; then
 		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
 	else
@@ -42,8 +44,6 @@ if [ ! -f $FILE ]; then
 	sudo chmod +x ./agent-register.sh
 	sudo chmod +x ./agent-reset.sh
 	sudo chmod +x ./agent-reset-local-login.sh
-else
-    echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 fi
 
 
