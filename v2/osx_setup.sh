@@ -4,47 +4,45 @@
 # To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
 shopt -s expand_aliases
 
+arch=`uname -m`
+
 ABSOLUTE_PATH="${PWD}"
 echo "$ABSOLUTE_PATH"
 
 mkdir AgentDVR
 cd AgentDVR
 
-
-if [ "$(command -v brew)" ]; then
-	echo "Setting brew alias"
-	alias axbrew='arch -x86_64 /opt/homebrew/bin/brew'
+FILE=/usr/local/bin/brew
+if [[ ("$arch" == "arm64") ]]; then
+	FILE=/opt/homebrew/bin/brew
+fi
+if [ -d $FILE ]
+	echo "Using installed homebrew at $FILE"
+	alias brewdvr='$FILE'
 else
-	FILE=$ABSOLUTE_PATH/AgentDVR/homebrew
-	if [ ! -d $FILE ]
-	then
-		echo "Downloading brew..."
-		cd ~/Downloads
-		mkdir homebrew
-		curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
-
-		mv homebrew "$ABSOLUTE_PATH/AgentDVR/homebrew"
-	else
-		echo "Found homebrew in $ABSOLUTE_PATH/AgentDVR/homebrew"
-	fi
-
-	echo "Setting brew alias"
-	alias axbrew='arch -x86_64 $ABSOLUTE_PATH/AgentDVR/homebrew/bin/brew'
+	echo "Installing homebrew"
+	bash <(curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh")
+	alias brewdvr='$FILE'
 fi
 
 echo "Installing ffmpeg v5"
-axbrew install ffmpeg
+brewdvr install ffmpeg@5
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ ! -f $FILE ]
 then
-    URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSX") | tr -d '"')
-    echo "Downloading $URL"
-    curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
-    sudo chmod +x Agent
-    sudo chmod +x ./agent-register.sh
-    sudo chmod +x ./agent-reset.sh
-    sudo chmod +x ./agent-reset-local-login.sh
+	if [[ ("$arch" == "arm64") ]]; then
+		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
+	else
+		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
+	fi
+   
+	echo "Downloading $URL"
+	curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
+	sudo chmod +x Agent
+	sudo chmod +x ./agent-register.sh
+	sudo chmod +x ./agent-reset.sh
+	sudo chmod +x ./agent-reset-local-login.sh
 else
     echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 fi
