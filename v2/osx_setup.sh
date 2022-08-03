@@ -18,15 +18,15 @@ if [[ ("$(arch)" == "arm64") ]]; then
 fi
 if [ -f $FILE ]; then
 	echo "Using installed homebrew at $FILE"
-	alias brewdvr='$FILE'
+	alias brewcmd='$FILE'
 else
 	echo "Installing homebrew"
 	bash <(curl -fsSL "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh")
-	alias brewdvr='$FILE'
+	alias brewcmd='$FILE'
 fi
 
 echo "Installing ffmpeg v5"
-brewdvr install ffmpeg@5
+brewcmd install ffmpeg@5
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ -f $FILE ]; then
