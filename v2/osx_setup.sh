@@ -13,7 +13,7 @@ mkdir AgentDVR
 cd AgentDVR
 
 FILE=/usr/local/bin/brew
-if [[ ("$arch" == "arm64") ]]; then
+if [[ ($(arch) == "arm64") ]]; then
 	FILE=/opt/homebrew/bin/brew
 fi
 if [ -d $FILE ]; then
@@ -30,7 +30,7 @@ brewdvr install ffmpeg@5
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ ! -f $FILE ]; then
-	if [[ ("$arch" == "arm64") ]]; then
+	if [[ ("$(arch)" == "arm64") ]]; then
 		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
 	else
 		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
