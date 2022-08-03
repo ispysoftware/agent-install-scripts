@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Homebrew Script for AgentDVR/ OSX
-# To execute: save and `chmod +x ./agent_setup.sh` then `./agent_setup.sh`
+# To execute: save and `chmod +x ./osx_setup.sh` then `./osx_setup.sh`
 shopt -s expand_aliases
 
 arch=`uname -m`
