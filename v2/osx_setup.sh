@@ -16,7 +16,7 @@ FILE=/usr/local/bin/brew
 if [[ ("$arch" == "arm64") ]]; then
 	FILE=/opt/homebrew/bin/brew
 fi
-if [ -d $FILE ]
+if [ -d $FILE ]; then
 	echo "Using installed homebrew at $FILE"
 	alias brewdvr='$FILE'
 else
@@ -29,8 +29,7 @@ echo "Installing ffmpeg v5"
 brewdvr install ffmpeg@5
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
-if [ ! -f $FILE ]
-then
+if [ ! -f $FILE ]; then
 	if [[ ("$arch" == "arm64") ]]; then
 		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
 	else
@@ -50,7 +49,7 @@ fi
 
 echo -n "Setup AgentDVR as system service (y/n)? "
 read answer
-if [ "$answer" != "${answer#[Yy]}" ] ;then 
+if [ "$answer" != "${answer#[Yy]}" ]; then 
 	echo Yes
 	read -p "Enter your username [$(whoami)]: " name
 	name=${name:-$(whoami)}
