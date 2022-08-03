@@ -11,21 +11,26 @@ mkdir AgentDVR
 cd AgentDVR
 
 
-FILE=$ABSOLUTE_PATH/AgentDVR/homebrew
-if [ ! -d $FILE ]
-then
-	echo "Downloading brew..."
-	cd ~/Downloads
-	mkdir homebrew
-	curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
-
-	mv homebrew "$ABSOLUTE_PATH/AgentDVR/homebrew"
+if [ "$(command -v brew)" ]; then
+	echo "Setting brew alias"
+	alias axbrew='arch -x86_64 /opt/homebrew/bin/brew'
 else
-	echo "Found homebrew in $ABSOLUTE_PATH/AgentDVR/homebrew"
-fi
+	FILE=$ABSOLUTE_PATH/AgentDVR/homebrew
+	if [ ! -d $FILE ]
+	then
+		echo "Downloading brew..."
+		cd ~/Downloads
+		mkdir homebrew
+		curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 
-echo "Setting brew alias"
-alias axbrew='arch -x86_64 $ABSOLUTE_PATH/AgentDVR/homebrew/bin/brew'
+		mv homebrew "$ABSOLUTE_PATH/AgentDVR/homebrew"
+	else
+		echo "Found homebrew in $ABSOLUTE_PATH/AgentDVR/homebrew"
+	fi
+
+	echo "Setting brew alias"
+	alias axbrew='arch -x86_64 $ABSOLUTE_PATH/AgentDVR/homebrew/bin/brew'
+fi
 
 echo "Installing ffmpeg v5"
 axbrew install ffmpeg
