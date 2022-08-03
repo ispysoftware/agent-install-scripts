@@ -13,7 +13,7 @@ mkdir AgentDVR
 cd AgentDVR
 
 FILE=/usr/local/bin/brew
-if [[ ($(arch) == "arm64") ]]; then
+if [[ ("$(arch)" == "arm64") ]]; then
 	FILE=/opt/homebrew/bin/brew
 fi
 if [ -d $FILE ]; then
