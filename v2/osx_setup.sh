@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Homebrew Script for AgentDVR/ OSX
 # To execute: save and `chmod +x ./osx_setup.sh` then `./osx_setup.sh`
