@@ -31,7 +31,7 @@ formula_installed() {
 }
 
 needFFmpeg=(formula_installed ffmpeg 5)
-
+echo $needFFmpeg
 if [ needFFMpeg -eq 1 ]; then
 	echo "Installing ffmpeg v5"
 	brewcmd install ffmpeg@5
