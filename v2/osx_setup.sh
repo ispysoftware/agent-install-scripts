@@ -30,7 +30,7 @@ formula_installed() {
     return $?
 }
 
-needFFmpeg=(formula_installed ffmpeg 5)
+needFFmpeg=$(formula_installed ffmpeg 5)
 echo "need = $(needFFmpeg)"
 if [ needFFMpeg -eq 1 ]; then
 	echo "Installing ffmpeg v5"
