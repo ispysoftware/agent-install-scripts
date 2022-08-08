@@ -57,8 +57,7 @@ then
 		fi
 
 		
-		#rmdir -r ffmpeg-build
-		mkdir ffmpeg-v5
+		mkdir -p ffmpeg-v5
 		cd ffmpeg-v5
 		curl -H 'Cache-Control: no-cache, no-store' -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
 		
@@ -134,7 +133,9 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
 	
 	sudo systemctl stop AgentDVR.service
   	sudo systemctl disable AgentDVR.service
-  	sudo rm /etc/systemd/system/AgentDVR.service
+	if [ -f /etc/systemd/system/AgentDVR.service ]; then
+  		sudo rm /etc/systemd/system/AgentDVR.service
+	fi
   
 	sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 	sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
