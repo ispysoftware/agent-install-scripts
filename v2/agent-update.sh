@@ -27,12 +27,14 @@ else
 fi
 
 if [ "$1" == "-update" ]; then
-	echo "Installing update"
-	unzip -o AgentDVR.zip
-	rm -f AgentDVR.zip
+	if [ -f AgentDVR.zip ]; then
+		echo "Installing update"
+		unzip -o AgentDVR.zip
+		rm -f AgentDVR.zip
 
-	chmod +x Agent
-	chmod +x agent-update.sh
+		chmod +x Agent
+		chmod +x agent-update.sh
+	fi
 
 	
 fi
