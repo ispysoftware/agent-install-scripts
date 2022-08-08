@@ -71,6 +71,9 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
 	echo "Creating service config"
 	sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 	sudo chmod a+x ./com.ispy.agent.dvr.plist
+	if [ -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist ]; then
+		sudo rm -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+	fi
 	sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
 	rm -f com.ispy.agent.dvr.plist
 	sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
