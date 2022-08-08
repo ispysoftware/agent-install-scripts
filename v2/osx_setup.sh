@@ -9,7 +9,7 @@ arch=`uname -m`
 ABSOLUTE_PATH="${PWD}"
 echo "$ABSOLUTE_PATH"
 
-mkdir AgentDVR
+mkdir -p AgentDVR
 cd AgentDVR
 
 FILE=/usr/local/bin/brew
@@ -50,10 +50,10 @@ else
 
 	echo "Downloading $URL"
 	curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
-	sudo chmod +x Agent
-	sudo chmod +x ./agent-register.sh
-	sudo chmod +x ./agent-reset.sh
-	sudo chmod +x ./agent-reset-local-login.sh
+	chmod +x Agent
+	chmod +x ./agent-register.sh
+	chmod +x ./agent-reset.sh
+	chmod +x ./agent-reset-local-login.sh
 fi
 
 
