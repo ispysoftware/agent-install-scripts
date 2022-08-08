@@ -575,7 +575,7 @@ case $(arch) in
 		CONFIGURE_OPTIONS+=("--arch=aarch64")
 		CONFIGURE_OPTIONS+=("--enable-neon")
 		CONFIGURE_OPTIONS+=("--enable-omx")
-		CONFIGURE_OPTIONS+=("--enable-mmal")
+		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's
     		CONFIGURE_OPTIONS+=("--enable-omx-rpi")
 		EXTRALIBS+=" -lrtmp"
 		
@@ -583,7 +583,7 @@ case $(arch) in
 	'arm' | 'armv6l' | 'armv7l')
 		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=armel")
-		CONFIGURE_OPTIONS+=("--enable-mmal")
+		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's
 		EXTRALIBS+=" -lrtmp"
 	;;
 esac
