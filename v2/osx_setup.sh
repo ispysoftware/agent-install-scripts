@@ -25,8 +25,18 @@ else
 	alias brewcmd='$FILE'
 fi
 
-echo "Installing ffmpeg v5"
-brewcmd install ffmpeg@5
+formula_installed() {
+    [ "$(brew list --versions | grep "$1 $2")" ]
+    return $?
+}
+
+needFFmpeg=$(formula_installed ffmpeg 5)
+if [ needFFMpeg -eq 1 ]; then
+	echo "Installing ffmpeg v5"
+	brewcmd install ffmpeg@5
+else
+	echo "Found FFmpeg v5+"
+fi
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ -f $FILE ]; then
@@ -37,7 +47,7 @@ else
 	else
 		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
 	fi
-   
+
 	echo "Downloading $URL"
 	curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
 	sudo chmod +x Agent
@@ -45,6 +55,7 @@ else
 	sudo chmod +x ./agent-reset.sh
 	sudo chmod +x ./agent-reset-local-login.sh
 fi
+
 
 
 echo -n "Setup AgentDVR as system service (y/n)? "
