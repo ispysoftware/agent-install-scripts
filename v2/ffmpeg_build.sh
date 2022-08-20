@@ -573,15 +573,11 @@ case $(arch) in
 			CONFIGURE_OPTIONS+=("--enable-omx")
 			CONFIGURE_OPTIONS+=("--enable-omx-rpi")
 		fi
-		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's
-    		
-		EXTRALIBS+=" -lrtmp"
-		
+		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's		
 	;;
 	'arm' | 'armv6l' | 'armv7l')
 		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=armel")
-		EXTRALIBS+=" -lrtmp"
 	;;
 esac
 
