@@ -3,7 +3,7 @@
 # Install script for AgentDVR/ Linux
 # To execute: save and `chmod +x ./linux_setup2.sh` then `./linux_setup2.sh`
 
-. /etc/lsb-release
+. /etc/*-release
 arch=`uname -m`
 
 ffmpeg_installed=false
