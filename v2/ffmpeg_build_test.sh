@@ -581,6 +581,7 @@ case $(arch) in
 		CONFIGURE_OPTIONS+=("--enable-neon")
 		CONFIGURE_OPTIONS+=("--enable-v4l2-m2m")
 		if [ "$isBuster" = true ]; then
+			echo "Adding OMX (Buster)"
 			CONFIGURE_OPTIONS+=("--enable-omx")
 			CONFIGURE_OPTIONS+=("--enable-omx-rpi")
 		fi
