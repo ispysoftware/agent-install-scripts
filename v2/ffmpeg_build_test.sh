@@ -22,7 +22,7 @@ LATEST=false
 arch=`uname -m`
 isBuster=false
 checkBuster=`cat /etc/*-release | grep buster`
-if [ -z "$checkBuster" ]; then
+if [ ! -z "$checkBuster" ]; then
  isBuster=true
 fi
 
