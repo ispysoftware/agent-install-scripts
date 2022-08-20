@@ -18,20 +18,17 @@ CONFIGURE_OPTIONS=()
 NONFREE_AND_GPL=false
 LATEST=false
 
-. /etc/lsb-release
+. /etc/*-release
 arch=`uname -m`
+isBuster=false
+checkBuster=`cat /etc/*-release | grep buster`
+if [ ! -z "$checkBuster" ]; then
+ isBuster=true
+fi
 
 
 echo "Building for $OSTYPE"
 echo "LDFLAGS are $LDFLAGS"
-
-# Check for Apple Silicon
-if [[ ("$(uname -m)" == "arm64") && ("$OSTYPE" == "darwin"*) ]]; then
-  # If arm64 AND darwin (macOS)
-  export ARCH=arm64
-  export MACOSX_DEPLOYMENT_TARGET=11.0
-  MACOS_M1=true
-fi
 
 # Speed up the process
 # Env Var NUMJOBS overrides automatic detection
@@ -39,10 +36,6 @@ if [[ -n "$NUMJOBS" ]]; then
   MJOBS="$NUMJOBS"
 elif [[ -f /proc/cpuinfo ]]; then
   MJOBS=$(grep -c processor /proc/cpuinfo)
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  MJOBS=$(sysctl -n machdep.cpu.thread_count)
-  CONFIGURE_OPTIONS+=("--enable-videotoolbox")
-  MACOS_LIBTOOL="$(which libtool)" # gnu libtool is installed in this script and need to avoid name conflict
 else
   MJOBS=4
 fi
@@ -574,16 +567,20 @@ case $(arch) in
 		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=aarch64")
 		CONFIGURE_OPTIONS+=("--enable-neon")
-		CONFIGURE_OPTIONS+=("--enable-omx")
+		CONFIGURE_OPTIONS+=("--enable-v4l2-m2m")
+		if [ "$isBuster" = true ]; then
+			echo "Adding OMX (Buster)"
+			CONFIGURE_OPTIONS+=("--enable-omx")
+			CONFIGURE_OPTIONS+=("--enable-omx-rpi")
+		fi
 		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's
-    		CONFIGURE_OPTIONS+=("--enable-omx-rpi")
+    		
 		EXTRALIBS+=" -lrtmp"
 		
 	;;
 	'arm' | 'armv6l' | 'armv7l')
 		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=armel")
-		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's
 		EXTRALIBS+=" -lrtmp"
 	;;
 esac
