@@ -78,21 +78,21 @@ FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ ! -f $FILE ]
 then
 	echo "finding installer for $(arch)"
-	purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=Linux"
-	AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_Linux64_4_1_2_0.zip"
+	purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0"
+	#AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_Linux64_4_1_2_0.zip"
 	
 	case $(arch) in
 		'aarch64' | 'arm64')
-			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=ARM"
-			AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_ARM64_4_1_2_0.zip"
+			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0"
+			#AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_ARM64_4_1_2_0.zip"
 		;;
 		'arm' | 'armv6l' | 'armv7l')
-			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=false&platform=ARM32"
-			AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_ARM32_4_1_2_0.zip"
+			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0"
+			#AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_ARM32_4_1_2_0.zip"
 		;;
 	esac
 
-	#AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
+	AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
 	unzip AgentDVR.zip
