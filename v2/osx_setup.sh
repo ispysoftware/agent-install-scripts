@@ -43,9 +43,11 @@ if [ -f $FILE ]; then
 	echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 else
 	if [[ ("$(arch)" == "arm64") ]]; then
-		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
+	 	URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
+		#URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip"
 	else
-		URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip" #$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation2?productID=24&is64=true&platform=OSXARM") | tr -d '"')
+		URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
+		#URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip"
 	fi
 
 	echo "Downloading $URL"
