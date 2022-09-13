@@ -59,9 +59,9 @@ if [ $svc -eq 1 ]; then
 else
 	echo "Restart service"
 	if [ $isOSX -eq 1 ]; then
-		sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+		launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 	else
-		sudo systemctl start AgentDVR
+		systemctl start AgentDVR
 	fi
 	
 fi
