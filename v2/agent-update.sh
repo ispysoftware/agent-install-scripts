@@ -53,15 +53,5 @@ if [ "$1" == "-plugins" ]; then
 	cd ..
 fi
 
-if [ $svc -eq 1 ]; then
-	echo "Restarting Agent"
-	./Agent
-else
-	echo "Restart service"
-	if [ $isOSX -eq 1 ]; then
-		launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-	else
-		systemctl start AgentDVR
-	fi
-	
-fi
+echo "Restarting Agent"
+./Agent
