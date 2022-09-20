@@ -109,9 +109,7 @@ chmod a+x ./start_agent.sh
 
 echo "Adding execute permissions"
 chmod +x ./Agent
-chmod +x ./agent-register.sh
-chmod +x ./agent-reset.sh
-chmod +x ./agent-reset-local-login.sh
+find . -name "*.sh" -exec chmod +x {} \;
 
 cd $ABSOLUTE_PATH
 
