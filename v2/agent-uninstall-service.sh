@@ -14,3 +14,4 @@ else
   sudo systemctl reset-failed
 fi
 
+echo "stopped and removed service"
