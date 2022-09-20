@@ -5,7 +5,9 @@
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-  sudo rm -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+  if [ -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist ]; then
+    sudo rm -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+  fi
 else
   sudo systemctl stop AgentDVR.service
   sudo systemctl disable AgentDVR.service
