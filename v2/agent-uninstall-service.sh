@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install script for AgentDVR/ Linux
+# Uninstall script for AgentDVR/ Linux/ OSX
 # To execute: save and `chmod +x ./agent-uninstall-service.sh` then `./agent-uninstall-service.sh`
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
