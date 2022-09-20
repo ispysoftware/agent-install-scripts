@@ -53,9 +53,7 @@ else
 	echo "Downloading $URL"
 	curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
 	chmod +x Agent
-	chmod +x ./agent-register.sh
-	chmod +x ./agent-reset.sh
-	chmod +x ./agent-reset-local-login.sh
+	find . -name "*.sh" -exec chmod +x {} \;
 fi
 
 
