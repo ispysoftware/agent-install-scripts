@@ -34,9 +34,9 @@ if [ "$1" == "-update" ]; then
 
 		chmod +x Agent
 		chmod +x agent-update.sh
+	else
+		echo "Update file not found. Use the web portal to update Agent"
 	fi
-
-	
 fi
 
 if [ "$1" == "-plugins" ]; then 
