@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install script for AgentDVR/ Linux
-# To execute: save and `chmod +x ./uninstall.sh` then `./uninstall.sh`
+# To execute: save and `chmod +x ./agent-uninstall-service.sh` then `./agent-uninstall-service.sh`
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
