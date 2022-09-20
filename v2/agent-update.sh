@@ -33,7 +33,7 @@ if [ "$1" == "-update" ]; then
 		rm -f AgentDVR.zip
 
 		chmod +x Agent
-		chmod +x agent-update.sh
+		find . -name "*.sh" -exec chmod +x {} \;
 	else
 		echo "Update file not found. Use the web portal to update Agent"
 	fi
