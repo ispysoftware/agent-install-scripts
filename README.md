@@ -7,11 +7,13 @@ https://www.ispyconnect.com/download.aspx
 
 To install on **macOS** (Requires: macOS >= 10.14) or **Linux** (x64, arm and raspberry pi) open a terminal and call:
 
-    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/install.sh")
+    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/install.sh")
 
 To download the latest Agent DVR zip file for your platform:
 
-    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/download.sh")
+    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
+    
+Unzip that over the existing install location to update Agent
 
 You may need to install curl first:
 
@@ -22,14 +24,8 @@ When Agent is installed you can access it on the local computer at http://localh
 
 If Agent doesn't start or you want to run Agent manually (provides console output for debugging):
 
-On macOS in the AgentDVR folder run:
+./Agent
 
-    dotnet Agent.dll
-    
-On Linux in the parent folder:
-
-    ./start_agent.sh
-   
 **Known Issues:**
 
 On Raspberry Pi please ensure you are using a recent OS - older versions of Raspbian do not support modern SSL certificates.
