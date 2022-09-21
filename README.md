@@ -13,7 +13,9 @@ To download the latest Agent DVR zip file for your platform:
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
     
-Unzip that over the existing install location to update Agent
+Unzip that over the existing install location to update Agent. When it is unzipped run
+
+    chmod +x Agent
 
 You may need to install curl first:
 
