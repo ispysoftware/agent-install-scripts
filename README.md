@@ -1,4 +1,4 @@
-# Scripted installs for Agent DVR on macOS, Linux and Raspberry Pi
+# Scripted installs for Agent DVR on OSX, Linux and Raspberry Pi
 Setup scripts for Agent DVR on macOS/ Linux
 For Windows download the installer from the website
 For Docker see the download page below
