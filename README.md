@@ -9,13 +9,31 @@ To install on **OSX** (Requires: OSX >= 10.14) or **Linux** (x64, arm and raspbe
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/install.sh")
 
-To download the latest Agent DVR zip file for your platform:
+# Updating Agent
+
+To update Agent to the latest version for your platform you can either click on the server icon and "Update Agent" if you have a license or a subscription or you can do it manually:
+
+Stop the Agent Service
+
+    Linux:
+        sudo systemctl stop AgentDVR.service
+    OSX:
+        sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+
+Download the latest version (will detect your platform)
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
     
 Unzip that over the existing install location to update Agent. When it is unzipped run
 
     chmod +x Agent
+    
+... and restart the service
+
+    Linux: 
+        sudo systemctl start AgentDVR.service
+    OSX:
+        sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 
 You may need to install curl first:
 
