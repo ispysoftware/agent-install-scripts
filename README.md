@@ -5,6 +5,10 @@ For Docker see the download page below
 
 https://www.ispyconnect.com/download.aspx
 
+You may need to install curl first:
+
+    sudo apt-get install curl
+
 To install on **OSX** (Requires: OSX >= 10.14) or **Linux** (x64, arm and raspberry pi) open a terminal and call:
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/install.sh")
@@ -44,10 +48,6 @@ Linux:
 OSX:
 
     sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-
-You may need to install curl first:
-
-    sudo apt-get install curl
 
 When Agent is installed you can access it on the local computer at http://localhost:8090
 
