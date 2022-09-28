@@ -19,10 +19,13 @@ Backup your configuration (just in case!) - copy the xml files in Agent/Media/XM
 
 Stop the Agent Service
 
-    #Linux:
-        sudo systemctl stop AgentDVR.service
-    #OSX:
-        sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+Linux:
+
+    sudo systemctl stop AgentDVR.service
+
+OSX:
+    
+    sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 
 Download the latest version (will detect your platform)
 
@@ -34,10 +37,13 @@ Unzip that over the existing install location to update (it won't erase your con
     
 ... and restart the service:
 
-    #Linux: 
-        sudo systemctl start AgentDVR.service
-    #OSX:
-        sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+Linux: 
+
+    sudo systemctl start AgentDVR.service
+
+OSX:
+
+    sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 
 You may need to install curl first:
 
