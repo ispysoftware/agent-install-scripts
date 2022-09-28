@@ -11,7 +11,9 @@ To install on **OSX** (Requires: OSX >= 10.14) or **Linux** (x64, arm and raspbe
 
 # Updating Agent
 
-To update Agent to the latest version for your platform you can either click on the server icon and "Update Agent" if you have a license or a subscription or you can do it manually:
+If you have a license or a subscription you can update Agent to the latest version by clicking on the server menu and "Update Agent".
+
+To update Agent manually follow the following steps:
 
 Stop the Agent Service
 
