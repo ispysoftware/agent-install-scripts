@@ -15,6 +15,8 @@ If you have a license or a subscription you can update Agent to the latest versi
 
 To update Agent manually follow the following steps:
 
+Backup your configuration (just in case!) - copy the xml files in Agent/Media/XML somewhere
+
 Stop the Agent Service
 
     Linux:
