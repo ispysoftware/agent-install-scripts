@@ -26,11 +26,11 @@ Download the latest version (will detect your platform)
 
     bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
     
-Unzip that over the existing install location to update Agent. When it is unzipped run
+Unzip that over the existing install location to update (it won't erase your config). When it is unzipped, change to the Agent directory and run
 
     chmod +x Agent
     
-... and restart the service
+... and restart the service:
 
     Linux: 
         sudo systemctl start AgentDVR.service
