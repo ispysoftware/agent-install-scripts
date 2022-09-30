@@ -6,7 +6,7 @@ WorkingDirectory=AGENT_LOCATION
 ExecStart=AGENT_LOCATION/Agent
 
 # fix memory management issue with dotnet core
-Enviroment="MALLOC_TRIM_THRESHOLD_=100000"
+Environment="MALLOC_TRIM_THRESHOLD_=100000"
 
 # to query logs using journalctl, set a logical name here
 SyslogIdentifier=AgentDVR
