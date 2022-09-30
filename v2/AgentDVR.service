@@ -2,6 +2,7 @@
 Description=AgentDVR
 
 [Service]
+#fix memory management issue with dotnet core
 Enviroment="MALLOC_TRIM_THRESHOLD_=100000"
 WorkingDirectory=AGENT_LOCATION
 ExecStart=AGENT_LOCATION/Agent
