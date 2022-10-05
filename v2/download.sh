@@ -16,10 +16,10 @@ purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&f
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
     if [[ ("$(arch)" == "arm64") ]]; then
-	 	purl=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
-	else
-		purl=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
-	fi
+	purl=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
+    else
+        purl=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
+    fi
 else
   case $(arch) in
     'aarch64' | 'arm64')
