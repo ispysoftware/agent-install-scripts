@@ -373,6 +373,14 @@ fi
 ## video library
 ##
 
+if build "libalsa" "1.2.7.2"; then
+  download "https://www.alsa-project.org/files/pub/lib/alsa-lib-1.2.7.2.tar.bz2"
+  execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static --enable-pic
+  execute make -j $MJOBS
+  execute make install
+  build_done "libalsa" "1.2.7.2"
+fi
+
 if build "libvpx" "1.10.0"; then
   download "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz" "libvpx-1.10.0.tar.gz"
 
@@ -471,6 +479,7 @@ if build "libvorbis" "1.3.6"; then
   build_done "libvorbis" "1.3.6"
 fi
 CONFIGURE_OPTIONS+=("--enable-libvorbis")
+
 
 
 if $NONFREE_AND_GPL; then
