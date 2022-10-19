@@ -321,12 +321,12 @@ if build "nasm" "2.15.05"; then
   build_done "nasm" "2.15.05"
 fi
 
-if build "zlib" "1.2.12"; then
-  download "https://www.zlib.net/zlib-1.2.12.tar.gz"
+if build "zlib" "1.2.13"; then
+  download "https://www.zlib.net/zlib-1.2.13.tar.gz"
   execute ./configure --static --prefix="${WORKSPACE}"
   execute make -j $MJOBS
   execute make install
-  build_done "zlib" "1.2.12"
+  build_done "zlib" "1.2.13"
 fi
 
 if build "m4" "1.4.19"; then
@@ -372,6 +372,16 @@ fi
 ##
 ## video library
 ##
+
+if build "libalsa" "1.2.7"; then
+  download "https://www.alsa-project.org/snapshot/files/alsa-lib-1.2.7.2.3.gd8061.tar.bz2"
+  execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static --enable-pic
+  execute make -j $MJOBS
+  execute make install
+  build_done "libalsa" "1.2.7"
+fi
+
+exit 0
 
 if build "libvpx" "1.10.0"; then
   download "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz" "libvpx-1.10.0.tar.gz"
@@ -471,6 +481,7 @@ if build "libvorbis" "1.3.6"; then
   build_done "libvorbis" "1.3.6"
 fi
 CONFIGURE_OPTIONS+=("--enable-libvorbis")
+
 
 
 if $NONFREE_AND_GPL; then
@@ -573,15 +584,11 @@ case $(arch) in
 			CONFIGURE_OPTIONS+=("--enable-omx")
 			CONFIGURE_OPTIONS+=("--enable-omx-rpi")
 		fi
-		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's
-    		
-		EXTRALIBS+=" -lrtmp"
-		
+		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's		
 	;;
 	'arm' | 'armv6l' | 'armv7l')
 		mparam=""
 		CONFIGURE_OPTIONS+=("--arch=armel")
-		EXTRALIBS+=" -lrtmp"
 	;;
 esac
 
