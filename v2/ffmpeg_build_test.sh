@@ -381,8 +381,6 @@ if build "libalsa" "1.2.7"; then
   build_done "libalsa" "1.2.7"
 fi
 
-exit 0
-
 if build "libvpx" "1.10.0"; then
   download "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz" "libvpx-1.10.0.tar.gz"
 
