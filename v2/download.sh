@@ -10,6 +10,8 @@ machine_has() {
     return $?
 }
 
+arch=`uname -m`
+
 echo "finding installer for $(arch)"
 purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0"
 
