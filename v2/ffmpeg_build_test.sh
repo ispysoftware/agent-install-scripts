@@ -373,12 +373,12 @@ fi
 ## video library
 ##
 
-if build "libalsa" "1.2.7"; then
-  download "https://www.alsa-project.org/snapshot/files/alsa-lib-1.2.7.2.3.gd8061.tar.bz2"
+if build "libalsa" "1.2.7.2"; then
+  download "https://www.alsa-project.org/files/pub/lib/alsa-lib-1.2.7.2.tar.bz2"
   execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static --enable-pic
   execute make -j $MJOBS
   execute make install
-  build_done "libalsa" "1.2.7"
+  build_done "libalsa" "1.2.7.2"
 fi
 
 if build "libvpx" "1.10.0"; then
