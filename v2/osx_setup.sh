@@ -33,6 +33,7 @@ formula_installed() {
 formula_installed ffmpeg 5
 if [ $? -eq 1 ]; then
 	echo "Installing ffmpeg v5"
+	brewcmd install curl ca-certificates
 	brewcmd install ffmpeg@5
 else
 	echo "Found FFmpeg v5+"
