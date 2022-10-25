@@ -29,7 +29,7 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 	read -p "Install ffmpeg v5 from package manager (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 	  echo Yes
-	  sudo apt-get install -y software-properties-common alsa-utils
+	  sudo apt-get install -y software-properties-common alsa-utils unzip
 	  sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
 	  sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
 	  sudo apt update
