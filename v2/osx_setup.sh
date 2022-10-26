@@ -45,10 +45,8 @@ if [ -f $FILE ]; then
 else
 	if [[ ("$(arch)" == "arm64") ]]; then
 	 	URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
-		#URL="https://ispyfiles.azureedge.net/downloads/Agent_OSXARM64_4_1_2_0.zip"
 	else
 		URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
-		#URL="https://ispyfiles.azureedge.net/downloads/Agent_OSX64_4_1_2_0.zip"
 	fi
 
 	echo "Downloading $URL"
