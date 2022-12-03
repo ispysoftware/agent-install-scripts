@@ -3,15 +3,18 @@
 <dict>
   <key>Label</key>
   <string>com.ispy.agent.dvr</string>
-
   <key>ProgramArguments</key>
   <array>
     <string>AGENT_LOCATION/Agent</string>
   </array>
-
   <key>RunAtLoad</key>
   <true/>
-
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>AGENT_LOCATION/logfile.log</string>
+  <key>StandardErrorPath</key>
+  <string>AGENT_LOCATION/logerr.log</string>
   <key>UserName</key>
   <string>YOUR_USERNAME</string>
 </dict>
