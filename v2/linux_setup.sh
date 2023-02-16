@@ -79,7 +79,6 @@ if [ ! -f $FILE ]
 then
 	echo "finding installer for $(arch)"
 	purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0"
-	#AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_Linux64_4_1_2_0.zip"
 	
 	case $(arch) in
 		'aarch64' | 'arm64')
