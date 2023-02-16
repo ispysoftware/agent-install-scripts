@@ -84,11 +84,9 @@ then
 	case $(arch) in
 		'aarch64' | 'arm64')
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0"
-			#AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_ARM64_4_1_2_0.zip"
 		;;
 		'arm' | 'armv6l' | 'armv7l')
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0"
-			#AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_ARM32_4_1_2_0.zip"
 		;;
 	esac
 
