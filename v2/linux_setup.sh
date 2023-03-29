@@ -27,17 +27,27 @@ cd AgentDVR
 
 
 #PPA's no longer available - need to build from source now :(
-if [ "$DISTRIB_ID" = "Ubuntu_NotWorking" ] ; then
-	read -p "Install ffmpeg v5 from package manager (y/n)? " answer
+if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
+
+	read -p "Build FFMPEG v5 in shared mode (required) (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-	  echo Yes
-	  sudo apt-get install -y software-properties-common alsa-utils unzip
-	  sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
-	  sudo add-apt-repository ppa:savoury1/ffmpeg5 -y
-	  sudo apt update
-	  sudo apt upgrade -y
-	  sudo apt install ffmpeg -y
-	  ffmpeg_installed=true
+		sudo apt-get install -y alsa-utils build-essential xz-utils yasm cmake libtool libc6 libc6-dev unzip wget pkg-config libx264-dev libx265-dev libmp3lame-dev libopus-dev libvorbis-dev libfdk-aac-dev libvpx-dev
+
+		wget https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.gz
+		tar xf ffmpeg-5.1.2.tar.gz
+		cd ffmpeg-5.1.2
+		
+		./configure --disable-debug \
+		  --disable-doc \
+		  --enable-shared \
+		  --enable-pthreads \
+		  --enable-hwaccels \
+		  --enable-hardcoded-tables \
+		  --enable-nonfree --disable-static --enable-shared --enable-gpl --enable-libx264 --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libfdk-aac --enable-libx265 --enable-libvpx
+
+		make -j 8
+		sudo make install
+		ffmpeg_installed=true
 	fi
 else
 	echo "No default ffmpeg package option - build from source"
