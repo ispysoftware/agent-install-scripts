@@ -25,7 +25,9 @@ ABSOLUTE_PATH="${PWD}"
 mkdir AgentDVR
 cd AgentDVR
 
-if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
+
+#PPA's no longer available - need to build from source now :(
+if [ "$DISTRIB_ID" = "Ubuntu_NotWorking" ] ; then
 	read -p "Install ffmpeg v5 from package manager (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 	  echo Yes
