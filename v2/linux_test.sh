@@ -49,6 +49,7 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
 
 		make -j 8
 		sudo make install
+		rm -rf $ABSOLUTE_PATH/AgentDVR/ffmpeg-5.1.2
 	fi
 else
 	read -p "Build ffmpeg v5 for Agent DVR (y/n)? " answer
