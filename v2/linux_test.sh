@@ -38,8 +38,8 @@ if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
     mkdir -p $ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace
 		cd ffmpeg-5.1.2
 		
-		./configure --prefix=$ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace
-      --disable-debug \
+		./configure --prefix=$ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace \
+		  --disable-debug \
 		  --disable-doc \
 		  --enable-shared \
 		  --enable-pthreads \
