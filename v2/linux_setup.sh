@@ -28,33 +28,33 @@ cd AgentDVR
 
 #PPA's no longer available - need to build from source now :(
 if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
-
-	read -p "Build FFMPEG v5 in shared mode (required) (y/n)? " answer
+	read -p "Build ffmpeg v5 for Agent DVR (Ubuntu) (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		sudo apt-get install -y alsa-utils build-essential xz-utils yasm cmake libtool libc6 libc6-dev unzip wget pkg-config libx264-dev libx265-dev libmp3lame-dev libopus-dev libvorbis-dev libfdk-aac-dev libvpx-dev
+		sudo apt-get install -y alsa-utils build-essential xz-utils yasm cmake libtool libc6 libc6-dev unzip wget pkg-config libx264-dev libx265-dev libmp3lame-dev libopus-dev libvorbis-dev libfdk-aac-dev libvpx-dev libva-dev
 
 		wget https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.gz
 		tar xf ffmpeg-5.1.2.tar.gz
+    
+    mkdir -p $ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace
 		cd ffmpeg-5.1.2
 		
-		./configure --disable-debug \
+		./configure --prefix=$ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace \
+		  --target-os=linux \
+		  --disable-debug \
 		  --disable-doc \
 		  --enable-shared \
 		  --enable-pthreads \
 		  --enable-hwaccels \
 		  --enable-hardcoded-tables \
-		  --enable-nonfree --disable-static --enable-shared --enable-gpl --enable-libx264 --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libfdk-aac --enable-libx265 --enable-libvpx
+		  --enable-nonfree --disable-static --enable-gpl --enable-libx264 --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libfdk-aac --enable-libx265 --enable-libvpx \
+		  --enable-vaapi \
+		  
 
 		make -j 8
 		sudo make install
-		ffmpeg_installed=true
+		rm -rf $ABSOLUTE_PATH/AgentDVR/ffmpeg-5.1.2
 	fi
 else
-	echo "No default ffmpeg package option - build from source"
-fi
-
-if [ "$ffmpeg_installed" = false ]
-then
 	read -p "Build ffmpeg v5 for Agent DVR (y/n)? " answer
 	if [ "$answer" != "${answer#[Yy]}" ] ;then 
 		echo Yes
@@ -79,8 +79,6 @@ then
 		    exit 1
 		fi
 	fi
-else
-	echo "Found ffmpeg"
 fi
 
 cd $ABSOLUTE_PATH/AgentDVR/
