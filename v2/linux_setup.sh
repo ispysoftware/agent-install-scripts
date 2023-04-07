@@ -102,6 +102,7 @@ then
 	AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
+	sudo apt install unzip -y
 	unzip AgentDVR.zip
 	rm AgentDVR.zip
 else
