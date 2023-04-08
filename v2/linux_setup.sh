@@ -102,6 +102,13 @@ then
 	AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
+	
+	if machine_has "apt-get"; then
+		sudo apt-get unzip
+	else
+		sudo yum install bzip2
+	fi
+	
 	unzip AgentDVR.zip
 	rm AgentDVR.zip
 else
@@ -125,8 +132,6 @@ name=$(whoami)
 echo "Adding permission for local device access"
 sudo adduser $name video
 sudo usermod -a -G video $name
-
-
 
 read -p "Setup AgentDVR as system service (y/n)? " answer
 if [ "$answer" != "${answer#[Yy]}" ] ;then 
