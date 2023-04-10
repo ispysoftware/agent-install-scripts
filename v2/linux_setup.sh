@@ -26,33 +26,41 @@ mkdir AgentDVR
 cd AgentDVR
 
 
-#PPA's no longer available - need to build from source now :(
 if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
-	read -p "Build ffmpeg v5 for Agent DVR (Ubuntu) (y/n)? " answer
-	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		sudo apt-get install -y alsa-utils build-essential xz-utils yasm cmake libtool libc6 libc6-dev unzip wget pkg-config libx264-dev libx265-dev libmp3lame-dev libopus-dev libvorbis-dev libfdk-aac-dev libvpx-dev libva-dev
+	if [ "$DISTRIB_RELEASE" = "22.10" ] ; then
+		read -p "Install ffmpeg from apt for Ubuntu 22.10 (y/n)? " answer
+		if [ "$answer" != "${answer#[Yy]}" ] ;then 
+			sudo apt-get install -y ffmpeg
+			ffmpeg_installed=true
+		fi
+	fi 
+	if [ "$ffmpeg_installed" = false ] ; then
+		read -p "Build ffmpeg v5 for Agent DVR (Ubuntu) (y/n)? " answer
+		if [ "$answer" != "${answer#[Yy]}" ] ;then 
+			sudo apt-get install -y alsa-utils build-essential xz-utils yasm cmake libtool libc6 libc6-dev unzip wget pkg-config libx264-dev libx265-dev libmp3lame-dev libopus-dev libvorbis-dev libfdk-aac-dev libvpx-dev libva-dev
 
-		wget https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.gz
-		tar xf ffmpeg-5.1.2.tar.gz
-    
-    mkdir -p $ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace
-		cd ffmpeg-5.1.2
-		
-		./configure --prefix=$ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace \
-		  --target-os=linux \
-		  --disable-debug \
-		  --disable-doc \
-		  --enable-shared \
-		  --enable-pthreads \
-		  --enable-hwaccels \
-		  --enable-hardcoded-tables \
-		  --enable-nonfree --disable-static --enable-gpl --enable-libx264 --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libfdk-aac --enable-libx265 --enable-libvpx \
-		  --enable-vaapi \
-		  
+			wget https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.gz
+			tar xf ffmpeg-5.1.2.tar.gz
 
-		make -j 8
-		sudo make install
-		rm -rf $ABSOLUTE_PATH/AgentDVR/ffmpeg-5.1.2
+	    		mkdir -p $ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace
+			cd ffmpeg-5.1.2
+
+			./configure --prefix=$ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace \
+			  --target-os=linux \
+			  --disable-debug \
+			  --disable-doc \
+			  --enable-shared \
+			  --enable-pthreads \
+			  --enable-hwaccels \
+			  --enable-hardcoded-tables \
+			  --enable-nonfree --disable-static --enable-gpl --enable-libx264 --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libfdk-aac --enable-libx265 --enable-libvpx \
+			  --enable-vaapi \
+
+
+			make -j 8
+			sudo make install
+			rm -rf $ABSOLUTE_PATH/AgentDVR/ffmpeg-5.1.2
+		fi
 	fi
 else
 	read -p "Build ffmpeg v5 for Agent DVR (y/n)? " answer
