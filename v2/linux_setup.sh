@@ -68,7 +68,7 @@ else
 		echo Yes
 		
 		
-		echo "installing build tools"
+		echo "Installing build tools"
 		if machine_has "apt-get"; then
 			sudo apt-get update \
 				&& sudo apt-get install --no-install-recommends -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev alsa-utils libxext-dev
@@ -95,7 +95,7 @@ cd $ABSOLUTE_PATH/AgentDVR/
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ ! -f $FILE ]
 then
-	echo "finding installer for $(arch)"
+	echo "Finding installer for $(arch)"
 	purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0"
 	
 	case $(arch) in
@@ -125,7 +125,7 @@ fi
 
 #for backward compat with existing service files
 
-echo "downloading start script for back compat"
+echo "Downloading start script for back compat"
 curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/start_agent.sh" -o "start_agent.sh"
 chmod a+x ./start_agent.sh
 
@@ -140,6 +140,8 @@ name=$(whoami)
 echo "Adding permission for local device access"
 sudo adduser $name video
 sudo usermod -a -G video $name
+
+echo "To run Agent either call ./Agent from the terminal or install it as a system service."
 
 read -p "Setup AgentDVR as system service (y/n)? " answer
 if [ "$answer" != "${answer#[Yy]}" ] ;then 
@@ -163,10 +165,11 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
 	sudo systemctl enable AgentDVR.service
 	sudo systemctl start AgentDVR
 
-	echo "started service"
-	echo "go to http://localhost:8090 to configure"
+	echo "Started service"
+	echo "Go to http://localhost:8090 to configure"
 	exit 0
 else
+	echo "Starting Agent DVR from the terminal.."
 	cd AgentDVR
 	./Agent
 fi
