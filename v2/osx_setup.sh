@@ -36,6 +36,7 @@ if [ $? -eq 1 ]; then
 	brewcmd install curl ca-certificates
 	curl -o ./ffmpeg.rb https://raw.githubusercontent.com/Homebrew/homebrew-core/854ecdfc15a07c6c9fc66852cc34700df5cca581/Formula/ffmpeg.rb
 	HOMEBREW_NO_AUTO_UPDATE=1 brewcmd install --build-from-source ./ffmpeg.rb
+	rm -f ./ffmpeg.rb
 else
 	echo "Found FFmpeg v5"
 fi
