@@ -23,9 +23,17 @@ machine_has() {
 
 ABSOLUTE_PATH="${PWD}"
 mkdir AgentDVR
-cd AgentDVR
-
 cd $ABSOLUTE_PATH/AgentDVR/
+
+if machine_has "apt-get"; then
+	sudo apt-get update \
+		&& sudo apt-get install --no-install-recommends -y unzip apt-transport-https alsa-utils libxext-dev
+else
+	sudo yum update \
+		&& sudo yum install -y bzip2 vlc libva
+fi
+
+
 #download latest version
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
