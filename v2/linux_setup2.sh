@@ -54,14 +54,6 @@ then
 
 	AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
 	
-	case $(arch) in
-		'arm' | 'armv6l' | 'armv7l')
-			#last supported version for 32 bit arm platforms
-			echo "Last supported version for your 32 bit platform is 4.7.2.0"
-      			AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_LinuxARM_4_7_2_0.zip"
-		;;
-	esac
-	
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
 	
