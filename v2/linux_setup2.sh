@@ -6,8 +6,6 @@
 . /etc/*-release
 arch=`uname -m`
 
-ffmpeg_installed=false
-
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If arm64 AND darwin (macOS)
   echo "Use use osx_setup2.sh instead"
