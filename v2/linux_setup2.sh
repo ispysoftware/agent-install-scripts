@@ -47,12 +47,21 @@ then
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0"
 		;;
 		'arm' | 'armv6l' | 'armv7l')
-      echo "32 bit not supported - install a 64 bit OS"
-      exit
+			#last supported version for 32 bit arm platforms
+      			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0"
 		;;
 	esac
 
 	AGENTURL=$(curl -s --fail "$purl" | tr -d '"')
+	
+	case $(arch) in
+		'arm' | 'armv6l' | 'armv7l')
+			#last supported version for 32 bit arm platforms
+			echo "Last supported version for your 32 bit platform is 4.7.2.0"
+      			AGENTURL="https://ispyfiles.azureedge.net/downloads/Agent_LinuxARM_4_7_2_0.zip"
+		;;
+	esac
+	
 	echo "Downloading $AGENTURL"
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
 	
