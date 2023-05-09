@@ -21,6 +21,9 @@ machine_has() {
     return $?
 }
 
+# Stop it if it's running
+sudo systemctl stop AgentDVR.service
+
 ABSOLUTE_PATH="${PWD}"
 mkdir AgentDVR
 cd $ABSOLUTE_PATH/AgentDVR/
@@ -47,7 +50,6 @@ then
 			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0"
 		;;
 		'arm' | 'armv6l' | 'armv7l')
-			#last supported version for 32 bit arm platforms
       			purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0"
 		;;
 	esac
