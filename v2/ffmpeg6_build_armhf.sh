@@ -437,7 +437,7 @@ if $NONFREE_AND_GPL; then
     download "https://code.videolan.org/videolan/x264/-/archive/941cae6d1d6d6344c9a1d27440eaf2872b18ca9a/x264-941cae6d1d6d6344c9a1d27440eaf2872b18ca9a.tar.gz" "x264-941cae6d.tar.gz"
     cd "${PACKAGES}"/x264-941cae6d || exit
 
-    execute ./configure --prefix="${WORKSPACE}" --host=arm-linux --enable-pic --enable-shared --extra-cflags="-mfpu=neon"
+    execute ./configure --prefix="${WORKSPACE}" --host=arm-linux --enable-pic --extra-cflags="-mfpu=neon"
 
     execute make -j $MJOBS
     execute make install
