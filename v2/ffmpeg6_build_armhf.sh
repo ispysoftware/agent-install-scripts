@@ -419,17 +419,17 @@ if $NONFREE_AND_GPL; then
   CONFIGURE_OPTIONS+=("--enable-libxvid")
 fi
 
-if build "zimg" "3.0.4"; then
-  download "https://github.com/sekrit-twc/zimg/archive/refs/tags/release-3.0.4.tar.gz" "zimg-3.0.4.tar.gz" "zimg"
-  cd zimg-release-3.0.4 || exit
-  execute "${WORKSPACE}/bin/libtoolize" -i -f -q
-  execute ./autogen.sh --prefix="${WORKSPACE}"
-  execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-shared
-  execute make -j $MJOBS
-  execute make install
-  build_done "zimg" "3.0.4"
-fi
-CONFIGURE_OPTIONS+=("--enable-libzimg")
+#if build "zimg" "3.0.4"; then
+#  download "https://github.com/sekrit-twc/zimg/archive/refs/tags/release-3.0.4.tar.gz" "zimg-3.0.4.tar.gz" "zimg"
+#  cd zimg-release-3.0.4 || exit
+#  execute "${WORKSPACE}/bin/libtoolize" -i -f -q
+#  execute ./autogen.sh --prefix="${WORKSPACE}"
+#  execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-shared
+#  execute make -j $MJOBS
+#  execute make install
+#  build_done "zimg" "3.0.4"
+#fi
+#CONFIGURE_OPTIONS+=("--enable-libzimg")
 
 if $NONFREE_AND_GPL; then
 
