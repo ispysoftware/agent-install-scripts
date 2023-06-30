@@ -4,8 +4,8 @@
 # LICENSE: https://github.com/markus-perl/ffmpeg-build-script/blob/master/LICENSE
 
 PROGNAME=$(basename "$0")
-FFMPEG_VERSION=5.1
-SCRIPT_VERSION=1.37
+FFMPEG_VERSION=6.0
+SCRIPT_VERSION=1.38
 CWD=$(pwd)
 PACKAGES="$CWD/packages"
 WORKSPACE="$CWD/workspace"
@@ -313,12 +313,12 @@ if build "yasm" "1.3.0"; then
   build_done "yasm" "1.3.0"
 fi
 
-if build "nasm" "2.15.05"; then
-  download "https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/nasm-2.15.05.tar.xz"
+if build "nasm" "2.16.01"; then
+  download "https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.xz"
   execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
   execute make -j $MJOBS
   execute make install
-  build_done "nasm" "2.15.05"
+  build_done "nasm" "2.16.01"
 fi
 
 if build "zlib" "1.2.13"; then
@@ -353,20 +353,20 @@ if build "automake" "1.16.5"; then
   build_done "automake" "1.16.4"
 fi
 
-if build "libtool" "2.4.6"; then
-  download "https://ftpmirror.gnu.org/libtool/libtool-2.4.6.tar.gz"
+if build "libtool" "2.4.7"; then
+  download "https://ftpmirror.gnu.org/libtool/libtool-2.4.7.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-shared
   execute make -j $MJOBS
   execute make install
-  build_done "libtool" "2.4.6"
+  build_done "libtool" "2.4.7"
 fi
 
-if build "cmake" "3.23.1"; then
-  download "https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1.tar.gz"
+if build "cmake" "3.25.1"; then
+  download "https://github.com/Kitware/CMake/releases/download/v3.25.1/cmake-3.25.1.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --parallel="${MJOBS}" -- -DCMAKE_USE_OPENSSL=OFF
   execute make -j $MJOBS
   execute make install
-  build_done "cmake" "3.23.1"
+  build_done "cmake" "3.25.1"
 fi
 
 ##
@@ -381,8 +381,8 @@ if build "libalsa" "1.2.7.2"; then
   build_done "libalsa" "1.2.7.2"
 fi
 
-if build "libvpx" "1.10.0"; then
-  download "https://github.com/webmproject/libvpx/archive/refs/tags/v1.10.0.tar.gz" "libvpx-1.10.0.tar.gz"
+if build "libvpx" "1.13.0"; then
+  download "https://github.com/webmproject/libvpx/archive/refs/tags/v1.13.0.tar.gz" "libvpx-1.13.0.tar.gz"
 
   if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Applying Darwin patch"
@@ -394,7 +394,7 @@ if build "libvpx" "1.10.0"; then
   execute make -j $MJOBS
   execute make install
 
-  build_done "libvpx" "1.10.0"
+  build_done "libvpx" "1.13.0"
 fi
 CONFIGURE_OPTIONS+=("--enable-libvpx")
 
@@ -433,9 +433,9 @@ CONFIGURE_OPTIONS+=("--enable-libzimg")
 
 if $NONFREE_AND_GPL; then
 
-  if build "x264" "5db6aa6"; then
-    download "https://code.videolan.org/videolan/x264/-/archive/5db6aa6cab1b146e07b60cc1736a01f21da01154/x264-5db6aa6cab1b146e07b60cc1736a01f21da01154.tar.gz" "x264-5db6aa6.tar.gz"
-    cd "${PACKAGES}"/x264-5db6aa6 || exit
+  if build "x264" "941cae6d"; then
+    download "https://code.videolan.org/videolan/x264/-/archive/941cae6d1d6d6344c9a1d27440eaf2872b18ca9a/x264-941cae6d1d6d6344c9a1d27440eaf2872b18ca9a.tar.gz" "x264-941cae6d.tar.gz"
+    cd "${PACKAGES}"/x264-941cae6d || exit
 
     if [[ "$OSTYPE" == "linux-gnu" ]]; then
       execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic CXXFLAGS="-fPIC"
@@ -447,7 +447,7 @@ if $NONFREE_AND_GPL; then
     execute make install
     execute make install-lib-static
 
-    build_done "x264" "5db6aa6"
+    build_done "x264" "941cae6d"
   fi
   CONFIGURE_OPTIONS+=("--enable-libx264")
 fi
@@ -462,21 +462,21 @@ if build "lame" "3.100"; then
 fi
 CONFIGURE_OPTIONS+=("--enable-libmp3lame")
 
-if build "libogg" "1.3.3"; then
-  download "https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.3.tar.gz"
+if build "libogg" "1.3.5"; then
+  download "https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.5.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
   execute make -j $MJOBS
   execute make install
-  build_done "libogg" "1.3.3"
+  build_done "libogg" "1.3.5"
 fi
 
-if build "libvorbis" "1.3.6"; then
-  download "https://ftp.osuosl.org/pub/xiph/releases/vorbis/libvorbis-1.3.6.tar.gz"
+if build "libvorbis" "1.3.7"; then
+  download "https://ftp.osuosl.org/pub/xiph/releases/vorbis/libvorbis-1.3.7.tar.gz"
   execute ./configure --prefix="${WORKSPACE}" --with-ogg-libraries="${WORKSPACE}"/lib --with-ogg-includes="${WORKSPACE}"/include/ --disable-static --enable-shared --disable-oggtest
   execute make -j $MJOBS
   execute make install
 
-  build_done "libvorbis" "1.3.6"
+  build_done "libvorbis" "1.3.7"
 fi
 CONFIGURE_OPTIONS+=("--enable-libvorbis")
 
@@ -498,14 +498,14 @@ fi
 ## image library
 ##
 
-if build "libpng" "1.6.37"; then
-  download "https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/libpng-1.6.37.tar.gz/download?use_mirror=gigenet" "libpng-1.6.37.tar.gz"
+if build "libpng" "1.6.39"; then
+  download "https://sourceforge.net/projects/libpng/files/libpng16/1.6.39/libpng-1.6.39.tar.gz/download?use_mirror=gigenet" "libpng-1.6.39.tar.gz"
   export LDFLAGS="${LDFLAGS}"
   export CPPFLAGS="${CFLAGS}"
   execute ./configure --prefix="${WORKSPACE}" --enable-shared --disable-static
   execute make -j $MJOBS
   execute make install
-  build_done "libpng" "1.6.37"
+  build_done "libpng" "1.6.39"
 fi
 
 ##
@@ -515,11 +515,11 @@ fi
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   CONFIGURE_OPTIONS+=("--target-os=linux")
   if command_exists "nvcc"; then
-    if build "nv-codec" "11.1.5.0"; then
-      download "https://github.com/FFmpeg/nv-codec-headers/releases/download/n11.1.5.0/nv-codec-headers-11.1.5.0.tar.gz"
+    if build "nv-codec" "11.1.5.2"; then
+      download "https://github.com/FFmpeg/nv-codec-headers/releases/download/n11.1.5.2/nv-codec-headers-11.1.5.2.tar.gz"
       execute make PREFIX="${WORKSPACE}"
       execute make install PREFIX="${WORKSPACE}"
-      build_done "nv-codec" "11.1.5.0"
+      build_done "nv-codec" "11.1.5.2"
     fi
     CFLAGS+=" -I/usr/local/cuda/include"
     LDFLAGS+=" -L/usr/local/cuda/lib64"
@@ -544,12 +544,12 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     fi
   fi
 
-  if build "amf" "1.4.21.0"; then
-    download "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/refs/tags/v.1.4.21.tar.gz" "AMF-1.4.21.tar.gz" "AMF-1.4.21"
+  if build "amf" "1.4.29"; then
+    download "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/refs/tags/v.1.4.29.tar.gz" "AMF-1.4.29.tar.gz" "AMF-1.4.29"
     execute rm -rf "${WORKSPACE}/include/AMF"
     execute mkdir -p "${WORKSPACE}/include/AMF"
-    execute cp -r "${PACKAGES}"/AMF-1.4.21/AMF-v.1.4.21/amf/public/include/* "${WORKSPACE}/include/AMF/"
-    build_done "amf" "1.4.21.0"
+    execute cp -r "${PACKAGES}"/AMF-1.4.29/AMF-v.1.4.29/amf/public/include/* "${WORKSPACE}/include/AMF/"
+    build_done "amf" "1.4.29.0"
   fi
   CONFIGURE_OPTIONS+=("--enable-amf")
 fi
@@ -570,25 +570,26 @@ echo "cflags: ${CFLAGS}"
 echo "configure: ${CONFIGURE_OPTIONS}"
 
 mparam=" -m64"
-
-case $(arch) in
-	'aarch64' | 'arm64')
-		mparam=""
-		CONFIGURE_OPTIONS+=("--arch=aarch64")
-		CONFIGURE_OPTIONS+=("--enable-neon")
-		CONFIGURE_OPTIONS+=("--enable-v4l2-m2m")
-		if [ "$isBuster" = true ]; then
-			echo "Adding OMX (Buster)"
-			CONFIGURE_OPTIONS+=("--enable-omx")
-			CONFIGURE_OPTIONS+=("--enable-omx-rpi")
-		fi
+mparam=""
+CONFIGURE_OPTIONS+=("--arch=armhf")
+#case $(arch) in
+#	'aarch64' | 'arm64')
+#		mparam=""
+#		CONFIGURE_OPTIONS+=("--arch=aarch64")
+#		CONFIGURE_OPTIONS+=("--enable-neon")
+#		CONFIGURE_OPTIONS+=("--enable-v4l2-m2m")
+#		if [ "$isBuster" = true ]; then
+#			echo "Adding OMX (Buster)"
+#			CONFIGURE_OPTIONS+=("--enable-omx")
+#			CONFIGURE_OPTIONS+=("--enable-omx-rpi")
+#		fi
 		#CONFIGURE_OPTIONS+=("--enable-mmal") -- not available on 64 bit pi's		
-	;;
-	'arm' | 'armv6l' | 'armv7l')
-		mparam=""
-		CONFIGURE_OPTIONS+=("--arch=armel")
-	;;
-esac
+#	;;
+#	'arm' | 'armv6l' | 'armv7l')
+#		mparam=""
+#		CONFIGURE_OPTIONS+=("--arch=armel")
+#	;;
+#esac
 
 
 # shellcheck disable=SC2086
