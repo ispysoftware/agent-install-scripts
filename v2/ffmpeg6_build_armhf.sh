@@ -437,11 +437,7 @@ if $NONFREE_AND_GPL; then
     download "https://code.videolan.org/videolan/x264/-/archive/941cae6d1d6d6344c9a1d27440eaf2872b18ca9a/x264-941cae6d1d6d6344c9a1d27440eaf2872b18ca9a.tar.gz" "x264-941cae6d.tar.gz"
     cd "${PACKAGES}"/x264-941cae6d || exit
 
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic CXXFLAGS="-fPIC"
-    else
-      execute ./configure --prefix="${WORKSPACE}" --disable-static --enable-pic
-    fi
+    execute ./configure --prefix="${WORKSPACE}" --host=arm-linux --enable-pic --extra-cflags="-mfpu=neon"
 
     execute make -j $MJOBS
     execute make install
@@ -572,6 +568,7 @@ echo "configure: ${CONFIGURE_OPTIONS}"
 mparam=" -m64"
 mparam=""
 CONFIGURE_OPTIONS+=("--arch=armhf")
+CONFIGURE_OPTIONS+=("--enable-neon")
 #case $(arch) in
 #	'aarch64' | 'arm64')
 #		mparam=""
