@@ -28,7 +28,7 @@ else
       purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0"
     ;;
     'arm' | 'armv6l' | 'armv7l')
-      purl="https://www.ispyconnect.com/api/Agent/DownloadLocation2?platform=LinuxARM&fromVersion=0"
+      purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0"
     ;;
   esac
 fi
