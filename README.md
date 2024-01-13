@@ -25,7 +25,7 @@ Stop the Agent Service
 
 Linux:
 
-    sudo systemctl stop AgentDVR.service
+    sudo systemctl stop agentdvr.service
 
 OSX:
     
@@ -37,13 +37,13 @@ Download the latest version (will detect your platform)
     
 Unzip that over the existing install location to update (it won't erase your config). When it is unzipped, change to the Agent directory and run
 
-    chmod +x Agent
+    chmod +x agent
     
 ... and restart the service:
 
 Linux: 
 
-    sudo systemctl start AgentDVR.service
+    sudo systemctl start agentdvr.service
 
 OSX:
 
