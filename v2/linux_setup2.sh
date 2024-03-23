@@ -58,7 +58,7 @@ then
 	curl --show-error --location "$AGENTURL" -o "AgentDVR.zip"
 	
 	if machine_has "apt-get"; then
-		sudo apt-get unzip
+		sudo apt-get install unzip
 	else
 		sudo yum install bzip2
 	fi
