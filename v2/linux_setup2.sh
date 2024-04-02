@@ -28,7 +28,7 @@ cd $ABSOLUTE_PATH/AgentDVR/
 
 if machine_has "apt-get"; then
 	sudo apt-get update \
-		&& sudo apt-get install --no-install-recommends -y unzip apt-transport-https alsa-utils libxext-dev fontconfig
+		&& sudo apt-get install --no-install-recommends -y unzip apt-transport-https alsa-utils libxext-dev fontconfig libva-drm2
 else
 	sudo yum update \
 		&& sudo yum install -y bzip2 vlc libva fontconfig
