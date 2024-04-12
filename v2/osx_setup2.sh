@@ -34,7 +34,8 @@ formula_installed ffmpeg 6
 if [ $? -eq 1 ]; then
 	echo "Installing ffmpeg"
 	brewcmd install curl ca-certificates
-	brewcmd install ffmpeg
+	brewcmd install ffmpeg@6
+ 	ln -s /usr/local/Cellar/ffmpeg@6/6.1.1 /usr/local/Cellar/ffmpeg/6
 else
 	echo "Found FFmpeg v6"
 fi
