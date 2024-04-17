@@ -36,8 +36,10 @@ if [ $? -eq 1 ]; then
 	brewcmd install curl ca-certificates
 	brewcmd install ffmpeg@6
  	if [[ ("$(arch)" == "arm64") ]]; then
- 		ln -s /opt/homebrew/Cellar/ffmpeg@6/6.1.1 /opt/homebrew/Cellar/ffmpeg/6
+  		mkdir -p /opt/homebrew/Cellar/ffmpeg/6
+ 		ln -s /opt/homebrew/Cellar/ffmpeg@6/6.1.1/* /opt/homebrew/Cellar/ffmpeg/6
    	else
+		mkdir -p /usr/local/Cellar/ffmpeg/6
     		ln -s /usr/local/Cellar/ffmpeg@6/6.1.1 /usr/local/Cellar/ffmpeg/6
    	fi
 else
