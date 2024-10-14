@@ -13,20 +13,24 @@
   <true/>
   <key>Sockets</key>
   <dict>
-    <key>Listeners</key>
-    <dict>
-      <key>SockType</key>
-      <string>stream</string>
-      <key>SockFamily</key>
-      <string>Any</string>
-    </dict>
-    <dict>
-      <key>SockType</key>
-      <string>dgram</string>
-      <key>SockFamily</key>
-      <string>Any</string>
-    </dict>
-  </dict>
+      <key>Listeners</key>
+      <dict>
+          <key>Listener1</key>
+          <dict>
+              <key>SockType</key>
+              <string>stream</string>
+              <key>SockFamily</key>
+              <string>Any</string>
+          </dict>
+          <key>Listener2</key>
+          <dict>
+              <key>SockType</key>
+              <string>dgram</string>
+              <key>SockFamily</key>
+              <string>Any</string>
+          </dict>
+      </dict>
+  </dict>  
   <key>StandardOutPath</key>
   <string>AGENT_LOCATION/logfile.log</string>
   <key>StandardErrorPath</key>
