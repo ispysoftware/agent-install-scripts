@@ -11,6 +11,24 @@
   <true/>
   <key>KeepAlive</key>
   <true/>
+  <key>Sockets</key>
+  <dict>
+    <key>Listeners</key>
+    <dict>
+      <!-- For TCP connections (IPv4 and IPv6) -->
+      <key>SockType</key>
+      <string>stream</string> <!-- 'stream' for TCP -->
+      <key>SockFamily</key>
+      <string>Any</string>    <!-- Allows both IPv4 and IPv6 -->
+    </dict>
+    <dict>
+      <!-- For UDP connections (IPv4 and IPv6) -->
+      <key>SockType</key>
+      <string>dgram</string>  <!-- 'dgram' for UDP -->
+      <key>SockFamily</key>
+      <string>Any</string>    <!-- Allows both IPv4 and IPv6 -->
+    </dict>
+  </dict>
   <key>StandardOutPath</key>
   <string>AGENT_LOCATION/logfile.log</string>
   <key>StandardErrorPath</key>
