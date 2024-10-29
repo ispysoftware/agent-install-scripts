@@ -24,13 +24,13 @@ if ! command -v supervisord &> /dev/null; then
     pip3 install --user supervisor
 fi
 
-# Define the full path for supervisord and supervisorctl
-SUPERVISORD_BIN="$HOME/.local/bin/supervisord"
-SUPERVISORCTL_BIN="$HOME/.local/bin/supervisorctl"
+# Attempt to locate supervisord
+SUPERVISORD_BIN=$(find $HOME -name "supervisord" 2>/dev/null | head -n 1)
+SUPERVISORCTL_BIN=$(find $HOME -name "supervisorctl" 2>/dev/null | head -n 1)
 
 # Verify installation of supervisord
-if [ ! -f "$SUPERVISORD_BIN" ]; then
-    echo "Failed to install supervisord. Ensure that $HOME/.local/bin is in your PATH."
+if [ -z "$SUPERVISORD_BIN" ]; then
+    echo "Failed to find supervisord. Ensure it is installed and in your PATH."
     exit 1
 fi
 
@@ -95,4 +95,22 @@ EOL
 command=$AGENT_COMMAND
 directory=$AGENT_DIR
 autostart=true
-au
+autorestart=true
+user=$(whoami)
+stderr_logfile=$HOME/.config/supervisor/agentdvr.err.log
+stdout_logfile=$HOME/.config/supervisor/agentdvr.out.log
+EOL
+    echo "Created AgentDVR configuration for supervisor."
+
+    # Start supervisord
+    echo "Starting supervisord..."
+    $SUPERVISORD_BIN -c $SUPERVISOR_CONF
+
+    # Reload supervisor configuration
+    $SUPERVISORCTL_BIN -c $SUPERVISOR_CONF reread
+    $SUPERVISORCTL_BIN -c $SUPERVISOR_CONF update
+
+    echo "Started AgentDVR service under supervisor"
+    echo "Go to http://localhost:8090 to configure"
+else
+    e
