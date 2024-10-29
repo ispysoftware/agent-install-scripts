@@ -9,6 +9,20 @@ echo "$ABSOLUTE_PATH"
 mkdir -p AgentDVR
 cd AgentDVR
 
+# Check if supervisord is installed
+if ! command -v supervisord &> /dev/null; then
+    echo "supervisord not found. Installing it using pip..."
+    # Install pip if not present
+    if ! command -v pip3 &> /dev/null; then
+        echo "pip3 not found. Installing it first..."
+        /usr/bin/python3 -m ensurepip --upgrade
+    fi
+    pip3 install supervisor
+else
+    echo "supervisord is already installed."
+fi
+
+
 # Download AgentDVR if not already present
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ -f $FILE ]; then
