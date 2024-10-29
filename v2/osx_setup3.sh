@@ -9,11 +9,12 @@ echo "$ABSOLUTE_PATH"
 mkdir -p AgentDVR
 cd AgentDVR
 
-# Ensure ~/.local/bin is in PATH
-export PATH="$HOME/.local/bin:$PATH"
+# Define the correct installation path for supervisord
+SUPERVISORD_BIN="$HOME/Library/Python/3.9/bin/supervisord"
+SUPERVISORCTL_BIN="$HOME/Library/Python/3.9/bin/supervisorctl"
 
-# Install supervisord if not installed
-if ! command -v supervisord &> /dev/null; then
+# Install supervisord if not found
+if [ ! -f "$SUPERVISORD_BIN" ]; then
     echo "supervisord not found. Installing it using pip..."
     # Ensure pip3 is available
     if ! command -v pip3 &> /dev/null; then
@@ -24,13 +25,9 @@ if ! command -v supervisord &> /dev/null; then
     pip3 install --user supervisor
 fi
 
-# Attempt to locate supervisord
-SUPERVISORD_BIN=$(find $HOME -name "supervisord" 2>/dev/null | head -n 1)
-SUPERVISORCTL_BIN=$(find $HOME -name "supervisorctl" 2>/dev/null | head -n 1)
-
 # Verify installation of supervisord
-if [ -z "$SUPERVISORD_BIN" ]; then
-    echo "Failed to find supervisord. Ensure it is installed and in your PATH."
+if [ ! -f "$SUPERVISORD_BIN" ]; then
+    echo "Failed to install supervisord. Ensure that $SUPERVISORD_BIN is in your PATH."
     exit 1
 fi
 
@@ -113,4 +110,7 @@ EOL
     echo "Started AgentDVR service under supervisor"
     echo "Go to http://localhost:8090 to configure"
 else
-    e
+    echo "Starting AgentDVR"
+    cd $ABSOLUTE_PATH/AgentDVR
+    ./Agent
+fi
