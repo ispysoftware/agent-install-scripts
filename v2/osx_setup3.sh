@@ -9,6 +9,9 @@ echo "$ABSOLUTE_PATH"
 mkdir -p AgentDVR
 cd AgentDVR
 
+# Ensure ~/.local/bin is in PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # Install supervisord if not installed
 if ! command -v supervisord &> /dev/null; then
     echo "supervisord not found. Installing it using pip..."
@@ -19,9 +22,9 @@ if ! command -v supervisord &> /dev/null; then
     fi
     # Install supervisor using pip3
     pip3 install --user supervisor
-    # Ensure the local bin directory is in PATH
+    # Add local bin to PATH
     export PATH="$HOME/.local/bin:$PATH"
-    # Add the local bin directory to shell config for future use
+    # Add local bin directory to shell config for future use
     if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
@@ -29,6 +32,12 @@ if ! command -v supervisord &> /dev/null; then
     fi
 else
     echo "supervisord is already installed."
+fi
+
+# Verify supervisord installation
+if ! command -v supervisord &> /dev/null; then
+    echo "Failed to install supervisord. Please check your PATH."
+    exit 1
 fi
 
 # Download AgentDVR if not already present
