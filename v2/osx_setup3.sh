@@ -17,77 +17,79 @@ if ! command -v supervisord &> /dev/null; then
         echo "pip3 not found. Installing it first..."
         /usr/bin/python3 -m ensurepip --upgrade
     fi
-    pip3 install supervisor
+    pip3 install --user supervisor
+    # Add local bin to PATH
+    export PATH=$HOME/.local/bin:$PATH
 else
     echo "supervisord is already installed."
 fi
 
-
 # Download AgentDVR if not already present
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ -f $FILE ]; then
-	echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
+    echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
 else
-	if [[ "$(uname -m)" == "arm64" ]]; then
-	 	URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0" | tr -d '"')
-	else
-		URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0" | tr -d '"')
-	fi
+    if [[ "$(uname -m)" == "arm64" ]]; then
+        URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0" | tr -d '"')
+    else
+        URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0" | tr -d '"')
+    fi
 
-	echo "Downloading $URL"
-	curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
-	chmod +x Agent
-	find . -name "*.sh" -exec chmod +x {} \;
+    echo "Downloading $URL"
+    curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
+    chmod +x Agent
+    find . -name "*.sh" -exec chmod +x {} \;
 fi
 
 echo -n "Setup AgentDVR as system service using supervisor (y/n)? "
 read answer
 if [ "$answer" != "${answer#[Yy]}" ]; then 
-	echo "Setting up AgentDVR as a service using supervisor"
+    echo "Setting up AgentDVR as a service using supervisor"
 
-	# Define variables
-	SUPERVISOR_DIR="/usr/local/etc/supervisor.d"
-	AGENT_CONF="$SUPERVISOR_DIR/agentdvr.ini"
-	AGENT_DIR="$ABSOLUTE_PATH/AgentDVR"
-	AGENT_COMMAND="$AGENT_DIR/Agent"
+    # Define variables
+    SUPERVISOR_DIR="$HOME/.local/etc/supervisor"
+    AGENT_CONF="$SUPERVISOR_DIR/agentdvr.ini"
+    AGENT_DIR="$ABSOLUTE_PATH/AgentDVR"
+    AGENT_COMMAND="$AGENT_DIR/Agent"
 
-	# Check if supervisor is already running
-	if pgrep -x "supervisord" > /dev/null; then
-	    echo "supervisord is already running."
-	else
-	    echo "Starting supervisord..."
-	    supervisord -c /usr/local/etc/supervisord.ini
-	fi
+    # Get the current user
+    CURRENT_USER=$(whoami)
 
-	# Create supervisor.d directory if it doesn't exist
-	mkdir -p $SUPERVISOR_DIR
+    # Create supervisor directory if it doesn't exist
+    mkdir -p $SUPERVISOR_DIR
 
-	# Create agentdvr.ini if it doesn't exist
-	if [ ! -f $AGENT_CONF ]; then
-		cat <<EOL > $AGENT_CONF
+    # Create agentdvr.ini if it doesn't exist
+    if [ ! -f $AGENT_CONF ]; then
+        cat <<EOL > $AGENT_CONF
 [program:agentdvr]
 command=$AGENT_COMMAND
 directory=$AGENT_DIR
 user=$CURRENT_USER
 autostart=true
 autorestart=true
-stderr_logfile=/usr/local/var/log/agentdvr.err.log
-stdout_logfile=/usr/local/var/log/agentdvr.out.log
+stderr_logfile=$HOME/.local/var/log/agentdvr.err.log
+stdout_logfile=$HOME/.local/var/log/agentdvr.out.log
 EOL
-		echo "Created AgentDVR configuration in supervisor."
-	else
-		echo "AgentDVR configuration already exists in supervisor."
-	fi
+        echo "Created AgentDVR configuration in supervisor."
+    else
+        echo "AgentDVR configuration already exists in supervisor."
+    fi
 
-	# Reload supervisor configuration
-	supervisorctl reread
-	supervisorctl update
+    # Start supervisord if not running
+    if ! pgrep -x "supervisord" > /dev/null; then
+        echo "Starting supervisord..."
+        supervisord -c $HOME/.local/etc/supervisord.conf
+    fi
 
-	echo "Started AgentDVR service under supervisor"
-	echo "Go to http://localhost:8090 to configure"
-	exit
+    # Reload supervisor configuration
+    supervisorctl -c $HOME/.local/etc/supervisord.conf reread
+    supervisorctl -c $HOME/.local/etc/supervisord.conf update
+
+    echo "Started AgentDVR service under supervisor"
+    echo "Go to http://localhost:8090 to configure"
+    exit
 else
-	echo "Starting AgentDVR"
-	cd $ABSOLUTE_PATH/AgentDVR
-	./Agent
+    echo "Starting AgentDVR"
+    cd $ABSOLUTE_PATH/AgentDVR
+    ./Agent
 fi
