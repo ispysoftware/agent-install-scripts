@@ -36,6 +36,7 @@ echo "Using supervisord at: $SUPERVISORD_BIN"
 FILE="$ABSOLUTE_PATH/AgentDVR/Agent"
 if [ -f $FILE ]; then
     echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
+    chmod +x "$FILE"
 else
     if [[ "$(uname -m)" == "arm64" ]]; then
         URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0" | tr -d '"')
