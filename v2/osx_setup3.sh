@@ -22,21 +22,15 @@ if ! command -v supervisord &> /dev/null; then
     fi
     # Install supervisor using pip3
     pip3 install --user supervisor
-    # Add local bin to PATH
-    export PATH="$HOME/.local/bin:$PATH"
-    # Add local bin directory to shell config for future use
-    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-        source ~/.bash_profile 2>/dev/null || source ~/.zshrc
-    fi
-else
-    echo "supervisord is already installed."
 fi
 
-# Verify supervisord installation
-if ! command -v supervisord &> /dev/null; then
-    echo "Failed to install supervisord. Please check your PATH."
+# Define the full path for supervisord and supervisorctl
+SUPERVISORD_BIN="$HOME/.local/bin/supervisord"
+SUPERVISORCTL_BIN="$HOME/.local/bin/supervisorctl"
+
+# Verify installation of supervisord
+if [ ! -f "$SUPERVISORD_BIN" ]; then
+    echo "Failed to install supervisord. Ensure that $HOME/.local/bin is in your PATH."
     exit 1
 fi
 
@@ -101,25 +95,4 @@ EOL
 command=$AGENT_COMMAND
 directory=$AGENT_DIR
 autostart=true
-autorestart=true
-user=$(whoami)
-stderr_logfile=$HOME/.config/supervisor/agentdvr.err.log
-stdout_logfile=$HOME/.config/supervisor/agentdvr.out.log
-EOL
-    echo "Created AgentDVR configuration for supervisor."
-
-    # Start supervisord
-    echo "Starting supervisord..."
-    supervisord -c $SUPERVISOR_CONF
-
-    # Reload supervisor configuration
-    supervisorctl -c $SUPERVISOR_CONF reread
-    supervisorctl -c $SUPERVISOR_CONF update
-
-    echo "Started AgentDVR service under supervisor"
-    echo "Go to http://localhost:8090 to configure"
-else
-    echo "Starting AgentDVR"
-    cd $ABSOLUTE_PATH/AgentDVR
-    ./Agent
-fi
+au
