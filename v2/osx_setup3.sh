@@ -9,17 +9,24 @@ echo "$ABSOLUTE_PATH"
 mkdir -p AgentDVR
 cd AgentDVR
 
-# Check if supervisord is installed
+# Install supervisord if not installed
 if ! command -v supervisord &> /dev/null; then
     echo "supervisord not found. Installing it using pip..."
-    # Install pip if not present
+    # Ensure pip3 is available
     if ! command -v pip3 &> /dev/null; then
         echo "pip3 not found. Installing it first..."
         /usr/bin/python3 -m ensurepip --upgrade
     fi
+    # Install supervisor using pip3
     pip3 install --user supervisor
-    # Add local bin to PATH
-    export PATH=$HOME/.local/bin:$PATH
+    # Ensure the local bin directory is in PATH
+    export PATH="$HOME/.local/bin:$PATH"
+    # Add the local bin directory to shell config for future use
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+        source ~/.bash_profile 2>/dev/null || source ~/.zshrc
+    fi
 else
     echo "supervisord is already installed."
 fi
@@ -47,47 +54,61 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
     echo "Setting up AgentDVR as a service using supervisor"
 
     # Define variables
-    SUPERVISOR_DIR="$HOME/.local/etc/supervisor"
-    AGENT_CONF="$SUPERVISOR_DIR/agentdvr.ini"
+    SUPERVISOR_DIR="$HOME/.config/supervisor"
+    SUPERVISOR_CONF="$SUPERVISOR_DIR/supervisord.conf"
+    SUPERVISOR_PROGRAM_CONF="$SUPERVISOR_DIR/agentdvr.ini"
     AGENT_DIR="$ABSOLUTE_PATH/AgentDVR"
     AGENT_COMMAND="$AGENT_DIR/Agent"
 
-    # Get the current user
-    CURRENT_USER=$(whoami)
-
-    # Create supervisor directory if it doesn't exist
+    # Create supervisor config directory
     mkdir -p $SUPERVISOR_DIR
 
-    # Create agentdvr.ini if it doesn't exist
-    if [ ! -f $AGENT_CONF ]; then
-        cat <<EOL > $AGENT_CONF
+    # Create supervisord.conf if not exists
+    if [ ! -f $SUPERVISOR_CONF ]; then
+        cat <<EOL > $SUPERVISOR_CONF
+[unix_http_server]
+file=$HOME/.config/supervisor/supervisor.sock   ; path to the socket file
+
+[supervisord]
+logfile=$HOME/.config/supervisor/supervisord.log ; main log file
+pidfile=$HOME/.config/supervisor/supervisord.pid ; pid file
+childlogdir=$HOME/.config/supervisor/           ; child log directory
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix://$HOME/.config/supervisor/supervisor.sock
+
+[include]
+files = $HOME/.config/supervisor/*.ini
+EOL
+        echo "Created supervisord configuration."
+    fi
+
+    # Create agentdvr.ini for the service
+    cat <<EOL > $SUPERVISOR_PROGRAM_CONF
 [program:agentdvr]
 command=$AGENT_COMMAND
 directory=$AGENT_DIR
-user=$CURRENT_USER
 autostart=true
 autorestart=true
-stderr_logfile=$HOME/.local/var/log/agentdvr.err.log
-stdout_logfile=$HOME/.local/var/log/agentdvr.out.log
+user=$(whoami)
+stderr_logfile=$HOME/.config/supervisor/agentdvr.err.log
+stdout_logfile=$HOME/.config/supervisor/agentdvr.out.log
 EOL
-        echo "Created AgentDVR configuration in supervisor."
-    else
-        echo "AgentDVR configuration already exists in supervisor."
-    fi
+    echo "Created AgentDVR configuration for supervisor."
 
-    # Start supervisord if not running
-    if ! pgrep -x "supervisord" > /dev/null; then
-        echo "Starting supervisord..."
-        supervisord -c $HOME/.local/etc/supervisord.conf
-    fi
+    # Start supervisord
+    echo "Starting supervisord..."
+    supervisord -c $SUPERVISOR_CONF
 
     # Reload supervisor configuration
-    supervisorctl -c $HOME/.local/etc/supervisord.conf reread
-    supervisorctl -c $HOME/.local/etc/supervisord.conf update
+    supervisorctl -c $SUPERVISOR_CONF reread
+    supervisorctl -c $SUPERVISOR_CONF update
 
     echo "Started AgentDVR service under supervisor"
     echo "Go to http://localhost:8090 to configure"
-    exit
 else
     echo "Starting AgentDVR"
     cd $ABSOLUTE_PATH/AgentDVR
