@@ -54,6 +54,7 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
 [program:agentdvr]
 command=$AGENT_COMMAND
 directory=$AGENT_DIR
+user=$CURRENT_USER
 autostart=true
 autorestart=true
 stderr_logfile=/usr/local/var/log/agentdvr.err.log
