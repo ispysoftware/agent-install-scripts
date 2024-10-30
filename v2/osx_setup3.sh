@@ -1,115 +1,63 @@
 #!/bin/bash
 
-# Debug output
-set -x
+# To execute: save and `chmod +x ./osx_setup.sh` then `./osx_setup.sh`
+shopt -s expand_aliases
+
+arch=`uname -m`
 
 ABSOLUTE_PATH="${PWD}"
-echo "Current directory: $ABSOLUTE_PATH"
+echo "$ABSOLUTE_PATH"
 
 mkdir -p AgentDVR
-cd AgentDVR
+cd AgentDVR	
 
-# Define where supervisord is expected
-SUPERVISORD_BIN="$HOME/Library/Python/3.9/bin/supervisord"
-SUPERVISORCTL_BIN="$HOME/Library/Python/3.9/bin/supervisorctl"
-
-# Install supervisord if not found
-if [ ! -f "$SUPERVISORD_BIN" ]; then
-    echo "supervisord not found. Installing it using pip..."
-    if ! command -v pip3 &> /dev/null; then
-        echo "pip3 not found. Installing it..."
-        /usr/bin/python3 -m ensurepip --upgrade
-    fi
-    pip3 install --user supervisor
-fi
-
-# Verify installation of supervisord
-if [ ! -f "$SUPERVISORD_BIN" ]; then
-    echo "Failed to install supervisord."
-    exit 1
-fi
-
-# Debug output: supervisord path
-echo "Using supervisord at: $SUPERVISORD_BIN"
-
-# Check if AgentDVR is already present
-FILE="$ABSOLUTE_PATH/AgentDVR/Agent"
+FILE=$ABSOLUTE_PATH/AgentDVR/Agent
 if [ -f $FILE ]; then
-    echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
+	echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
     chmod +x "$FILE"
 else
-    if [[ "$(uname -m)" == "arm64" ]]; then
-        URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0" | tr -d '"')
-    else
-        URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0" | tr -d '"')
-    fi
+	if [[ ("$(arch)" == "arm64") ]]; then
+	 	URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
+	else
+		URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
+	fi
 
-    echo "Downloading $URL"
-    curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
-    chmod +x Agent
+	echo "Downloading $URL"
+	curl --show-error --location $URL | tar -xf - -C $ABSOLUTE_PATH/AgentDVR
+	chmod +x Agent
+	find . -name "*.sh" -exec chmod +x {} \;
 fi
 
-echo -n "Setup AgentDVR as system service using supervisor (y/n)? "
+
+
+echo -n "Setup AgentDVR as system service (y/n)? "
 read answer
-if [[ "$answer" =~ ^[Yy]$ ]]; then
-    echo "Setting up AgentDVR as a service using supervisor"
+if [ "$answer" != "${answer#[Yy]}" ]; then 
+	echo Yes
+	read -p "Enter your username [$(whoami)]: " name
+	name=${name:-$(whoami)}
+	cd $ABSOLUTE_PATH/
+	curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/com.ispy.agent.dvr.plist" -o "com.ispy.agent.dvr.plist"
+	sed -i '' "s|AGENT_LOCATION|${ABSOLUTE_PATH}/AgentDVR|" com.ispy.agent.dvr.plist
+	sed -i '' "s|YOUR_USERNAME|${name}|" com.ispy.agent.dvr.plist
+	echo "Creating service config"
+	sudo chmod a+x ./com.ispy.agent.dvr.plist
+ 
+	if [ -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist ]; then
+ 		sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+		sudo rm -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+	fi
+ 
+	sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
+	rm -f com.ispy.agent.dvr.plist
+	sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+	sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
 
-    SUPERVISOR_DIR="$HOME/.config/supervisor"
-    SUPERVISOR_CONF="$SUPERVISOR_DIR/supervisord.conf"
-    SUPERVISOR_PROGRAM_CONF="$SUPERVISOR_DIR/agentdvr.ini"
-
-    mkdir -p $SUPERVISOR_DIR
-
-    # Create supervisord.conf
-    cat > "$SUPERVISOR_CONF" <<EOL
-[unix_http_server]
-file=$HOME/.config/supervisor/supervisor.sock
-
-[supervisord]
-logfile=$HOME/.config/supervisor/supervisord.log
-pidfile=$HOME/.config/supervisor/supervisord.pid
-childlogdir=$HOME/.config/supervisor/
-
-[rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-
-[supervisorctl]
-serverurl=unix://$HOME/.config/supervisor/supervisor.sock
-
-[include]
-files = $HOME/.config/supervisor/*.ini
-EOL
-
-    echo "Created supervisord configuration at $SUPERVISOR_CONF"
-
-    # Create agentdvr.ini
-    cat > "$SUPERVISOR_PROGRAM_CONF" <<EOL
-[program:agentdvr]
-command=$ABSOLUTE_PATH/AgentDVR/Agent
-directory=$ABSOLUTE_PATH/AgentDVR
-autostart=true
-autorestart=true
-user=$(whoami)
-stderr_logfile=$HOME/.config/supervisor/agentdvr.err.log
-stdout_logfile=$HOME/.config/supervisor/agentdvr.out.log
-EOL
-
-    echo "Created AgentDVR configuration for supervisor at $SUPERVISOR_PROGRAM_CONF"
-
-    echo "Starting supervisord..."
-    $SUPERVISORD_BIN -c $SUPERVISOR_CONF
-
-    echo "Reloading supervisor configuration..."
-    $SUPERVISORCTL_BIN -c $SUPERVISOR_CONF reread
-    $SUPERVISORCTL_BIN -c $SUPERVISOR_CONF update
-
-    echo "AgentDVR service started under supervisor"
-    echo "Go to http://localhost:8090 to configure"
+	echo "Started service"
+	echo "go to http://localhost:8090 to configure"
+	exit
 else
-    echo "Starting AgentDVR directly..."
-    cd $ABSOLUTE_PATH/AgentDVR
-    ./Agent
+	echo "Starting AgentDVR"
+	cd $ABSOLUTE_PATH/AgentDVR
+	./Agent
 fi
-
-# Debug output
-set +x
