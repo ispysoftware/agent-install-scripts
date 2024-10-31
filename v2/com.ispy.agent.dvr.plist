@@ -3,6 +3,11 @@
 <dict>
   <key>Label</key>
   <string>com.ispy.agent.dvr</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/usr/sbin:/sbin</string>
+  </dict>
   <key>ProgramArguments</key>
   <array>
     <string>AGENT_LOCATION/Agent</string>
