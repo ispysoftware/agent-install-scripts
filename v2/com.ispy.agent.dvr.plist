@@ -16,6 +16,10 @@
   <true/>
   <key>KeepAlive</key>
   <true/>
+  <key>AssociatedBundleIdentifiers</key>
+  <array>
+    <string>com.ispyconnect.agent</string>
+  </array>
   <key>StandardOutPath</key>
   <string>AGENT_LOCATION/logfile.log</string>
   <key>StandardErrorPath</key>
