@@ -70,12 +70,12 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
 
     # Update plist paths and set to run as root
     sudo sed -i '' "s|AGENT_LOCATION|$ABSOLUTE_PATH|" com.ispy.agent.dvr.plist
-    sudo sed -i '' "s|YOUR_USERNAME|root|" com.ispy.agent.dvr.plist
+    sudo sed -i '' "s|YOUR_USERNAME|${name}|" com.ispy.agent.dvr.plist
 
     echo "Creating service config"
 
     # Ensure correct permissions on the plist file
-    sudo chmod 644 com.ispy.agent.dvr.plist
+    sudo chmod a+x ./com.ispy.agent.dvr.plist
 
     # Unload any existing daemon
     if [ -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist ]; then
