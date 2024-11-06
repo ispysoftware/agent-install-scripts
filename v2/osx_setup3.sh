@@ -48,22 +48,16 @@ echo "Installing to $ABSOLUTE_PATH"
 sudo mkdir -p "$ABSOLUTE_PATH"
 cd "$ABSOLUTE_PATH"	
 
-FILE="$ABSOLUTE_PATH/Agent"
-if [ -f "$FILE" ]; then
-    echo "Found Agent in $ABSOLUTE_PATH - delete it to reinstall"
-    sudo chmod +x "$FILE"
+if [[ "$arch" == "arm64" ]]; then
+    URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
 else
-    if [[ "$arch" == "arm64" ]]; then
-        URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
-    else
-        URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
-    fi
-    URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
-    echo "Downloading $URL"
-    curl --show-error --location $URL | sudo tar -xf - -C "$ABSOLUTE_PATH"
-    sudo chmod +x Agent
-    sudo find . -name "*.sh" -exec chmod +x {} \;
+    URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
 fi
+URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
+echo "Downloading $URL"
+curl --show-error --location $URL | sudo tar -xf - -C "$ABSOLUTE_PATH"
+sudo chmod +x Agent
+sudo find . -name "*.sh" -exec chmod +x {} \;
 
 echo -n "Setup AgentDVR as system service (y/n)? "
 read answer
