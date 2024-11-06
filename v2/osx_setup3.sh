@@ -58,7 +58,7 @@ else
     else
         URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
     fi
-
+    URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
     echo "Downloading $URL"
     curl --show-error --location $URL | sudo tar -xf - -C "$ABSOLUTE_PATH"
     sudo chmod +x Agent
