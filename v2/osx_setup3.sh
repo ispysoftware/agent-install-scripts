@@ -63,7 +63,9 @@ echo -n "Setup AgentDVR as system service (y/n)? "
 read answer
 if [ "$answer" != "${answer#[Yy]}" ]; then 
     echo "Setting up AgentDVR as a system service"
-    
+    read -p "Enter your username [$(whoami)]: " name
+    name=${name:-$(whoami)}
+
     # Download the plist file to a temporary location
     cd /tmp
     curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/com.ispy.agent.dvr.plist" -o "com.ispy.agent.dvr.plist"
