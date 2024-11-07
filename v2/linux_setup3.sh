@@ -107,6 +107,7 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
   
 	sudo chown $name -R $ABSOLUTE_PATH/AgentDVR
 	sudo cp AgentDVR.service /etc/systemd/system/AgentDVR.service
+        sudo rm -f AgentDVR.service
 
 	sudo systemctl daemon-reload
 	sudo systemctl enable AgentDVR.service
