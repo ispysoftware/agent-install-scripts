@@ -8,6 +8,8 @@ arch=`uname -m`
 
 ABSOLUTE_PATH="${PWD}"
 echo "$ABSOLUTE_PATH"
+SYSTEM_LAUNCHDAEMONS_DIR="/Library/LaunchDaemons"
+USER_LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 
 mkdir -p AgentDVR
 cd AgentDVR
@@ -58,20 +60,16 @@ else
   find . -name "*.sh" -exec chmod +x {} \;
 fi
 
-echo -n "Setup AgentDVR as system service (y/n)? "
+echo -n "Setup AgentDVR as launch agent (y/n)? "
 read answer
 if [ "$answer" != "${answer#[Yy]}" ]; then 
-    echo "Setting up AgentDVR as a system service"
-    read -p "Enter your username [$(whoami)]: " name
-    name=${name:-$(whoami)}
-
+    echo "Setting up AgentDVR as a launch agent"
     # Download the plist file to a temporary location
     cd /tmp
-    curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/com.ispy.agent.dvr.plist" -o "com.ispy.agent.dvr.plist"
+    curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/com.ispy.agent.dvr.launchagent.plist" -o "com.ispy.agent.dvr.plist"
 
     # Update plist paths and set to run as root
     sudo sed -i '' "s|AGENT_LOCATION|${ABSOLUTE_PATH}/AgentDVR|" com.ispy.agent.dvr.plist
-    sudo sed -i '' "s|YOUR_USERNAME|${name}|" com.ispy.agent.dvr.plist
 
     echo "Creating service config"
 
@@ -79,20 +77,27 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
     sudo chmod a+x ./com.ispy.agent.dvr.plist
 
     # Unload any existing daemon
-    if [ -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist ]; then
-        sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-        sudo rm -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+    if [ -f "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME" ]; then
+            sudo launchctl unload -w "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME"
+            sudo rm -f "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME"
     fi
-
-    # Move plist to LaunchDaemons and set permissions
-    sudo cp com.ispy.agent.dvr.plist /Library/LaunchDaemons/
-    rm -f com.ispy.agent.dvr.plist
-    sudo chown root:wheel /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-
-    # Load the new daemon
-    sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-
-    echo "Service started"
+        
+    # Unload any existing agent
+    if [ -f "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME" ]; then
+        launchctl unload -w "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+        rm -f "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+    fi
+        
+    # Move plist to LaunchAgents and set permissions
+    cp "$PLIST_NAME" "$USER_LAUNCHAGENTS_DIR/"
+    rm -f "$PLIST_NAME"
+    chmod 644 "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+    chown "$(id -u):$(id -g)" "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+        
+    # Load the new agent
+    launchctl load -w "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+        
+    echo "Launch Agent started successfully."
     echo "Visit http://localhost:8090 to configure"
     exit
 else
