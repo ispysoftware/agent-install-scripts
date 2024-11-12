@@ -7,7 +7,7 @@ shopt -s expand_aliases
 arch=`uname -m`
 
 ABSOLUTE_PATH="${PWD}"
-echo "$ABSOLUTE_PATH"
+PLIST_NAME="com.ispy.agent.dvr.plist"
 SYSTEM_LAUNCHDAEMONS_DIR="/Library/LaunchDaemons"
 USER_LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 
@@ -66,7 +66,7 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
     echo "Setting up AgentDVR as a launch agent"
     # Download the plist file to a temporary location
     cd /tmp
-    curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/launchagent.plist" -o "com.ispy.agent.dvr.plist"
+    curl --show-error --location "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/launchagent.plist" -o "$PLIST_NAME"
 
     # Update plist paths and set to run as root
     sudo sed -i '' "s|AGENT_LOCATION|${ABSOLUTE_PATH}/AgentDVR|" com.ispy.agent.dvr.plist
@@ -103,5 +103,5 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
 else
     echo "Starting AgentDVR"
     cd "$ABSOLUTE_PATH"
-    sudo ./Agent
+    ./Agent
 fi
