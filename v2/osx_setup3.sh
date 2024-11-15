@@ -43,22 +43,44 @@ else
 fi
 
 FILE=$ABSOLUTE_PATH/AgentDVR/Agent
-if [ -f $FILE ]; then
-    echo "Found Agent in $ABSOLUTE_PATH/AgentDVR - delete it to reinstall"
-else
-    echo "Installing to $ABSOLUTE_PATH/AgentDVR"
-
-    if [[ "$arch" == "arm64" ]]; then
-        URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0") | tr -d '"')
-    else
-        URL=$((curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0") | tr -d '"')
+if [ -f "$FILE" ]; then
+    echo "Found Agent in $ABSOLUTE_PATH/AgentDVR. Would you like to reinstall? (y/n)"
+    read -r REINSTALL
+    if [[ "$REINSTALL" != "y" ]]; then
+        echo "Aborting installation."
+        exit 1
     fi
-    URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
-    echo "Downloading $URL"
-    curl --show-error --location $URL | tar -xf - -C "$ABSOLUTE_PATH/AgentDVR"
-    chmod +x Agent
-    find . -name "*.sh" -exec chmod +x {} \;
 fi
+
+echo "Stopping services"
+
+# Unload any existing daemon
+if [ -f "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME" ]; then
+    sudo launchctl unload -w "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME"
+    sudo rm -f "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME"
+fi
+
+# Unload any existing agent
+if [ -f "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME" ]; then
+    launchctl unload -w "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+    rm -f "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
+fi
+
+
+echo "Installing to $ABSOLUTE_PATH/AgentDVR"
+
+if [[ "$arch" == "arm64" ]]; then
+    URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0" | tr -d '"')
+else
+    URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0" | tr -d '"')
+fi
+
+URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
+echo "Downloading $URL"
+curl --show-error --location "$URL" | tar -xf - -C "$ABSOLUTE_PATH/AgentDVR"
+
+chmod +x "$ABSOLUTE_PATH/AgentDVR/Agent"
+find "$ABSOLUTE_PATH/AgentDVR" -name "*.sh" -exec chmod +x {} \;
 
 echo -n "Setup AgentDVR as launch agent (y/n)? "
 read answer
@@ -75,18 +97,6 @@ if [ "$answer" != "${answer#[Yy]}" ]; then
 
     # Ensure correct permissions on the plist file
     sudo chmod a+x ./com.ispy.agent.dvr.plist
-
-    # Unload any existing daemon
-    if [ -f "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME" ]; then
-        sudo launchctl unload -w "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME"
-        sudo rm -f "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME"
-    fi
-
-    # Unload any existing agent
-    if [ -f "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME" ]; then
-        launchctl unload -w "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
-        rm -f "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME"
-    fi
 
     # Move plist to LaunchAgents and set permissions
     cp "$PLIST_NAME" "$USER_LAUNCHAGENTS_DIR/"
