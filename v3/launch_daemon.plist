@@ -1,0 +1,26 @@
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ispy.agent.dvr</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>AGENT_LOCATION/Agent</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>AGENT_LOCATION/logfile.log</string>
+  <key>StandardErrorPath</key>
+  <string>AGENT_LOCATION/logerr.log</string>
+  <key>UserName</key>
+  <string>YOUR_USERNAME</string>
+</dict>
+</plist>
