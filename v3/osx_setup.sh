@@ -31,8 +31,7 @@ else
 fi
 
 formula_installed() {
-    [ "$($brewcmd list --formula --versions | grep -q "^$1 $2$")" ]
-    return $?
+    $brewcmd list --formula --versions | grep -q "^$1 $2$"
 }
 
 if ! formula_installed "ffmpeg" "7"; then
@@ -75,6 +74,8 @@ if [[ "$arch" == "arm64" ]]; then
 else
     URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0" | tr -d '"')
 fi
+
+URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
 
 echo "Downloading $URL"
 curl --show-error --location "$URL" | tar -xf - -C "$ABSOLUTE_PATH/AgentDVR"
