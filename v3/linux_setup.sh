@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install script for AgentDVR on Linux
-# To execute: save and `chmod +x ./linux_setup2.sh` then `./linux_setup2.sh`
+# To execute: save and `chmod +x ./linux_setup2.sh` then `./linux_setup.sh`
 
 . /etc/*-release
 arch=`uname -m`
@@ -13,14 +13,12 @@ if [[ ("$OSTYPE" == "darwin"*) ]]; then
 fi
 
 machine_has() {
-    eval $invocation
-
     command -v "$1" > /dev/null 2>&1
     return $?
 }
 
 # Stop it if it's running
-sudo systemctl stop AgentDVR.service
+sudo systemctl stop AgentDVR.service || true
 
 # Set installation path to /opt/AgentDVR
 INSTALL_PATH="/opt/AgentDVR"
@@ -32,7 +30,7 @@ if machine_has "apt-get"; then
 		&& sudo apt-get install --no-install-recommends -y unzip apt-transport-https alsa-utils libxext-dev fontconfig libva-drm2
 else
 	sudo yum update \
-		&& sudo yum install -y bzip2 vlc libva fontconfig
+		&& sudo yum install -y unzip vlc libva fontconfig
 fi
 
 # Check for existing installation
@@ -40,7 +38,7 @@ FILE="$INSTALL_PATH/Agent"
 if [ -f "$FILE" ]; then
     echo "Found Agent in $INSTALL_PATH. Would you like to reinstall? (y/n)"
     read -r REINSTALL
-    if [[ "$REINSTALL" != "y" ]]; then
+    if [[ "${REINSTALL,,}" != "y" ]]; then
         echo "Aborting installation."
         exit 1
     fi
