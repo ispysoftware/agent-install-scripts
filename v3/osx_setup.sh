@@ -31,7 +31,11 @@ else
 fi
 
 formula_installed() {
-    $brewcmd list --formula --versions | grep -q "^$1 $2$"
+    if $brewcmd list --formula --versions | grep -q "^$1 $2"; then
+        return 0  # Formula with version is installed
+    else
+        return 1  # Formula with version is not installed
+    fi
 }
 
 if ! formula_installed "ffmpeg" "7"; then
