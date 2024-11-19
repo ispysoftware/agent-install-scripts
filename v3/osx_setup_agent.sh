@@ -70,12 +70,11 @@ fi
 echo "Installing to $ABSOLUTE_PATH/AgentDVR"
 
 if [[ "$arch" == "arm64" ]]; then
-    URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0" | tr -d '"')
+    URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0&useBeta=${USE_BETA:-0}" | tr -d '"')
 else
-    URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0" | tr -d '"')
+    URL=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0&useBeta=${USE_BETA:-0}" | tr -d '"')
 fi
 
-URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_OSXARM64_5_8_1_0.zip"
 echo "Downloading $URL"
 curl --show-error --location "$URL" | tar -xf - -C "$ABSOLUTE_PATH/AgentDVR"
 

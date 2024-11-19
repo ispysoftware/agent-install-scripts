@@ -45,19 +45,18 @@ if [ -f "$FILE" ]; then
 fi
 
 echo "Finding installer for $(arch)"
-purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0"
+purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0&useBeta=${USE_BETA:-0}"
 	
 case $(arch) in
 	'aarch64' | 'arm64')
-		purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0"
+		purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0&useBeta=${USE_BETA:-0}"
 	;;
 	'arm' | 'armv6l' | 'armv7l')
-      		purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0"
+      		purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0&useBeta=${USE_BETA:-0}"
 	;;
 esac
 
 URL=$(curl -s --fail "$purl" | tr -d '"')
-URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
 echo "Downloading $URL"
 curl --show-error --location "$URL" -o "AgentDVR.zip"
