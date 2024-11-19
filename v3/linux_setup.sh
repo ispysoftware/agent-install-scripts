@@ -117,7 +117,7 @@ fi
 # Check for existing AgentDVR installation
 AGENT_FILE="$INSTALL_PATH/Agent"
 if [ -f "$AGENT_FILE" ]; then
-    read -rp "Found Agent in $INSTALL_PATH. Would you like to reinstall? (y/n): " REINSTALL
+    read -rp "Found Agent in $INSTALL_PATH. Would you like to reinstall? (y/n): " REINSTALL </dev/tty
     REINSTALL=${REINSTALL,,}  # Convert to lowercase
     if [[ "$REINSTALL" != "y" ]]; then
         info "Aborting installation as per user request."
@@ -192,7 +192,7 @@ info "User '$name' added to 'video' group successfully."
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
 
 # Option to set up as a system service
-read -rp "Setup AgentDVR as a system service (y/n)? " answer
+read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty
 answer=${answer,,}  # Convert to lowercase
 
 if [[ "$answer" == "y" || "$answer" == "yes" ]]; then 
