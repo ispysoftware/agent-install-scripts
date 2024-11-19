@@ -11,15 +11,11 @@ INSTALL_PATH="/opt/AgentDVR"
 touch "$LOGFILE" || { echo "Cannot write to $LOGFILE. Please check permissions."; exit 1; }
 chmod 644 "$LOGFILE"
 
-set -x  # Enable debug mode
-exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
-set +x  # Disable debug mode
-
 # Try to redirect output to both terminal and logfile; fall back to file-only if it fails
-#if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
-#    echo "Warning: Process substitution failed. Logging only to $LOGFILE."
-#    exec > "$LOGFILE" 2>&1
-#fi
+if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
+    echo "Warning: Process substitution failed. Logging only to $LOGFILE."
+    exec > "$LOGFILE" 2>&1
+fi
 
 # Function to print info messages with timestamp
 info() {
@@ -143,6 +139,8 @@ case "$arch" in
         purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0&useBeta=${USE_BETA:-0}"
         ;;
 esac
+
+purl="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 info "Download API URL: $purl"
 
 # Fetch the actual download URL
