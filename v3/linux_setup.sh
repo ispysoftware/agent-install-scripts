@@ -11,8 +11,11 @@ INSTALL_PATH="/opt/AgentDVR"
 touch "$LOGFILE" || { echo "Cannot write to $LOGFILE. Please check permissions."; exit 1; }
 chmod 644 "$LOGFILE"
 
-# Redirect all stdout and stderr to the log file and to the terminal
-exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
+# Try to redirect output to both terminal and logfile; fall back to file-only if it fails
+if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
+    echo "Warning: Process substitution failed. Logging only to $LOGFILE."
+    exec > "$LOGFILE" 2>&1
+fi
 
 # Function to print info messages with timestamp
 info() {
