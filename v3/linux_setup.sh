@@ -147,10 +147,10 @@ DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error
 info "Overriding URL for testing"
 DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
-info "Actual download URL obtained: $URL"
+info "Actual download URL obtained: $DOWNLOAD_URL"
 
 # Download AgentDVR with retry logic
-download_agentdvr "$URL" "AgentDVR.zip"
+download_agentdvr "$DOWNLOAD_URL" "AgentDVR.zip"
 
 # Extract the downloaded archive
 info "Extracting AgentDVR.zip..."
