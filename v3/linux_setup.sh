@@ -11,6 +11,16 @@ INSTALL_PATH="/opt/AgentDVR"
 touch "$LOGFILE" || { echo "Cannot write to $LOGFILE. Please check permissions."; exit 1; }
 chmod 644 "$LOGFILE"
 
+# Redirect all stdout and stderr to the log file only
+exec > "$LOGFILE" 2>&1
+
+# Start a background `tail -f` process to show the log file content in real-time
+tail -f "$LOGFILE" &
+TAIL_PID=$!
+
+# Ensure the tail process is killed when the script exits
+trap 'kill $TAIL_PID' EXIT
+
 # Try to redirect output to both terminal and logfile; fall back to file-only if it fails
 if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
     echo "Warning: Process substitution failed. Logging only to $LOGFILE."
