@@ -129,23 +129,23 @@ fi
 
 # Determine the download URL based on architecture
 info "Determining download URL for architecture: $arch"
-purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0&useBeta=${USE_BETA:-0}"
+DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0&useBeta=${USE_BETA:-0}"
 
 case "$arch" in
     'aarch64'|'arm64')
-        purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0&useBeta=${USE_BETA:-0}"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0&useBeta=${USE_BETA:-0}"
         ;;
     'arm'|'armv6l'|'armv7l')
-        purl="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0&useBeta=${USE_BETA:-0}"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0&useBeta=${USE_BETA:-0}"
         ;;
 esac
 
 # Fetch the actual download URL
-URL=$(curl -s --fail "$purl" | tr -d '"') || critical_error "Failed to fetch download URL from $purl."
+DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
 
 #override for testing
 info "Overriding URL for testing"
-URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
+DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
 info "Actual download URL obtained: $URL"
 
@@ -248,7 +248,7 @@ else
     cd "$INSTALL_PATH" || critical_error "Failed to navigate to $INSTALL_PATH."
     ./Agent &
     sleep 2  # Give it a moment to start
-    if pgrep -f "AgentDVR" > /dev/null; then
+    if pgrep -f "Agent" > /dev/null; then
         info "AgentDVR started successfully."
         echo "AgentDVR is running. Visit http://localhost:8090 to configure."
     else

@@ -61,7 +61,7 @@ run_agent() {
     info "Running Agent manually..."
     "$INSTALL_PATH/Agent" &
     sleep 2  # Give it a moment to start
-    if pgrep -f "AgentDVR" > /dev/null; then
+    if pgrep -f "Agent" > /dev/null; then
         info "Agent is running manually."
     else
         error_log "Failed to run Agent manually."
@@ -140,6 +140,10 @@ install_agentdvr() {
 
     # Fetch the actual download URL
     DOWNLOAD_URL=$(curl -s --fail -L "$DOWNLOAD_URL_API" | tr -d '"') || handle_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
+
+    #override for testing
+    info "Overriding URL for testing"
+    DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
     info "Downloading AgentDVR from $DOWNLOAD_URL..."
     for attempt in {1..3}; do
