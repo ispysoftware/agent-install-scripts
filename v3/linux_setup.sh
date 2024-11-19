@@ -140,11 +140,13 @@ case "$arch" in
         ;;
 esac
 
-purl="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
-info "Download API URL: $purl"
-
 # Fetch the actual download URL
 URL=$(curl -s --fail "$purl" | tr -d '"') || critical_error "Failed to fetch download URL from $purl."
+
+#override for testing
+info "Overriding URL for testing"
+URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
+
 info "Actual download URL obtained: $URL"
 
 # Download AgentDVR with retry logic
