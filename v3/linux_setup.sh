@@ -49,7 +49,7 @@ download_agentdvr() {
     info "Starting download of AgentDVR..."
     while [ $attempt -le $max_attempts ]; do
         info "Attempt $attempt of $max_attempts: Downloading from $url"
-        if curl --show-error --location "$url" -o "$output" >> "$LOGFILE" 2>&1; then
+        if curl -# --location "$url" -o "$output" >> "$LOGFILE" 2>> "$LOGFILE"; then
             info "AgentDVR downloaded successfully on attempt $attempt."
             return 0
         else
@@ -147,16 +147,16 @@ DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error
 info "Overriding URL for testing"
 DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
-info "Actual download URL obtained: $DOWNLOAD_URL"
+info "Using download URL: $DOWNLOAD_URL"
 
 # Download AgentDVR with retry logic
-download_agentdvr "$DOWNLOAD_URL" "AgentDVR.zip"
+download_agentdvr "$DOWNLOAD_URL" "$INSTALL_PATH/AgentDVR.zip"
 
 # Extract the downloaded archive
 info "Extracting AgentDVR.zip..."
-if unzip AgentDVR.zip >> "$LOGFILE" 2>&1; then
+if unzip -o "AgentDVR.zip" -d "$INSTALL_PATH" >> "$LOGFILE" 2>&1; then
     info "AgentDVR extracted successfully."
-    rm AgentDVR.zip
+    rm "AgentDVR.zip"
     info "Removed AgentDVR.zip after extraction."
 else
     critical_error "Failed to extract AgentDVR.zip."

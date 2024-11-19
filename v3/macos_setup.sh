@@ -124,6 +124,34 @@ unload_services() {
     fi
 }
 
+# Function to handle critical errors
+critical_error() {
+    error_log "$1"
+    exit 1
+}
+
+# Function to download AgentDVR with retry logic
+download_agentdvr() {
+    local url="$1"
+    local output="$2"
+    local max_attempts=3
+    local attempt=1
+
+    info "Starting download of AgentDVR..."
+    while [ $attempt -le $max_attempts ]; do
+        info "Attempt $attempt of $max_attempts: Downloading from $url"
+        if curl -# --location "$url" -o "$output" >> "$LOGFILE" 2>> "$LOGFILE"; then
+            info "AgentDVR downloaded successfully on attempt $attempt."
+            return 0
+        else
+            error_log "Download attempt $attempt failed."
+            attempt=$((attempt + 1))
+            sleep 2  # Wait before retrying
+        fi
+    done
+    critical_error "Failed to download AgentDVR after $max_attempts attempts."
+}
+
 # Function to download and install AgentDVR
 install_agentdvr() {
     info "Installing AgentDVR to $INSTALL_PATH..."
@@ -145,17 +173,20 @@ install_agentdvr() {
     info "Overriding URL for testing"
     DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
-    info "Downloading AgentDVR from $DOWNLOAD_URL..."
-    for attempt in {1..3}; do
-        if curl --show-error --location "$DOWNLOAD_URL" | tar -xzf - -C "$INSTALL_PATH"; then
-            info "AgentDVR downloaded and extracted successfully."
-            break
-        else
-            error_log "Download attempt $attempt failed."
-            info "Retrying download... (Attempt $((attempt + 1)))"
-            sleep 2
-        fi
-    done
+    info "Using download URL: $DOWNLOAD_URL"
+
+    # Download AgentDVR with retry logic
+    download_agentdvr "$DOWNLOAD_URL" "$INSTALL_PATH/AgentDVR.zip"
+
+    # Extract the downloaded archive
+    info "Extracting AgentDVR.zip..."
+    if unzip -o "AgentDVR.zip" >> "$LOGFILE" 2>&1; then
+        info "AgentDVR extracted successfully."
+        rm "AgentDVR.zip"
+        info "Removed AgentDVR.zip after extraction."
+    else
+        critical_error "Failed to extract AgentDVR.zip."
+    fi
 
     # Check if Agent was successfully extracted
     if [ ! -f "$INSTALL_PATH/Agent" ]; then
