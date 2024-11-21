@@ -131,14 +131,14 @@ fi
 
 # Determine the download URL based on architecture
 info "Determining download URL for architecture: $arch"
-DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0&useBeta=${USE_BETA:-0}"
+DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
 
 case "$arch" in
     'aarch64'|'arm64')
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0&useBeta=${USE_BETA:-0}"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
         ;;
     'arm'|'armv6l'|'armv7l')
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0&useBeta=${USE_BETA:-0}"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
         ;;
 esac
 

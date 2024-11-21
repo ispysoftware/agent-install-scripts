@@ -163,9 +163,9 @@ install_agentdvr() {
 
     # Determine the download URL based on architecture
     if [[ "$arch" == "arm64" ]]; then
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0&useBeta=${USE_BETA:-0}"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
     else
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0&useBeta=${USE_BETA:-0}"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
     fi
 
     # Fetch the actual download URL
