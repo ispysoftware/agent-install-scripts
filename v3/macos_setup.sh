@@ -163,17 +163,13 @@ install_agentdvr() {
 
     # Determine the download URL based on architecture
     if [[ "$arch" == "arm64" ]]; then
-        DOWNLOAD_URL_API=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0&useBeta=${USE_BETA:-0}" | tr -d '"') || handle_error "Failed to fetch download API for ARM64."
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0&useBeta=${USE_BETA:-0}"
     else
-        DOWNLOAD_URL_API=$(curl -s -L "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0&useBeta=${USE_BETA:-0}" | tr -d '"') || handle_error "Failed to fetch download API for x64."
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0&useBeta=${USE_BETA:-0}"
     fi
 
     # Fetch the actual download URL
     DOWNLOAD_URL=$(curl -s --fail -L "$DOWNLOAD_URL_API" | tr -d '"') || handle_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
-
-    #override for testing
-    info "Overriding URL for testing"
-    DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
 
     info "Using download URL: $DOWNLOAD_URL"
 

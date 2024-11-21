@@ -145,10 +145,6 @@ esac
 # Fetch the actual download URL
 DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
 
-#override for testing
-info "Overriding URL for testing"
-DOWNLOAD_URL="https://ispyrtcdata.blob.core.windows.net/downloads/Agent_Linux64_5_8_1_0.zip"
-
 info "Using download URL: $DOWNLOAD_URL"
 
 # Download AgentDVR with retry logic
