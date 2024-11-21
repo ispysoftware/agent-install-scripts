@@ -142,7 +142,7 @@ download_agentdvr() {
         info "Attempt $attempt of $max_attempts: Downloading from $url"
         
         # Print progress bar to terminal, log output only for errors
-        if curl -# --location "$url" -o "$output" 2>> "$LOGFILE"; then
+        if curl --progress-bar --location "$url" -o "$output" 2> >(tee -a "$LOGFILE" >&2) > /dev/tty; then
             info "AgentDVR downloaded successfully on attempt $attempt."
             return 0
         else
