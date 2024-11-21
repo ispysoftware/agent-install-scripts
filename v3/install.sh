@@ -9,4 +9,4 @@ if [[ ("$OSTYPE" == "darwin"*) ]]; then
   exit
 fi
 
-curl -H 'Cache-Control: no-cache, no-store' -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/linux_setup.sh" | sudo bash
+curl -H 'Cache-Control: no-cache, no-store' -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/linux_setup.sh" | sudo USE_BETA=$USE_BETA bash
