@@ -140,7 +140,9 @@ download_agentdvr() {
     info "Starting download of AgentDVR..."
     while [ $attempt -le $max_attempts ]; do
         info "Attempt $attempt of $max_attempts: Downloading from $url"
-        if curl -# --location "$url" -o "$output" >> "$LOGFILE" 2>> "$LOGFILE"; then
+        
+        # Print progress bar to terminal, log output only for errors
+        if curl -# --location "$url" -o "$output" 2>> "$LOGFILE"; then
             info "AgentDVR downloaded successfully on attempt $attempt."
             return 0
         else
@@ -285,7 +287,7 @@ info "AgentDVR can be set up to start automatically in two ways:"
 info "1. As a launch daemon: Starts with the computer but does NOT have access to local devices (cameras/microphones)."
 info "2. As a launch agent: Starts when you log in and HAS access to local devices."
 info ""
-read -rp "Would you like to set up AgentDVR as a launch daemon (1) or a launch agent (2)? Enter 1 or 2 (or any other key to skip): " choice
+read -rp "Would you like to set up AgentDVR as a launch daemon (1) or a launch agent (2)? Enter 1 or 2 (or any other key to skip): " choice </dev/tty
 
 # Set installation path based on choice
 if [[ "$choice" == "1" ]]; then
@@ -301,7 +303,7 @@ fi
 
 AGENT_FILE="$INSTALL_PATH/Agent"
 if [ -f "$AGENT_FILE" ]; then
-    read -rp "Found Agent in $INSTALL_PATH. Would you like to reinstall? (y/n): " REINSTALL
+    read -rp "Found Agent in $INSTALL_PATH. Would you like to update? (y/n): " REINSTALL </dev/tty
     if [[ "$REINSTALL" != "y" && "$REINSTALL" != "Y" ]]; then
         info "Aborting installation as per user request."
         exit 0

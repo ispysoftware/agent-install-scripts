@@ -49,7 +49,9 @@ download_agentdvr() {
     info "Starting download of AgentDVR..."
     while [ $attempt -le $max_attempts ]; do
         info "Attempt $attempt of $max_attempts: Downloading from $url"
-        if curl -# --location "$url" -o "$output" >> "$LOGFILE" 2>> "$LOGFILE"; then
+        
+        # Print progress bar to terminal, log output only for errors
+        if curl -# --location "$url" -o "$output" 2>> "$LOGFILE"; then
             info "AgentDVR downloaded successfully on attempt $attempt."
             return 0
         else
@@ -117,7 +119,7 @@ fi
 # Check for existing AgentDVR installation
 AGENT_FILE="$INSTALL_PATH/Agent"
 if [ -f "$AGENT_FILE" ]; then
-    read -rp "Found Agent in $INSTALL_PATH. Would you like to reinstall? (y/n): " REINSTALL </dev/tty
+    read -rp "Found Agent in $INSTALL_PATH. Would you like to update? (y/n): " REINSTALL </dev/tty
     REINSTALL=${REINSTALL,,}  # Convert to lowercase
     if [[ "$REINSTALL" != "y" ]]; then
         info "Aborting installation as per user request."
