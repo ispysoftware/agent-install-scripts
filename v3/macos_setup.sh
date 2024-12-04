@@ -154,11 +154,38 @@ download_agentdvr() {
     critical_error "Failed to download AgentDVR after $max_attempts attempts."
 }
 
+check_install_path_ownership() {
+    if [ -d "$INSTALL_PATH" ]; then
+        OWNER=$(stat -f '%Su' "$INSTALL_PATH")
+        if [ "$OWNER" != "$(whoami)" ]; then
+            error_log "Installation directory $INSTALL_PATH is owned by $OWNER. Changing ownership to $(whoami)."
+            sudo chown -R "$(whoami)" "$INSTALL_PATH" || {
+                error_log "Failed to change ownership of $INSTALL_PATH."
+                exit 1
+            }
+            info "Ownership of $INSTALL_PATH changed to $(whoami)."
+        fi
+    else
+        # Directory does not exist, create it
+        mkdir -p "$INSTALL_PATH" || {
+            error_log "Failed to create installation directory $INSTALL_PATH."
+            exit 1
+        }
+        info "Created installation directory $INSTALL_PATH."
+    fi
+}
+
 # Function to download and install AgentDVR
 install_agentdvr() {
     info "Installing AgentDVR to $INSTALL_PATH..."
 
-    sudo mkdir -p "$INSTALL_PATH"
+    # Create the installation directory conditionally
+    if [ "$IS_DAEMON" = "true" ]; then
+        sudo mkdir -p "$INSTALL_PATH"
+    else
+        check_install_path_ownership
+    fi
+
     cd "$INSTALL_PATH" || { error_log "Failed to navigate to $INSTALL_PATH."; exit 1; }
 
     # Determine the download URL based on architecture
@@ -184,6 +211,10 @@ install_agentdvr() {
         info "Removed AgentDVR.zip after extraction."
     else
         critical_error "Failed to extract AgentDVR.zip."
+    fi
+
+    if [ "$IS_DAEMON" != "true" ]; then
+        chown -R "$(whoami)" "$INSTALL_PATH"
     fi
 
     # Check if Agent was successfully extracted
@@ -288,12 +319,15 @@ read -rp "Would you like to set up AgentDVR as a launch daemon (1) or a launch a
 # Set installation path based on choice
 if [[ "$choice" == "1" ]]; then
     INSTALL_PATH="/Applications/AgentDVR"
+    IS_DAEMON="true"
     info "Selected setup as Launch Daemon."
 elif [[ "$choice" == "2" ]]; then
     INSTALL_PATH="$HOME/Applications/AgentDVR"
+    IS_DAEMON="false"
     info "Selected setup as Launch Agent."
 else
     INSTALL_PATH="$HOME/Applications/AgentDVR"
+    IS_DAEMON="false"
     info "No automatic launch setup selected. AgentDVR will be installed to $INSTALL_PATH."
 fi
 
