@@ -67,8 +67,12 @@ download_agentdvr() {
 info "===== AgentDVR Linux Setup Script Started ====="
 
 # Source the release information
-if ! . /etc/*-release 2>/dev/null; then
-    critical_error "Failed to source /etc/*-release."
+release_file=$(ls /etc/*-release 2>/dev/null | head -n 1)
+
+if [ -n "$release_file" ]; then
+    . "$release_file"
+else
+    critical_error "Failed to source /etc/*-release. No suitable release file found."
 fi
 
 # Determine system architecture
