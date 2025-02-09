@@ -63,8 +63,32 @@ download_agentdvr() {
     critical_error "Failed to download AgentDVR after $max_attempts attempts."
 }
 
+find_port() {
+    # Define the list of ports to check
+    ports=(8090 8080 8100 8010 8123 8181 8222 8300 8400 8500 8600 8700 8800 8888 8899 8900 8989 9000 9080 9090 9100 9200 9300 9400 9500 9600 9700 9800 9900)
+
+
+    # Function to check if a port is in use
+    is_port_in_use() {
+        local port=$1
+        ss -tuln | grep -E "LISTEN" | grep -qE "[: ]$port([^0-9]|$)"
+    }
+
+    # Iterate over the list and find the first available port
+    for port in "${ports[@]}"; do
+        if ! is_port_in_use "$port"; then
+            echo "$port"
+            return 0
+        fi
+    done
+
+   return 1
+}
+
 # Start of the script
 info "===== AgentDVR Linux Setup Script Started ====="
+
+# Find available port
 
 # Source the release information
 release_file=$(ls /etc/*-release 2>/dev/null | head -n 1)
@@ -193,6 +217,19 @@ info "User '$name' added to 'video' group successfully."
 
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
 
+#write the port for the server
+available_port=$(find_port)
+
+if [[ $? -ne 0 ]]; then
+    error_log "No available ports found. Exiting."
+    exit 1
+fi
+
+# Write port to file
+mkdir -p "$INSTALL_PATH/Media/XML"
+echo "$available_port" > "$INSTALL_PATH/Media/XML/port.txt"
+info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
+
 # Option to set up as a system service
 read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty
 answer=${answer,,}  # Convert to lowercase
@@ -242,7 +279,7 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     info "AgentDVR service enabled and started successfully."
 
     echo "Started AgentDVR service."
-    echo "Go to http://localhost:8090 to configure AgentDVR."
+    echo "Go to http://localhost:$available_port to configure AgentDVR."
     exit 0
 else
     info "User opted not to set up AgentDVR as a system service."
@@ -252,7 +289,7 @@ else
     sleep 2  # Give it a moment to start
     if pgrep -f "Agent" > /dev/null; then
         info "AgentDVR started successfully."
-        echo "AgentDVR is running. Visit http://localhost:8090 to configure."
+        echo "AgentDVR is running. Visit http://localhost:$available_port to configure."
     else
         error_log "Failed to start AgentDVR."
     fi
