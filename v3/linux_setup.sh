@@ -34,6 +34,12 @@ if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
     exec > "$LOGFILE" 2>&1
 fi
 
+if [ "$FROM_VERSION" -gt 0 ]; then
+    echo "Installing v$FROM_VERSION"
+fi
+
+
+
 # Function to print info messages with timestamp
 info() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO]: $1"

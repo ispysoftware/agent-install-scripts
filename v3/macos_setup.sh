@@ -32,9 +32,12 @@ while getopts "v:" opt; do
     esac
 done
 
-
 # Redirect all stdout and stderr to the log file and to the terminal
 exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
+
+if [ "$FROM_VERSION" -gt 0 ]; then
+    echo "Installing v$FROM_VERSION"
+fi
 
 # Function to print info messages with timestamp
 info() {
