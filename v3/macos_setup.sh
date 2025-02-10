@@ -15,6 +15,23 @@ SYSTEM_LAUNCHDAEMONS_DIR="/Library/LaunchDaemons"
 USER_LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 LOGFILE="$HOME/agentdvr_setup.log"
 
+FROM_VERSION=0
+
+# Array to collect any arguments to pass on to child scripts.
+ARGS=()
+
+# Parse command-line options. If -v is provided, update FROM_VERSION and add it to ARGS.
+while getopts "v:" opt; do
+    case "$opt" in
+    v)
+        FROM_VERSION="$OPTARG"
+        ARGS+=("-v" "$OPTARG")
+        ;;
+    *)
+        ;;
+    esac
+done
+
 
 # Redirect all stdout and stderr to the log file and to the terminal
 exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
@@ -190,9 +207,9 @@ install_agentdvr() {
 
     # Determine the download URL based on architecture
     if [[ "$arch" == "arm64" ]]; then
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
     else
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=0&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
     fi
 
     # Fetch the actual download URL
@@ -255,7 +272,7 @@ setup_launch_daemon() {
     sudo launchctl load -w "$SYSTEM_LAUNCHDAEMONS_DIR/$PLIST_NAME" || handle_error "Failed to load the launch daemon."
 
     info "Launch Daemon started successfully."
-    info "Visit http://localhost:8090 to configure AgentDVR."
+    info "Visit http://localhost:$available_port to configure AgentDVR."
     exit 0
 }
 
@@ -285,8 +302,30 @@ setup_launch_agent() {
     launchctl load -w "$USER_LAUNCHAGENTS_DIR/$PLIST_NAME" || handle_error "Failed to load the launch agent."
 
     info "Launch Agent started successfully."
-    info "Visit http://localhost:8090 to configure AgentDVR."
+    info "Visit http://localhost:$available_port to configure AgentDVR."
     exit 0
+}
+
+find_port() {
+    # Define the list of ports to check
+    ports=(8090 8080 8100 8010 8123 8181 8222 8300 8400 8500 8600 8700 8800 8888 8899 8900 8989 9000 9080 9090 9100 9200 9300 9400 9500 9600 9700 9800 9900)
+
+
+    # Function to check if a port is in use
+    is_port_in_use() {
+        local port=$1
+        netstat -an | grep -E "LISTEN" | grep -qE "[:.]$port[^0-9]"
+    }
+
+    # Iterate over the list and find the first available port
+    for port in "${ports[@]}"; do
+        if ! is_port_in_use "$port"; then
+            echo "$port"
+            return 0
+        fi
+    done
+    
+    return 1
 }
 
 # Main script execution starts here
@@ -345,6 +384,19 @@ fi
 # Install AgentDVR
 install_agentdvr
 
+#write the port for the server
+available_port=$(find_port)
+
+if [[ $? -ne 0 ]]; then
+    error_log "No available ports found. Exiting."
+    exit 1
+fi
+
+mkdir -p "$INSTALL_PATH/Media/XML"
+echo "$available_port" > "$INSTALL_PATH/Media/XML/port.txt"
+info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
+
+
 # Set up launch daemon or agent based on user choice
 if [[ "$choice" == "1" ]]; then
     setup_launch_daemon
@@ -359,3 +411,4 @@ else
 fi
 
 info "===== AgentDVR macOS Setup Script Completed ====="
+info "AgentDVR is running. Visit http://localhost:$available_port to configure."
