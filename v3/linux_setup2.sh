@@ -132,11 +132,14 @@ setup_coturn() {
     read -p "Enter listening port (default 3478): " port </dev/tty
     port=${port:-3478}
 
-    read -p "Enter username (default user): " username </dev/tty
-    username=${username:-user}
+    default_username="user_$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)"
+    default_password="pwd_$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)"
 
-    read -p "Enter password (default pass123): " password </dev/tty
-    password=${password:-pass123}
+    read -p "Enter username (default $default_username): " username </dev/tty
+    username=${username:-$default_username}
+
+    read -p "Enter password (default $default_password): " password </dev/tty
+    password=${password:-$default_password}
 
     # Write the entered settings to a text file
     settings_file="coturn_settings.txt"
