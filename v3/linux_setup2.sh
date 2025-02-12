@@ -116,15 +116,14 @@ setup_coturn() {
     # Check if the settings file exists
     if [ -f "${settings_file}" ]; then
         echo "Configuration file '${settings_file}' already exists. Skipping coturn setup."
-        exit 0
+        return 0
     fi
 
 
-    echo "Installing Coturn alongside Agent can improve access over networks. Do you want to install coturn? [y/n]"
-    read -r install_choice
+    read -rp "Installing Coturn alongside Agent can improve access over networks. Do you want to install coturn? [y/n] " install_choice
     if [[ "$install_choice" != "y" && "$install_choice" != "Y" ]]; then
         echo "Installation canceled."
-        exit 0
+        return 0
     fi
 
     # Prompt for listening port, username, and password.
