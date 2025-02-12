@@ -129,13 +129,13 @@ setup_coturn() {
 
     # Prompt for listening port, username, and password.
     # If no value is entered, defaults are used.
-    read -p "Enter listening port (default 3478): " port
+    read -p "Enter listening port (default 3478): " port </dev/tty
     port=${port:-3478}
 
-    read -p "Enter username (default user): " username
+    read -p "Enter username (default user): " username </dev/tty
     username=${username:-user}
 
-    read -p "Enter password (default pass123): " password
+    read -p "Enter password (default pass123): " password </dev/tty
     password=${password:-pass123}
 
     # Write the entered settings to a text file
