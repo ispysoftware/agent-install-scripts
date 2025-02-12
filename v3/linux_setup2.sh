@@ -120,7 +120,8 @@ setup_coturn() {
     fi
 
 
-    read -rp "Installing Coturn alongside Agent can improve access over networks. Do you want to install coturn? [y/n] " install_choice
+    read -rp "Installing Coturn alongside Agent can improve access over networks. Do you want to install coturn? [y/n] " install_choice </dev/tty
+
     if [[ "$install_choice" != "y" && "$install_choice" != "Y" ]]; then
         echo "Installation canceled."
         return 0
