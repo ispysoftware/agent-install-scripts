@@ -351,7 +351,7 @@ esac
 # Fetch the actual download URL
 DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
 
-version=$(echo "$DOWNLOAD_URL" | sed -E 's/.*_([0-9]+)_([0-9]+)_([0-9]+)_([0-9]+)\.zip$/\1\2\3\4/')
+version=$(echo "$DOWNLOAD_URL" | sed -E 's#.*/[^/]*_([0-9]+)_([0-9]+)_([0-9]+)_([0-9]+)\.zip$#\1\2\3\4#')
 
 info "Extracted version: $version"
 
