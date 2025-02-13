@@ -196,9 +196,14 @@ listening-ip=0.0.0.0
 # Port on which the TURN server will listen.
 listening-port=${port}
 
+realm=agentturn.local
+
 # Define the range of ports used for relayed connections.
 min-port=50000
 max-port=50100
+
+# Enable long-term credential mechanism.
+lt-cred-mech
 
 # Set up static user authentication (format: username:password).
 user=${username}:${password}
@@ -211,7 +216,7 @@ EOF
     default_file="/etc/default/coturn"
     if [ -f "$default_file" ]; then
         echo "Enabling coturn service in ${default_file}..."
-        sudo sed -i 's/^#*\s*TURNSERVER_ENABLED=0/TURNSERVER_ENABLED=1/' "$default_file"
+        sudo sed -i 's/^\s*#\?\s*TURNSERVER_ENABLED=.*/TURNSERVER_ENABLED=1/' "$default_file"
     fi
 
     # Restart the coturn service to apply the changes.
