@@ -175,12 +175,12 @@ setup_coturn() {
     config_file="/etc/turnserver.conf"
     if [ -f "$config_file" ]; then
         echo "Backing up existing configuration file..."
-        sudo cp "$config_file" "${config_file}.bak"
+        cp "$config_file" "${config_file}.bak"
     fi
 
     # Write the new coturn configuration.
     echo "Creating new coturn configuration at ${config_file}..."
-    sudo tee "$config_file" > /dev/null <<EOF
+    tee "$config_file" > /dev/null <<EOF
 # Coturn configuration
 
 # Listen on all available interfaces.
@@ -209,12 +209,12 @@ EOF
     default_file="/etc/default/coturn"
     if [ -f "$default_file" ]; then
         echo "Enabling coturn service in ${default_file}..."
-        sudo sed -i 's/^\s*#\?\s*TURNSERVER_ENABLED=.*/TURNSERVER_ENABLED=1/' "$default_file"
+        sed -i 's/^\s*#\?\s*TURNSERVER_ENABLED=.*/TURNSERVER_ENABLED=1/' "$default_file"
     fi
 
     # Restart the coturn service to apply the changes.
     echo "Restarting coturn service..."
-    sudo systemctl restart coturn
+    systemctl restart coturn
 
     echo "coturn has been installed and configured with the following settings:"
     echo "  Listening Port: ${port}"
