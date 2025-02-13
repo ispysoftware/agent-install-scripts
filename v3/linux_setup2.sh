@@ -140,6 +140,7 @@ setup_coturn() {
     {
         echo "listening_port=${port}"
         echo "auth_secret=${auth_secret}"
+        echo "turn_only=true"
     } > "${settings_file}"
     echo "Configuration saved to ${settings_file}"
 
