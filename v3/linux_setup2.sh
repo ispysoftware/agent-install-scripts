@@ -132,22 +132,14 @@ setup_coturn() {
     read -p "Enter listening port (default 3478): " port </dev/tty
     port=${port:-3478}
 
-    default_username="user_$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)"
-    default_password="pwd_$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)"
-
-    read -p "Enter username (default $default_username): " username </dev/tty
-    username=${username:-$default_username}
-
-    read -p "Enter password (default $default_password): " password </dev/tty
-    password=${password:-$default_password}
+    auth_secret="$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 16)"
 
     # Write the entered settings to a text file
     settings_file="coturn_settings.txt"
     echo "Writing configuration to ${settings_file}..."
     {
         echo "listening_port=${port}"
-        echo "username=${username}"
-        echo "password=${password}"
+        echo "auth_secret=${auth_secret}"
     } > "${settings_file}"
     echo "Configuration saved to ${settings_file}"
 
@@ -205,8 +197,8 @@ max-port=50100
 # Enable long-term credential mechanism.
 lt-cred-mech
 
-# Set up static user authentication (format: username:password).
-user=${username}:${password}
+# Set up static user authentication
+static-auth-secret=${auth_secret}
 
 # Enable TURN message integrity and fingerprint.
 fingerprint
