@@ -154,8 +154,26 @@ setup_coturn() {
     # Install coturn if not already installed.
     if ! command -v turnserver &> /dev/null; then
         echo "coturn not found. Installing coturn..."
-        sudo apt-get update
-        sudo apt-get install -y coturn
+
+        if machine_has "apt-get"; then
+            echo "Using apt-get..."
+            apt-get update >> "$LOGFILE" 2>&1 || critical_error "apt-get update failed."
+            apt-get install --no-install-recommends -y coturn >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
+        elif machine_has "dnf"; then
+            echo "Using dnf..."
+            dnf install -y coturn >> "$LOGFILE" 2>&1 || critical_error "dnf install failed."
+        elif machine_has "yum"; then
+            echo "Using yum..."
+            yum install -y coturn >> "$LOGFILE" 2>&1 || critical_error "yum install failed."
+        elif machine_has "pacman"; then
+            echo "Using pacman..."
+            pacman -Syu --noconfirm coturn >> "$LOGFILE" 2>&1 || critical_error "pacman install failed."
+        elif machine_has "apk"; then
+            echo "Using apk..."
+            apk add coturn >> "$LOGFILE" 2>&1 || critical_error "apk install failed."
+        else
+            critical_error "Unsupported package manager. Please install dependencies manually."
+        fi
     else
         echo "coturn is already installed."
     fi
@@ -255,16 +273,58 @@ cd "$INSTALL_PATH" || critical_error "Failed to navigate to $INSTALL_PATH."
 if machine_has "apt-get"; then
     info "Detected apt-get package manager. Updating and installing dependencies..."
     apt-get update >> "$LOGFILE" 2>&1 || critical_error "apt-get update failed."
-    apt-get install --no-install-recommends -y unzip apt-transport-https alsa-utils libxext-dev fontconfig libva-drm2 >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
+    apt-get install --no-install-recommends -y \
+        unzip \
+        apt-transport-https \
+        alsa-utils \
+        libxext-dev \
+        fontconfig \
+        libva-drm2 >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
     info "Dependencies installed successfully using apt-get."
-elif machine_has "yum"; then
-    info "Detected yum package manager. Updating and installing dependencies..."
-    yum update -y >> "$LOGFILE" 2>&1 || critical_error "yum update failed."
-    yum install -y unzip vlc libva fontconfig >> "$LOGFILE" 2>&1 || critical_error "yum install failed."
-    info "Dependencies installed successfully using yum."
+elif machine_has "dnf" || machine_has "yum"; then
+    info "Detected yum/dnf package manager. Updating and installing dependencies..."
+    if machine_has "dnf"; then
+        dnf update -y >> "$LOGFILE" 2>&1 || critical_error "dnf update failed."
+        dnf install -y \
+            unzip \
+            alsa-utils \
+            libXext-devel \
+            fontconfig \
+            libva >> "$LOGFILE" 2>&1 || critical_error "dnf install failed."
+    else
+        yum update -y >> "$LOGFILE" 2>&1 || critical_error "yum update failed."
+        yum install -y \
+            unzip \
+            alsa-utils \
+            libXext-devel \
+            fontconfig \
+            libva >> "$LOGFILE" 2>&1 || critical_error "yum install failed."
+    fi
+    info "Dependencies installed successfully using yum/dnf."
+elif machine_has "pacman"; then
+    info "Detected pacman package manager. Updating and installing dependencies..."
+    pacman -Syu --noconfirm >> "$LOGFILE" 2>&1 || critical_error "pacman update failed."
+    pacman -S --noconfirm \
+        unzip \
+        alsa-utils \
+        libxext \
+        fontconfig \
+        libva >> "$LOGFILE" 2>&1 || critical_error "pacman install failed."
+    info "Dependencies installed successfully using pacman."
+elif machine_has "apk"; then
+    info "Detected apk package manager. Updating and installing dependencies..."
+    apk update >> "$LOGFILE" 2>&1 || critical_error "apk update failed."
+    apk add --no-cache \
+        unzip \
+        alsa-utils \
+        libxext-dev \
+        fontconfig \
+        libva >> "$LOGFILE" 2>&1 || critical_error "apk install failed."
+    info "Dependencies installed successfully using apk."
 else
     critical_error "Unsupported package manager. Please install dependencies manually."
 fi
+
 
 # Check for existing AgentDVR installation
 AGENT_FILE="$INSTALL_PATH/Agent"
