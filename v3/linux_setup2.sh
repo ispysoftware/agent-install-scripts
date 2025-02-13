@@ -127,7 +127,7 @@ setup_coturn() {
         return 0
     fi
 
-    # Prompt for listening port, username, and password.
+    # Prompt for listening port
     # If no value is entered, defaults are used.
     read -p "Enter listening port (default 3478): " port </dev/tty
     port=${port:-3478}
@@ -140,7 +140,7 @@ setup_coturn() {
     {
         echo "listening_port=${port}"
         echo "auth_secret=${auth_secret}"
-        echo "turn_only=true"
+        #echo "turn_only=true"
     } > "${settings_file}"
     echo "Configuration saved to ${settings_file}"
 
@@ -218,8 +218,6 @@ EOF
 
     echo "coturn has been installed and configured with the following settings:"
     echo "  Listening Port: ${port}"
-    echo "  Username: ${username}"
-    echo "  Password: ${password}"
 }
 
 
