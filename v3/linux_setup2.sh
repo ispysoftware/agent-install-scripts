@@ -351,6 +351,9 @@ esac
 # Fetch the actual download URL
 DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
 
+info "Extracted version: $version"
+
+
 info "Using download URL: $DOWNLOAD_URL"
 
 # Download AgentDVR with retry logic
@@ -411,7 +414,11 @@ echo "$available_port" > "port.txt"
 info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
 
 # Call the coturn setup function
-setup_coturn
+if (( version > 6140 )); then
+    setup_coturn
+fi
+
+
 
 # Option to set up as a system service
 read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty
