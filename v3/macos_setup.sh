@@ -15,16 +15,16 @@ SYSTEM_LAUNCHDAEMONS_DIR="/Library/LaunchDaemons"
 USER_LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
 LOGFILE="$HOME/agentdvr_setup.log"
 
-FROM_VERSION=0
+USE_VERSION=0
 
 # Array to collect any arguments to pass on to child scripts.
 ARGS=()
 
-# Parse command-line options. If -v is provided, update FROM_VERSION and add it to ARGS.
+# Parse command-line options. If -v is provided, update USE_VERSION and add it to ARGS.
 while getopts "v:" opt; do
     case "$opt" in
     v)
-        FROM_VERSION="$OPTARG"
+        USE_VERSION="$OPTARG"
         ARGS+=("-v" "$OPTARG")
         ;;
     *)
@@ -35,8 +35,8 @@ done
 # Redirect all stdout and stderr to the log file and to the terminal
 exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
 
-if [ "$FROM_VERSION" -gt 0 ]; then
-    echo "Installing v$FROM_VERSION"
+if [ "$USE_VERSION" -gt 0 ]; then
+    echo "Installing v$USE_VERSION"
 fi
 
 # Function to print info messages with timestamp
@@ -210,9 +210,9 @@ install_agentdvr() {
 
     # Determine the download URL based on architecture
     if [[ "$arch" == "arm64" ]]; then
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSXARM64&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=OSXARM64&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
     else
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=OSX64&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=OSX64&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
     fi
 
     # Fetch the actual download URL

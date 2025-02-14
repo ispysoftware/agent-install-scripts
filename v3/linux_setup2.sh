@@ -7,16 +7,16 @@
 LOGFILE="/var/log/agentdvr_setup.log"  # Log file path
 INSTALL_PATH="/opt/AgentDVR"
 
-FROM_VERSION=0
+USE_VERSION=0
 
 # Array to collect any arguments to pass on to child scripts.
 ARGS=()
 
-# Parse command-line options. If -v is provided, update FROM_VERSION and add it to ARGS.
+# Parse command-line options. If -v is provided, update USE_VERSION and add it to ARGS.
 while getopts "v:" opt; do
     case "$opt" in
     v)
-        FROM_VERSION="$OPTARG"
+        USE_VERSION="$OPTARG"
         ARGS+=("-v" "$OPTARG")
         ;;
     *)
@@ -34,8 +34,8 @@ if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
     exec > "$LOGFILE" 2>&1
 fi
 
-if [ "$FROM_VERSION" -gt 0 ]; then
-    echo "Installing v$FROM_VERSION"
+if [ "$USE_VERSION" -gt 0 ]; then
+    echo "Installing v$USE_VERSION"
 fi
 
 
@@ -337,14 +337,14 @@ fi
 
 # Determine the download URL based on architecture
 info "Determining download URL for architecture: $arch"
-DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=Linux64&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
 
 case "$arch" in
     'aarch64'|'arm64')
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=LinuxARM64&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
         ;;
     'arm'|'armv6l'|'armv7l')
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM&fromVersion=${FROM_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=LinuxARM&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
         ;;
 esac
 
