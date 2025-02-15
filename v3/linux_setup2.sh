@@ -133,9 +133,6 @@ setup_coturn() {
     port=${port:-3478}
 
     auth_secret="$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 16)"
-
-    # Write the entered settings to a text file
-    settings_file="coturn_settings.txt"
     echo "Writing configuration to ${settings_file}..."
     {
         echo "listening_port=${port}"
