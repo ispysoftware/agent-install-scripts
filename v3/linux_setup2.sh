@@ -108,116 +108,6 @@ find_port() {
    return 1
 }
 
-# Function to setup coturn
-setup_coturn() {
-    # Define the settings file name
-    settings_file="coturn_settings.txt"
-
-    # Check if the settings file exists
-    if [ -f "${settings_file}" ]; then
-        echo "Configuration file '${settings_file}' already exists. Skipping coturn setup."
-        return 0
-    fi
-
-
-    read -rp "Installing Coturn alongside Agent can improve access over networks. Do you want to install coturn? [y/n] " install_choice </dev/tty
-
-    if [[ "$install_choice" != "y" && "$install_choice" != "Y" ]]; then
-        echo "Installation canceled."
-        return 0
-    fi
-
-    # Prompt for listening port
-    # If no value is entered, defaults are used.
-    read -p "Enter listening port (default 3478): " port </dev/tty
-    port=${port:-3478}
-
-    auth_secret="$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 16)"
-    echo "Writing configuration to ${settings_file}..."
-    {
-        echo "listening_port=${port}"
-        echo "auth_secret=${auth_secret}"
-        #echo "turn_only=true"
-    } > "${settings_file}"
-    echo "Configuration saved to ${settings_file}"
-
-    # Install coturn if not already installed.
-    if ! command -v turnserver &> /dev/null; then
-        echo "coturn not found. Installing coturn..."
-
-        if machine_has "apt-get"; then
-            echo "Using apt-get..."
-            apt-get update >> "$LOGFILE" 2>&1 || critical_error "apt-get update failed."
-            apt-get install --no-install-recommends -y coturn >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
-        elif machine_has "dnf"; then
-            echo "Using dnf..."
-            dnf install -y coturn >> "$LOGFILE" 2>&1 || critical_error "dnf install failed."
-        elif machine_has "yum"; then
-            echo "Using yum..."
-            yum install -y coturn >> "$LOGFILE" 2>&1 || critical_error "yum install failed."
-        elif machine_has "pacman"; then
-            echo "Using pacman..."
-            pacman -Syu --noconfirm coturn >> "$LOGFILE" 2>&1 || critical_error "pacman install failed."
-        elif machine_has "apk"; then
-            echo "Using apk..."
-            apk add coturn >> "$LOGFILE" 2>&1 || critical_error "apk install failed."
-        else
-            critical_error "Unsupported package manager. Please install dependencies manually."
-        fi
-    else
-        echo "coturn is already installed."
-    fi
-
-    # Backup the existing configuration file if it exists.
-    config_file="/etc/turnserver.conf"
-    if [ -f "$config_file" ]; then
-        echo "Backing up existing configuration file..."
-        cp "$config_file" "${config_file}.bak"
-    fi
-
-    # Write the new coturn configuration.
-    echo "Creating new coturn configuration at ${config_file}..."
-    tee "$config_file" > /dev/null <<EOF
-# Coturn configuration
-
-# Listen on all available interfaces.
-listening-ip=0.0.0.0
-
-# Port on which the TURN server will listen.
-listening-port=${port}
-
-realm=agentturn.local
-
-# Define the range of ports used for relayed connections.
-min-port=50000
-max-port=50100
-
-# Enable long-term credential mechanism.
-lt-cred-mech
-
-# Set up static user authentication
-static-auth-secret=${auth_secret}
-
-# Enable TURN message integrity and fingerprint.
-fingerprint
-EOF
-
-    # Enable the coturn service if using the default configuration file.
-    default_file="/etc/default/coturn"
-    if [ -f "$default_file" ]; then
-        echo "Enabling coturn service in ${default_file}..."
-        sed -i 's/^\s*#\?\s*TURNSERVER_ENABLED=.*/TURNSERVER_ENABLED=1/' "$default_file"
-    fi
-
-    # Restart the coturn service to apply the changes.
-    echo "Restarting coturn service..."
-    systemctl restart coturn
-
-    echo "coturn has been installed and configured with the following settings:"
-    echo "  Listening Port: ${port}"
-}
-
-
 # Start of the script
 info "===== AgentDVR Linux Setup Script Started ====="
 
@@ -411,13 +301,6 @@ cd "$INSTALL_PATH/Media/XML"
 
 echo "$available_port" > "port.txt"
 info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
-
-# Call the coturn setup function
-if (( version > 6140 )); then
-    setup_coturn
-fi
-
-
 
 # Option to set up as a system service
 read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty

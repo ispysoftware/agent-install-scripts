@@ -34,6 +34,18 @@ else
 		&& sudo yum install -y bzip2 vlc libva fontconfig
 fi
 
+# Check if the coturn service is active
+if systemctl is-active --quiet coturn; then
+    echo "Coturn is running. Stopping the service..."
+    sudo systemctl stop coturn
+    echo "Coturn service stopped."
+
+    echo "Disabling coturn service... (using inbuilt turn server)"
+    sudo systemctl disable coturn
+    echo "Coturn service disabled."
+else
+    echo "Coturn service is not running."
+fi
 
 #download latest version
 
