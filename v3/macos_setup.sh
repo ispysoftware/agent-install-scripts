@@ -246,7 +246,7 @@ install_agentdvr() {
 
     # Set executable permissions
     chmod +x "$INSTALL_PATH/Agent"
-    chmod +x "$INSTALL_PATH/TURN/turnserver" 2>/dev/null || true
+    chmod +x "$INSTALL_PATH/TURN/turnserver" 2>/dev/null
     find "$INSTALL_PATH" -name "*.sh" -exec chmod +x {} \;
     info "Set executable permissions for AgentDVR."
 }

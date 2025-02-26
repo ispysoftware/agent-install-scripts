@@ -270,6 +270,7 @@ fi
 # Set executable permissions
 info "Setting execute permissions for Agent and scripts..."
 chmod +x ./Agent || critical_error "Failed to set execute permission for Agent."
+chmod +x ./TURN/turnserver 2>/dev/null
 find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execute permissions for scripts."
 info "Execute permissions set successfully."
 
