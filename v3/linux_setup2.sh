@@ -59,6 +59,7 @@ machine_has() {
 # Function to handle critical errors
 critical_error() {
     error_log "$1"
+    echo "check /var/log/agentdvr_setup.log"
     exit 1
 }
 
@@ -344,7 +345,7 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     info "AgentDVR.service copied to /etc/systemd/system and local copy removed."
 
     # Reload systemd daemon to recognize the new service
-    systemctl daemon-reload >> "$LOGFILE" 2>&1 || critical_error "Failed to reload systemd daemon."
+    systemctl daemon-reload >> "$LOGFILE" 2>&1 || info "Warning: Failed to reload systemd daemon."
 
     # Enable and start the AgentDVR service
     systemctl enable AgentDVR.service >> "$LOGFILE" 2>&1 || critical_error "Failed to enable AgentDVR.service."
