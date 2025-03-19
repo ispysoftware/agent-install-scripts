@@ -272,6 +272,22 @@ fi
 info "Setting execute permissions for Agent and scripts..."
 chmod +x ./Agent || critical_error "Failed to set execute permission for Agent."
 chmod +x ./TURN/turnserver 2>/dev/null
+
+# Fix line endings and remove BOM for all .sh files
+find . -name "*.sh" -exec bash -c '
+  # Create a temporary file
+  temp_file=$(mktemp)
+  # Remove BOM and CR characters, then write to temp file
+  sed -e "1s/^\xEF\xBB\xBF//" -e "s/\r$//" "$1" > "$temp_file"
+  # Move temp file back to original
+  mv "$temp_file" "$1"
+' _ {} \; || critical_error "Failed to fix line endings and BOM for scripts."
+info "Line endings and BOM fixed successfully."
+
+# Then set execute permissions
+find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execute permissions for scripts."
+info "Execute permissions set successfully."
+
 find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execute permissions for scripts."
 info "Execute permissions set successfully."
 
