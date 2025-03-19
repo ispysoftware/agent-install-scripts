@@ -284,10 +284,6 @@ find . -name "*.sh" -exec bash -c '
 ' _ {} \; || critical_error "Failed to fix line endings and BOM for scripts."
 info "Line endings and BOM fixed successfully."
 
-# Then set execute permissions
-find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execute permissions for scripts."
-info "Execute permissions set successfully."
-
 find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execute permissions for scripts."
 info "Execute permissions set successfully."
 
