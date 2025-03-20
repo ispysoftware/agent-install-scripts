@@ -159,6 +159,7 @@ if machine_has "apt-get"; then
     apt-get update >> "$LOGFILE" 2>&1 || critical_error "apt-get update failed."
     apt-get install --no-install-recommends -y \
         unzip \
+        xz-utils \
         apt-transport-https \
         alsa-utils \
         libxext-dev \
@@ -171,6 +172,7 @@ elif machine_has "dnf" || machine_has "yum"; then
         dnf update -y >> "$LOGFILE" 2>&1 || critical_error "dnf update failed."
         dnf install -y \
             unzip \
+            xz \
             alsa-utils \
             libXext-devel \
             fontconfig \
@@ -179,6 +181,7 @@ elif machine_has "dnf" || machine_has "yum"; then
         yum update -y >> "$LOGFILE" 2>&1 || critical_error "yum update failed."
         yum install -y \
             unzip \
+            xz \
             alsa-utils \
             libXext-devel \
             fontconfig \
@@ -190,6 +193,7 @@ elif machine_has "pacman"; then
     pacman -Syu --noconfirm >> "$LOGFILE" 2>&1 || critical_error "pacman update failed."
     pacman -S --noconfirm \
         unzip \
+        xz \
         alsa-utils \
         libxext \
         fontconfig \
@@ -200,6 +204,7 @@ elif machine_has "apk"; then
     apk update >> "$LOGFILE" 2>&1 || critical_error "apk update failed."
     apk add --no-cache \
         unzip \
+        xz \
         alsa-utils \
         libxext-dev \
         fontconfig \
