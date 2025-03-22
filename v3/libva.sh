@@ -111,7 +111,7 @@ setup_libva() {
         
         # Check if we're running in a non-interactive mode
         if [ -z "$INTERACTIVE" ] || [ "$INTERACTIVE" = "true" ]; then
-            read -p "Would you like to install libva 2.22.0? (y/n) " -n 1 -r
+            read -p "Would you like to install libva 2.22.0? (y/n) " -n 1 -r </dev/tty
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 install_libva
@@ -129,6 +129,7 @@ setup_libva() {
                 echo "Note: GPU hardware acceleration will not be available."
                 return 1
             fi
+        else
             # In non-interactive mode, automatically install
             echo "Running in non-interactive mode. Automatically installing libva..."
             install_libva
@@ -142,8 +143,9 @@ setup_libva() {
                 echo "Continuing with installation, but GPU acceleration may not work."
                 return 1
             fi
+        fi
     fi
 }
 
-# Call the function in your main installation script
+# Call the function
 setup_libva
