@@ -116,15 +116,21 @@ check_libva_installation() {
     # Try different methods to find libva
     if command -v vainfo &> /dev/null; then
         echo "vainfo command found, checking version..."
-        LIBVA_VERSION=$(vainfo --version 2>/dev/null | grep -oP "libva \K[0-9]+\.[0-9]+\.[0-9]+" || echo "")
+        VAINFO_OUTPUT=$(vainfo --version 2>&1)
+        echo "vainfo output: $VAINFO_OUTPUT"
+        LIBVA_VERSION=$(echo "$VAINFO_OUTPUT" | grep -oP "libva \K[0-9]+\.[0-9]+(\.[0-9]+)?" || echo "")
     elif pkg-config --exists libva 2>/dev/null; then
         echo "libva found via pkg-config, checking version..."
-        LIBVA_VERSION=$(pkg-config --modversion libva 2>/dev/null || echo "")
+        PKG_OUTPUT=$(pkg-config --modversion libva 2>&1)
+        echo "pkg-config output: $PKG_OUTPUT"
+        LIBVA_VERSION="$PKG_OUTPUT"
     elif ldconfig -p 2>/dev/null | grep -q libva; then
         echo "libva found in system libraries, attempting to determine version..."
         # This is a fallback and might not be accurate
-        LIBVA_MAJOR=$(ldconfig -v 2>/dev/null | grep -oP "libva\.so\.\K[0-9]+" | sort -nr | head -1 || echo "0")
-        LIBVA_MINOR=$(ldconfig -v 2>/dev/null | grep -oP "libva\.so\.[0-9]+\.\K[0-9]+" | sort -nr | head -1 || echo "0")
+        LDCONFIG_OUTPUT=$(ldconfig -v 2>/dev/null | grep libva)
+        echo "ldconfig relevant output: $LDCONFIG_OUTPUT"
+        LIBVA_MAJOR=$(echo "$LDCONFIG_OUTPUT" | grep -oP "libva\.so\.\K[0-9]+" | sort -nr | head -1 || echo "0")
+        LIBVA_MINOR=$(echo "$LDCONFIG_OUTPUT" | grep -oP "libva\.so\.[0-9]+\.\K[0-9]+" | sort -nr | head -1 || echo "0")
         LIBVA_VERSION="$LIBVA_MAJOR.$LIBVA_MINOR.0"
     else
         echo "libva not found on the system"
@@ -135,10 +141,24 @@ check_libva_installation() {
     
     # Check if version is 2.21 or higher
     if [ -n "$LIBVA_VERSION" ]; then
-        MAJOR=$(echo $LIBVA_VERSION | cut -d. -f1)
-        MINOR=$(echo $LIBVA_VERSION | cut -d. -f2)
+        # Extract just the major and minor version components
+        # This handles quirky version strings like "2.1700.0" by normalizing them
+        MAJOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+" || echo "0")
+        MINOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+\.\K[0-9]+" || echo "0")
         
-        if [ "$MAJOR" -gt 2 ] || ([ "$MAJOR" -eq 2 ] && [ "$MINOR" -ge 21 ]); then
+        # Trim minor version to its first two digits to handle cases like "1700" -> "17"
+        if [ ${#MINOR} -gt 2 ]; then
+            echo "Trimming long minor version: $MINOR -> ${MINOR:0:2}"
+            MINOR=${MINOR:0:2}
+        fi
+        
+        echo "Normalized version: $MAJOR.$MINOR.x"
+        
+        # Convert to integers for proper comparison
+        MAJOR_INT=$((MAJOR))
+        MINOR_INT=$((MINOR))
+        
+        if [ "$MAJOR_INT" -gt 2 ] || ([ "$MAJOR_INT" -eq 2 ] && [ "$MINOR_INT" -ge 21 ]); then
             echo "Suitable libva version detected (≥ 2.21)"
             return 0
         else
@@ -157,7 +177,8 @@ install_libva() {
     TEMP_SCRIPT=$(mktemp)
     
     if command -v curl &> /dev/null; then
-        curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -o "$TEMP_SCRIPT"
+        # Bypass cache by adding a timestamp parameter
+        curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh?$(date +%s)" -o "$TEMP_SCRIPT"
     elif command -v wget &> /dev/null; then
         wget -q "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -O "$TEMP_SCRIPT"
     else
@@ -199,7 +220,7 @@ setup_libva() {
         
         # Check if we're running in a non-interactive mode
         if [ -z "$INTERACTIVE" ] || [ "$INTERACTIVE" = "true" ]; then
-            read -p "Would you like to install libva 2.22.0? (y/n) " -n 1 -r
+            read -p "Would you like to install libva 2.22.0? (y/n) " -n 1 -r </dev/tty
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 install_libva
@@ -433,8 +454,6 @@ info "User '$name' added to 'video' group successfully."
 
 
 setup_libva
-
-
 
 
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
