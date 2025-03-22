@@ -32,12 +32,18 @@ check_libva_installation() {
     
     # Check if version is 2.21 or higher
     if [ -n "$LIBVA_VERSION" ]; then
-        # More robust version parsing
-        # Extract major and minor values using regex to handle various formats
+        # Extract just the major and minor version components
+        # This handles quirky version strings like "2.1700.0" by normalizing them
         MAJOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+" || echo "0")
         MINOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+\.\K[0-9]+" || echo "0")
         
-        echo "Parsed version components: Major=$MAJOR, Minor=$MINOR"
+        # Trim minor version to its first two digits to handle cases like "1700" -> "17"
+        if [ ${#MINOR} -gt 2 ]; then
+            echo "Trimming long minor version: $MINOR -> ${MINOR:0:2}"
+            MINOR=${MINOR:0:2}
+        fi
+        
+        echo "Normalized version: $MAJOR.$MINOR.x"
         
         # Convert to integers for proper comparison
         MAJOR_INT=$((MAJOR))
@@ -62,7 +68,8 @@ install_libva() {
     TEMP_SCRIPT=$(mktemp)
     
     if command -v curl &> /dev/null; then
-        curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -o "$TEMP_SCRIPT"
+        # Bypass cache by adding a timestamp parameter
+        curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh?$(date +%s)" -o "$TEMP_SCRIPT"
     elif command -v wget &> /dev/null; then
         wget -q "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -O "$TEMP_SCRIPT"
     else
