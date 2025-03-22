@@ -1,231 +1,144 @@
 #!/bin/bash
-set -e
 
-# Exit on error
-error_exit() {
-    echo "Error: $1" >&2
-    exit 1
-}
-
-# Detect Linux distribution
-detect_distro() {
-    echo "Detecting Linux distribution..."
+# Check if libva is installed and get its version
+check_libva_installation() {
+    echo "Checking for libva installation..."
     
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        DISTRO=$ID
-        DISTRO_VERSION=$VERSION_ID
-        echo "Detected distribution: $DISTRO $DISTRO_VERSION"
-    elif [ -f /etc/lsb-release ]; then
-        . /etc/lsb-release
-        DISTRO=$DISTRIB_ID
-        DISTRO_VERSION=$DISTRIB_RELEASE
-        echo "Detected distribution: $DISTRO $DISTRO_VERSION"
-    elif [ -f /etc/debian_version ]; then
-        DISTRO="debian"
-        DISTRO_VERSION=$(cat /etc/debian_version)
-        echo "Detected distribution: $DISTRO $DISTRO_VERSION"
-    elif [ -f /etc/redhat-release ]; then
-        DISTRO="redhat"
-        echo "Detected Red Hat-based distribution"
-    elif [ -f /etc/arch-release ]; then
-        DISTRO="arch"
-        echo "Detected Arch Linux"
-    elif [ -f /etc/gentoo-release ]; then
-        DISTRO="gentoo"
-        echo "Detected Gentoo Linux"
-    elif [ -f /etc/SuSE-release ]; then
-        DISTRO="suse"
-        echo "Detected SuSE Linux"
-    elif [ -f /etc/alpine-release ]; then
-        DISTRO="alpine"
-        echo "Detected Alpine Linux"
+    # Try different methods to find libva
+    if command -v vainfo &> /dev/null; then
+        echo "vainfo command found, checking version..."
+        VAINFO_OUTPUT=$(vainfo --version 2>&1)
+        echo "vainfo output: $VAINFO_OUTPUT"
+        LIBVA_VERSION=$(echo "$VAINFO_OUTPUT" | grep -oP "libva \K[0-9]+\.[0-9]+(\.[0-9]+)?" || echo "")
+    elif pkg-config --exists libva 2>/dev/null; then
+        echo "libva found via pkg-config, checking version..."
+        PKG_OUTPUT=$(pkg-config --modversion libva 2>&1)
+        echo "pkg-config output: $PKG_OUTPUT"
+        LIBVA_VERSION="$PKG_OUTPUT"
+    elif ldconfig -p 2>/dev/null | grep -q libva; then
+        echo "libva found in system libraries, attempting to determine version..."
+        # This is a fallback and might not be accurate
+        LDCONFIG_OUTPUT=$(ldconfig -v 2>/dev/null | grep libva)
+        echo "ldconfig relevant output: $LDCONFIG_OUTPUT"
+        LIBVA_MAJOR=$(echo "$LDCONFIG_OUTPUT" | grep -oP "libva\.so\.\K[0-9]+" | sort -nr | head -1 || echo "0")
+        LIBVA_MINOR=$(echo "$LDCONFIG_OUTPUT" | grep -oP "libva\.so\.[0-9]+\.\K[0-9]+" | sort -nr | head -1 || echo "0")
+        LIBVA_VERSION="$LIBVA_MAJOR.$LIBVA_MINOR.0"
     else
-        DISTRO="unknown"
-        echo "Unable to detect distribution, will attempt to continue with manual dependency checks"
+        echo "libva not found on the system"
+        LIBVA_VERSION="0.0.0"
+    fi
+    
+    echo "Detected libva version: $LIBVA_VERSION"
+    
+    # Check if version is 2.21 or higher
+    if [ -n "$LIBVA_VERSION" ]; then
+        # More robust version parsing
+        # Extract major and minor values using regex to handle various formats
+        MAJOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+" || echo "0")
+        MINOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+\.\K[0-9]+" || echo "0")
+        
+        echo "Parsed version components: Major=$MAJOR, Minor=$MINOR"
+        
+        # Convert to integers for proper comparison
+        MAJOR_INT=$((MAJOR))
+        MINOR_INT=$((MINOR))
+        
+        if [ "$MAJOR_INT" -gt 2 ] || ([ "$MAJOR_INT" -eq 2 ] && [ "$MINOR_INT" -ge 21 ]); then
+            echo "Suitable libva version detected (≥ 2.21)"
+            return 0
+        else
+            echo "libva version is too old (< 2.21)"
+            return 1
+        fi
+    else
+        echo "Could not determine libva version"
+        return 1
     fi
 }
 
-# Install required dependencies based on the detected distribution
-install_dependencies() {
-    echo "Checking and installing required dependencies..."
+# Download and run the libva installation script
+install_libva() {
+    echo "Downloading libva installation script..."
+    TEMP_SCRIPT=$(mktemp)
     
-    PACKAGES="git autoconf libtool pkg-config make gcc"
-    EXTRA_PACKAGES="libdrm-dev xorg-dev"
-    
-    case $DISTRO in
-        ubuntu|debian|pop|mint|elementary|kali|deepin|parrot)
-            echo "Installing dependencies for Debian-based system..."
-            sudo apt-get update
-            sudo apt-get install -y $PACKAGES $EXTRA_PACKAGES
-            ;;
-        fedora|centos|rhel|redhat|rocky|alma)
-            echo "Installing dependencies for Red Hat-based system..."
-            if command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y $PACKAGES libdrm-devel xorg-x11-server-devel
-            else
-                sudo yum install -y $PACKAGES libdrm-devel xorg-x11-server-devel
-            fi
-            ;;
-        arch|manjaro|endeavouros)
-            echo "Installing dependencies for Arch-based system..."
-            sudo pacman -Sy --needed $PACKAGES libdrm xorg-server-devel
-            ;;
-        opensuse|suse)
-            echo "Installing dependencies for SuSE-based system..."
-            sudo zypper install -y $PACKAGES libdrm-devel xorg-x11-devel
-            ;;
-        gentoo)
-            echo "Installing dependencies for Gentoo system..."
-            sudo emerge --ask --verbose dev-vcs/git sys-devel/autoconf sys-devel/libtool dev-util/pkgconfig sys-devel/gcc x11-libs/libdrm x11-base/xorg-server
-            ;;
-        alpine)
-            echo "Installing dependencies for Alpine system..."
-            sudo apk add git autoconf libtool pkgconfig make gcc g++ libdrm-dev xorg-server-dev
-            ;;
-        *)
-            echo "Unknown distribution, checking for dependencies manually..."
-            for cmd in git autoconf libtool pkg-config make gcc; do
-                if ! command -v $cmd >/dev/null 2>&1; then
-                    error_exit "$cmd is required but not installed. Please install it manually and try again."
-                fi
-            done
-            echo "Basic build dependencies found, but additional libraries might be needed"
-            read -p "Continue anyway? (y/n) " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                error_exit "Aborted by user"
-            fi
-            ;;
-    esac
-    
-    echo "All build dependencies are installed."
-}
-
-# Create a temporary build directory
-create_build_dir() {
-    BUILD_DIR=$(mktemp -d)
-    echo "Created temporary build directory: $BUILD_DIR"
-    cd "$BUILD_DIR" || error_exit "Failed to change to build directory"
-}
-
-# Clone and build libva
-build_libva() {
-    echo "Cloning libva repository..."
-    git clone https://github.com/intel/libva.git || error_exit "Failed to clone libva repository"
-    cd libva || error_exit "Failed to change to libva directory"
-    
-    # Pin to version 2.22.0 specifically
-    if git tag | grep -q "^2.22.0$"; then
-        echo "Checking out version 2.22.0..."
-        git checkout 2.22.0 || error_exit "Failed to checkout version 2.22.0"
-    elif git tag | grep -q "^2.22$"; then
-        # Sometimes projects use shorter version tags
-        echo "Checking out version 2.22..."
-        git checkout 2.22 || error_exit "Failed to checkout version 2.22"
+    if command -v curl &> /dev/null; then
+        curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -o "$TEMP_SCRIPT"
+    elif command -v wget &> /dev/null; then
+        wget -q "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -O "$TEMP_SCRIPT"
     else
-        echo "Error: Version 2.22.0 not found in repository."
-        echo "Available versions:"
-        git tag | grep -E "^2\.[0-9]+(\.[0-9]+)?$" | sort -V | tail -n 10
+        echo "Error: Neither curl nor wget is installed. Cannot download the script."
+        return 1
+    fi
+    
+    if [ ! -s "$TEMP_SCRIPT" ]; then
+        echo "Error: Failed to download the script or the downloaded file is empty."
+        return 1
+    fi
+    
+    echo "Making the script executable..."
+    chmod +x "$TEMP_SCRIPT"
+    
+    echo "Running libva installation script..."
+    bash "$TEMP_SCRIPT"
+    
+    # Clean up
+    rm -f "$TEMP_SCRIPT"
+    
+    echo "libva installation completed"
+    return 0
+}
+
+# Main function to check and potentially install libva
+setup_libva() {
+    if check_libva_installation; then
+        echo "libva ≥ 2.21 is already installed on the system."
+        echo "Continuing with installation..."
+        return 0
+    else
+        echo "--------------------------------------------------------------"
+        echo "GPU hardware acceleration support requires libva ≥ 2.21"
+        echo "This is needed for FFmpeg v7 to properly utilize your GPU for"
+        echo "video encoding/decoding, which can significantly improve"
+        echo "performance and reduce CPU usage."
+        echo "--------------------------------------------------------------"
         
-        read -p "Would you like to try building from a specific commit hash instead? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            # Try to find the commit that would most likely have 2.22.0 code
-            # Look at the commit history around when 2.22.0 would likely have been released
-            echo "Attempting to identify commit from around 2.22.0 release..."
-            
-            # Get nearby version tags to triangulate
-            LOWER_VERSION=$(git tag | grep -E "^2\.[0-9]+(\.[0-9]+)?$" | sort -V | grep -B1 "2\.23" | head -1 || echo "")
-            HIGHER_VERSION=$(git tag | grep -E "^2\.[0-9]+(\.[0-9]+)?$" | sort -V | grep -A1 "2\.22" | tail -1 || echo "")
-            
-            if [ -n "$LOWER_VERSION" ] && [ -n "$HIGHER_VERSION" ]; then
-                echo "Found versions surrounding 2.22: $LOWER_VERSION and $HIGHER_VERSION"
-                COMMIT_HASH=$(git log --pretty=format:"%H" $LOWER_VERSION..$HIGHER_VERSION | head -1)
-                echo "Using commit: $COMMIT_HASH"
-                git checkout $COMMIT_HASH || error_exit "Failed to checkout commit"
+        # Check if we're running in a non-interactive mode
+        if [ -z "$INTERACTIVE" ] || [ "$INTERACTIVE" = "true" ]; then
+            read -p "Would you like to install libva 2.22.0? (y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                install_libva
+                # Verify installation was successful
+                if check_libva_installation; then
+                    echo "libva ≥ 2.21 was successfully installed."
+                    return 0
+                else
+                    echo "Warning: libva installation may not have completed successfully."
+                    echo "Continuing with installation, but GPU acceleration may not work."
+                    return 1
+                fi
             else
-                error_exit "Cannot find a suitable commit for version 2.22.0. Please specify a different version."
+                echo "Skipping libva installation."
+                echo "Note: GPU hardware acceleration will not be available."
+                return 1
             fi
         else
-            error_exit "Version 2.22.0 required but not found. Aborting."
+            # In non-interactive mode, automatically install
+            echo "Running in non-interactive mode. Automatically installing libva..."
+            install_libva
+            
+            # Verify installation was successful
+            if check_libva_installation; then
+                echo "libva ≥ 2.21 was successfully installed."
+                return 0
+            else
+                echo "Warning: libva installation may not have completed successfully."
+                echo "Continuing with installation, but GPU acceleration may not work."
+                return 1
+            fi
         fi
     fi
-    
-    echo "Generating build system..."
-    ./autogen.sh || error_exit "Failed to run autogen.sh"
-    
-    echo "Configuring libva..."
-    ./configure --prefix=/usr || error_exit "Failed to configure libva"
-    
-    echo "Building libva..."
-    make -j$(nproc 2>/dev/null || echo 2) || error_exit "Failed to build libva"
 }
 
-# Install libva (requires sudo)
-install_libva() {
-    echo "Installing libva..."
-    
-    if [ "$EUID" -eq 0 ]; then
-        # Running as root
-        make install || error_exit "Failed to install libva"
-        ldconfig || error_exit "Failed to run ldconfig"
-    else
-        # Not running as root, use sudo
-        sudo make install || error_exit "Failed to install libva. Make sure you have sudo privileges."
-        sudo ldconfig || error_exit "Failed to run ldconfig"
-    fi
-    
-    # Verify installation
-    echo "Verifying installation..."
-    if ldconfig -p | grep -q libva; then
-        echo "libva installation verified successfully!"
-    else
-        echo "Warning: libva library not found in ldconfig cache."
-        echo "You may need to update your library configuration or restart your system."
-    fi
-}
-
-# Clean up
-cleanup() {
-    echo "Cleaning up..."
-    cd "$HOME" || true
-    if [ -d "$BUILD_DIR" ]; then
-        rm -rf "$BUILD_DIR"
-        echo "Removed temporary build directory"
-    fi
-}
-
-# Print system information
-print_system_info() {
-    echo "System information:"
-    echo "--------------------"
-    echo "Distribution: $DISTRO $DISTRO_VERSION"
-    echo "Kernel: $(uname -r)"
-    echo "Architecture: $(uname -m)"
-    echo "--------------------"
-}
-
-# Main execution
-main() {
-    echo "Starting libva 2.22.0 build and installation script (strictly pinned to version 2.22.0)..."
-    
-    detect_distro
-    print_system_info
-    install_dependencies
-    create_build_dir
-    build_libva
-    install_libva
-    cleanup
-    
-    echo "libva has been successfully built and installed!"
-    echo "You can now build ffmpeg v7 with libva support."
-}
-
-# Check if script is being run as root
-if [ "$EUID" -eq 0 ]; then
-    echo "Running as root"
-fi
-
-# Run the script
-main
+# Call the function in your main installation script
+setup_libva
