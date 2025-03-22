@@ -113,60 +113,60 @@ find_port() {
 check_libva_installation() {
     echo "Checking for libva installation..."
     
-    # Try different methods to find libva
-    if command -v vainfo &> /dev/null; then
-        echo "vainfo command found, checking version..."
-        VAINFO_OUTPUT=$(vainfo --version 2>&1)
-        echo "vainfo output: $VAINFO_OUTPUT"
-        LIBVA_VERSION=$(echo "$VAINFO_OUTPUT" | grep -oP "libva \K[0-9]+\.[0-9]+(\.[0-9]+)?" || echo "")
-    elif pkg-config --exists libva 2>/dev/null; then
-        echo "libva found via pkg-config, checking version..."
-        PKG_OUTPUT=$(pkg-config --modversion libva 2>&1)
-        echo "pkg-config output: $PKG_OUTPUT"
-        LIBVA_VERSION="$PKG_OUTPUT"
-    elif ldconfig -p 2>/dev/null | grep -q libva; then
-        echo "libva found in system libraries, attempting to determine version..."
-        # This is a fallback and might not be accurate
-        LDCONFIG_OUTPUT=$(ldconfig -v 2>/dev/null | grep libva)
-        echo "ldconfig relevant output: $LDCONFIG_OUTPUT"
-        LIBVA_MAJOR=$(echo "$LDCONFIG_OUTPUT" | grep -oP "libva\.so\.\K[0-9]+" | sort -nr | head -1 || echo "0")
-        LIBVA_MINOR=$(echo "$LDCONFIG_OUTPUT" | grep -oP "libva\.so\.[0-9]+\.\K[0-9]+" | sort -nr | head -1 || echo "0")
-        LIBVA_VERSION="$LIBVA_MAJOR.$LIBVA_MINOR.0"
-    else
-        echo "libva not found on the system"
-        LIBVA_VERSION="0.0.0"
+    # Look for the actual library file to get the package version
+    echo "Checking actual libva library files..."
+    LIBVA_FILES=$(find /usr/lib* /usr/local/lib* -name "libva.so.2.*" 2>/dev/null | sort)
+    
+    if [ -z "$LIBVA_FILES" ]; then
+        echo "No libva.so.2.* files found"
+        return 1
     fi
     
-    echo "Detected libva version: $LIBVA_VERSION"
+    echo "Found libva library files:"
+    echo "$LIBVA_FILES"
     
-    # Check if version is 2.21 or higher
-    if [ -n "$LIBVA_VERSION" ]; then
-        # Extract just the major and minor version components
-        # This handles quirky version strings like "2.1700.0" by normalizing them
-        MAJOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+" || echo "0")
-        MINOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+\.\K[0-9]+" || echo "0")
+    # Extract version from filename (e.g., libva.so.2.2200.0 → 2.22.0)
+    for LIB_FILE in $LIBVA_FILES; do
+        VERSION_STRING=$(echo "$LIB_FILE" | grep -oP "libva\.so\.2\.\K[0-9]+" || echo "")
         
-        # Trim minor version to its first two digits to handle cases like "1700" -> "17"
-        if [ ${#MINOR} -gt 2 ]; then
-            echo "Trimming long minor version: $MINOR -> ${MINOR:0:2}"
-            MINOR=${MINOR:0:2}
+        if [ -n "$VERSION_STRING" ]; then
+            # Handle different version number formats
+            if [ ${#VERSION_STRING} -eq 4 ]; then
+                # Format: 2200 → 2.22.0
+                MAJOR=2
+                MINOR=${VERSION_STRING:0:2}
+                MICRO=${VERSION_STRING:2:2}
+                LIBVA_VERSION="$MAJOR.$MINOR.$MICRO"
+            else
+                # Direct format like 22.0
+                LIBVA_VERSION="2.$VERSION_STRING"
+            fi
+            
+            echo "Extracted package version: $LIBVA_VERSION from $LIB_FILE"
+            break
         fi
-        
-        echo "Normalized version: $MAJOR.$MINOR.x"
-        
-        # Convert to integers for proper comparison
-        MAJOR_INT=$((MAJOR))
-        MINOR_INT=$((MINOR))
-        
-        if [ "$MAJOR_INT" -gt 2 ] || ([ "$MAJOR_INT" -eq 2 ] && [ "$MINOR_INT" -ge 21 ]); then
-            echo "Suitable libva version detected (≥ 2.21)"
-            return 0
-        else
-            echo "libva version is too old (< 2.21)"
-            return 1
-        fi
+    done
+    
+    if [ -z "$LIBVA_VERSION" ]; then
+        echo "Could not determine libva version from library files"
+        return 1
+    fi
+    
+    echo "Detected libva package version: $LIBVA_VERSION"
+    
+    # Extract major and minor version components
+    MAJOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+" || echo "0")
+    MINOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+\.\K[0-9]+" || echo "0")
+    
+    # Convert to integers for proper comparison
+    MAJOR_INT=$((MAJOR))
+    MINOR_INT=$((MINOR))
+    
+    if [ "$MAJOR_INT" -gt 2 ] || ([ "$MAJOR_INT" -eq 2 ] && [ "$MINOR_INT" -ge 21 ]); then
+        echo "Suitable libva version detected (≥ 2.21)"
+        return 0
     else
-        echo "Could not determine libva version"
+        echo "libva version is too old (< 2.21)"
         return 1
     fi
 }
