@@ -218,8 +218,7 @@ main() {
     install_libva
     cleanup
     
-    echo "libva has been successfully built and installed!"
-    echo "You can now build ffmpeg v7 with libva support."
+    echo "libva has been successfully built and installed"
 }
 
 # Check if script is being run as root
