@@ -216,6 +216,7 @@ setup_libva() {
         echo "This is needed for FFmpeg v7 to properly utilize your GPU for"
         echo "video encoding/decoding, which can significantly improve"
         echo "performance and reduce CPU usage."
+        echo "Warning: this may cause issues with other software running on your system."
         echo "--------------------------------------------------------------"
         
         # Check if we're running in a non-interactive mode
