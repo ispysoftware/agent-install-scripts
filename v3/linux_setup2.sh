@@ -125,7 +125,13 @@ check_libva_installation() {
     echo "Found libva library files:"
     echo "$LIBVA_FILES"
     
-    # Extract version from filename (e.g., libva.so.2.2200.0 → 2.22.0)
+    # Track the highest version found
+    HIGHEST_MAJOR=0
+    HIGHEST_MINOR=0
+    HIGHEST_MICRO=0
+    HIGHEST_VERSION_FILE=""
+    
+    # Extract version from each filename and keep the highest
     for LIB_FILE in $LIBVA_FILES; do
         VERSION_STRING=$(echo "$LIB_FILE" | grep -oP "libva\.so\.2\.\K[0-9]+" || echo "")
         
@@ -133,36 +139,46 @@ check_libva_installation() {
             # Handle different version number formats
             if [ ${#VERSION_STRING} -eq 4 ]; then
                 # Format: 2200 → 2.22.0
-                MAJOR=2
-                MINOR=${VERSION_STRING:0:2}
-                MICRO=${VERSION_STRING:2:2}
-                LIBVA_VERSION="$MAJOR.$MINOR.$MICRO"
+                CURRENT_MAJOR=2
+                CURRENT_MINOR=${VERSION_STRING:0:2}
+                CURRENT_MICRO=${VERSION_STRING:2:2}
             else
-                # Direct format like 22.0
-                LIBVA_VERSION="2.$VERSION_STRING"
+                # Direct format, try to parse it
+                PARTS=(${VERSION_STRING//./ })
+                CURRENT_MAJOR=2
+                CURRENT_MINOR=${PARTS[0]:-0}
+                CURRENT_MICRO=${PARTS[1]:-0}
             fi
             
-            echo "Extracted package version: $LIBVA_VERSION from $LIB_FILE"
-            break
+            # Convert to integers for comparison
+            CURRENT_MAJOR_INT=$((CURRENT_MAJOR))
+            CURRENT_MINOR_INT=$((CURRENT_MINOR))
+            CURRENT_MICRO_INT=$((CURRENT_MICRO))
+            
+            # Check if this version is higher than what we've seen before
+            if [ $CURRENT_MAJOR_INT -gt $HIGHEST_MAJOR ] || 
+               ([ $CURRENT_MAJOR_INT -eq $HIGHEST_MAJOR ] && [ $CURRENT_MINOR_INT -gt $HIGHEST_MINOR ]) ||
+               ([ $CURRENT_MAJOR_INT -eq $HIGHEST_MAJOR ] && [ $CURRENT_MINOR_INT -eq $HIGHEST_MINOR ] && [ $CURRENT_MICRO_INT -gt $HIGHEST_MICRO ]); then
+                HIGHEST_MAJOR=$CURRENT_MAJOR_INT
+                HIGHEST_MINOR=$CURRENT_MINOR_INT
+                HIGHEST_MICRO=$CURRENT_MICRO_INT
+                HIGHEST_VERSION_FILE=$LIB_FILE
+            fi
         fi
     done
     
-    if [ -z "$LIBVA_VERSION" ]; then
+    if [ -z "$HIGHEST_VERSION_FILE" ]; then
         echo "Could not determine libva version from library files"
         return 1
     fi
     
-    echo "Detected libva package version: $LIBVA_VERSION"
+    # Format the highest version found
+    LIBVA_VERSION="$HIGHEST_MAJOR.$HIGHEST_MINOR.$HIGHEST_MICRO"
     
-    # Extract major and minor version components
-    MAJOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+" || echo "0")
-    MINOR=$(echo $LIBVA_VERSION | grep -oP "^[0-9]+\.\K[0-9]+" || echo "0")
+    echo "Highest libva package version: $LIBVA_VERSION (from $HIGHEST_VERSION_FILE)"
     
-    # Convert to integers for proper comparison
-    MAJOR_INT=$((MAJOR))
-    MINOR_INT=$((MINOR))
-    
-    if [ "$MAJOR_INT" -gt 2 ] || ([ "$MAJOR_INT" -eq 2 ] && [ "$MINOR_INT" -ge 21 ]); then
+    # Compare against required version
+    if [ "$HIGHEST_MAJOR" -gt 2 ] || ([ "$HIGHEST_MAJOR" -eq 2 ] && [ "$HIGHEST_MINOR" -ge 21 ]); then
         echo "Suitable libva version detected (≥ 2.21)"
         return 0
     else
