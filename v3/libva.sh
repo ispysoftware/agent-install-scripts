@@ -109,6 +109,57 @@ create_build_dir() {
     cd "$BUILD_DIR" || error_exit "Failed to change to build directory"
 }
 
+# Before building, check existing libva versions
+check_existing_versions() {
+    echo "Checking for existing libva installations..."
+    
+    # Check package manager installed versions
+    case $DISTRO in
+        ubuntu|debian|pop|mint|elementary|kali|deepin|parrot)
+            EXISTING_PKG=$(dpkg -l | grep -i libva | awk '{print $2 " " $3}' || echo "None found")
+            echo "Package manager installed versions:"
+            echo "$EXISTING_PKG"
+            ;;
+        fedora|centos|rhel|redhat|rocky|alma)
+            if command -v dnf >/dev/null 2>&1; then
+                EXISTING_PKG=$(dnf list installed | grep -i libva || echo "None found")
+            else
+                EXISTING_PKG=$(yum list installed | grep -i libva || echo "None found")
+            fi
+            echo "Package manager installed versions:"
+            echo "$EXISTING_PKG"
+            ;;
+        arch|manjaro|endeavouros)
+            EXISTING_PKG=$(pacman -Q | grep -i libva || echo "None found")
+            echo "Package manager installed versions:"
+            echo "$EXISTING_PKG"
+            ;;
+        *)
+            echo "Skipping package manager check for this distribution"
+            ;;
+    esac
+    
+    # Check library paths
+    echo "Checking library paths for libva libraries..."
+    ldconfig -p | grep libva || echo "No libva libraries found in ldconfig cache"
+    
+    # Check if pkg-config knows about libva
+    if command -v pkg-config >/dev/null 2>&1; then
+        echo "Checking pkg-config information for libva..."
+        pkg-config --modversion libva 2>/dev/null || echo "libva not found via pkg-config"
+    fi
+}
+
+# Define installation directory - using /usr/local for higher priority
+define_install_prefix() {
+    echo "Setting installation directory for priority loading..."
+    
+    # Use /usr/local which has higher priority in most Linux systems
+    INSTALL_PREFIX="/usr/local"
+    
+    echo "Will install to $INSTALL_PREFIX (higher priority than system libraries)"
+}
+
 # Clone and build libva
 build_libva() {
     echo "Cloning libva repository..."
@@ -156,7 +207,7 @@ build_libva() {
     ./autogen.sh || error_exit "Failed to run autogen.sh"
     
     echo "Configuring libva..."
-    ./configure --prefix=/usr || error_exit "Failed to configure libva"
+    ./configure --prefix=$INSTALL_PREFIX || error_exit "Failed to configure libva"
     
     echo "Building libva..."
     make -j$(nproc 2>/dev/null || echo 2) || error_exit "Failed to build libva"
@@ -176,13 +227,94 @@ install_libva() {
         sudo ldconfig || error_exit "Failed to run ldconfig"
     fi
     
-    # Verify installation
-    echo "Verifying installation..."
-    if ldconfig -p | grep -q libva; then
-        echo "libva installation verified successfully!"
+    # Create new configuration for ldconfig
+    echo "Creating ldconfig configuration for priority loading..."
+    echo "$INSTALL_PREFIX/lib" | sudo tee /etc/ld.so.conf.d/libva-custom.conf > /dev/null
+    # Some distros use different lib directories
+    if [ -d "$INSTALL_PREFIX/lib64" ]; then
+        echo "$INSTALL_PREFIX/lib64" | sudo tee -a /etc/ld.so.conf.d/libva-custom.conf > /dev/null
+    fi
+    
+    # Update ldconfig cache to enable priority loading
+    sudo ldconfig
+    
+    # Create pkg-config configuration
+    echo "Updating PKG_CONFIG_PATH to prioritize custom installation..."
+    PKG_CONFIG_DIR="$INSTALL_PREFIX/lib/pkgconfig"
+    if [ -d "$INSTALL_PREFIX/lib64/pkgconfig" ]; then
+        PKG_CONFIG_DIR="$INSTALL_PREFIX/lib64/pkgconfig:$PKG_CONFIG_DIR"
+    fi
+    
+    # Add to system profile for all users
+    echo "export PKG_CONFIG_PATH=$PKG_CONFIG_DIR:\$PKG_CONFIG_PATH" | sudo tee /etc/profile.d/libva-custom.sh > /dev/null
+    sudo chmod +x /etc/profile.d/libva-custom.sh
+    
+    # Update current shell environment
+    export PKG_CONFIG_PATH="$PKG_CONFIG_DIR:$PKG_CONFIG_PATH"
+    
+    # Verify installation and loading priority
+    verify_installation_priority
+}
+
+# Create environment setup script that can be manually sourced
+create_environment_script() {
+    echo "Creating environment setup script for manual sourcing..."
+    
+    SCRIPT_DIR="$INSTALL_PREFIX/bin"
+    sudo mkdir -p "$SCRIPT_DIR" || true
+    
+    # Create the script
+    cat << EOF | sudo tee "$SCRIPT_DIR/libva-env-setup.sh" > /dev/null
+#!/bin/bash
+# Environment setup for libva 2.22.0 custom installation
+
+# Add library path to LD_LIBRARY_PATH with priority
+export LD_LIBRARY_PATH="$INSTALL_PREFIX/lib:$INSTALL_PREFIX/lib64:\$LD_LIBRARY_PATH"
+
+# Add pkg-config path with priority
+export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$INSTALL_PREFIX/lib64/pkgconfig:\$PKG_CONFIG_PATH"
+
+# Display confirmation
+echo "Environment configured to prioritize libva 2.22.0 custom installation"
+echo "Library path: $INSTALL_PREFIX/lib:$INSTALL_PREFIX/lib64"
+echo "PKG config path: $INSTALL_PREFIX/lib/pkgconfig:$INSTALL_PREFIX/lib64/pkgconfig"
+EOF
+
+    sudo chmod +x "$SCRIPT_DIR/libva-env-setup.sh"
+    
+    echo "Created environment script: $SCRIPT_DIR/libva-env-setup.sh"
+    echo "You can manually source this file with:"
+    echo "  source $SCRIPT_DIR/libva-env-setup.sh"
+}
+
+# Verify that the installation has priority
+verify_installation_priority() {
+    echo "Verifying installation and priority..."
+    
+    # Check if our library is found first in ldconfig
+    echo "Checking ldconfig cache for libva priority..."
+    LIBVA_PATHS=$(ldconfig -p | grep -i libva)
+    echo "$LIBVA_PATHS"
+    
+    # Use pkg-config to check selected version
+    if command -v pkg-config >/dev/null 2>&1; then
+        echo "Checking which libva version is selected by pkg-config..."
+        VERSION=$(pkg-config --modversion libva 2>/dev/null || echo "Not found")
+        LIBPATH=$(pkg-config --variable=libdir libva 2>/dev/null || echo "Not found")
+        
+        echo "Selected libva version: $VERSION"
+        echo "Selected libva path: $LIBPATH"
+        
+        # Check for correct priority
+        if echo "$LIBPATH" | grep -q "$INSTALL_PREFIX"; then
+            echo "PRIORITY CHECK: PASSED - Custom installation is being selected first"
+        else
+            echo "PRIORITY CHECK: FAILED - System is not using our custom installation first"
+            echo "  You may need to source the environment script manually:"
+            echo "  source $INSTALL_PREFIX/bin/libva-env-setup.sh"
+        fi
     else
-        echo "Warning: libva library not found in ldconfig cache."
-        echo "You may need to update your library configuration or restart your system."
+        echo "pkg-config not available for verification"
     fi
 }
 
@@ -213,12 +345,24 @@ main() {
     detect_distro
     print_system_info
     install_dependencies
+    check_existing_versions
+    define_install_prefix
     create_build_dir
     build_libva
     install_libva
+    create_environment_script
     cleanup
     
-    echo "libva has been successfully built and installed"
+    echo "libva 2.22.0 has been successfully built and installed with priority loading"
+    echo ""
+    echo "To ensure applications use this version, you can:"
+    echo "1. Source the environment script before running applications:"
+    echo "   source $INSTALL_PREFIX/bin/libva-env-setup.sh"
+    echo ""
+    echo "2. Or, set the environment variables directly:"
+    echo "   export LD_LIBRARY_PATH=$INSTALL_PREFIX/lib:$INSTALL_PREFIX/lib64:\$LD_LIBRARY_PATH"
+    echo ""
+    echo "Installation Complete!"
 }
 
 # Check if script is being run as root
