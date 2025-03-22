@@ -50,8 +50,8 @@ detect_distro() {
 install_dependencies() {
     echo "Checking and installing required dependencies..."
     
-    PACKAGES="git autoconf libtool pkg-config make gcc"
-    EXTRA_PACKAGES="libdrm-dev xorg-dev"
+    PACKAGES="git autoconf automake libtool libtool-bin gettext pkg-config make gcc flex bison"
+    EXTRA_PACKAGES="libdrm-dev xorg-dev xorgproto-dev"
     
     case $DISTRO in
         ubuntu|debian|pop|mint|elementary|kali|deepin|parrot)
@@ -77,15 +77,15 @@ install_dependencies() {
             ;;
         gentoo)
             echo "Installing dependencies for Gentoo system..."
-            sudo emerge --ask --verbose dev-vcs/git sys-devel/autoconf sys-devel/libtool dev-util/pkgconfig sys-devel/gcc x11-libs/libdrm x11-base/xorg-server
+            sudo emerge --ask --verbose dev-vcs/git sys-devel/autoconf sys-devel/automake sys-devel/libtool dev-util/pkgconfig sys-devel/gcc x11-libs/libdrm x11-base/xorg-server
             ;;
         alpine)
             echo "Installing dependencies for Alpine system..."
-            sudo apk add git autoconf libtool pkgconfig make gcc g++ libdrm-dev xorg-server-dev
+            sudo apk add git autoconf automake libtool pkgconfig make gcc g++ libdrm-dev xorg-server-dev
             ;;
         *)
             echo "Unknown distribution, checking for dependencies manually..."
-            for cmd in git autoconf libtool pkg-config make gcc; do
+            for cmd in git autoconf automake libtool pkg-config make gcc; do
                 if ! command -v $cmd >/dev/null 2>&1; then
                     error_exit "$cmd is required but not installed. Please install it manually and try again."
                 fi
