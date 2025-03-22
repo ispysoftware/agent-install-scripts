@@ -56,32 +56,32 @@ install_dependencies() {
         ubuntu|debian|pop|mint|elementary|kali|deepin|parrot)
             echo "Installing dependencies for Debian-based system..."
             sudo apt-get update
-            # Debian-specific packages
-            sudo apt-get install -y $PACKAGES libtool-bin libdrm-dev xorg-dev
+            # Debian-specific packages, adding just libx11-dev for X11 support
+            sudo apt-get install -y $PACKAGES libtool-bin libdrm-dev xorg-dev libx11-dev
             ;;
         fedora|centos|rhel|redhat|rocky|alma)
             echo "Installing dependencies for Red Hat-based system..."
             if command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y $PACKAGES libdrm-devel xorg-x11-server-devel xorg-x11-proto-devel
+                sudo dnf install -y $PACKAGES libdrm-devel xorg-x11-server-devel xorg-x11-proto-devel libX11-devel
             else
-                sudo yum install -y $PACKAGES libdrm-devel xorg-x11-server-devel xorg-x11-proto-devel
+                sudo yum install -y $PACKAGES libdrm-devel xorg-x11-server-devel xorg-x11-proto-devel libX11-devel
             fi
             ;;
         arch|manjaro|endeavouros)
             echo "Installing dependencies for Arch-based system..."
-            sudo pacman -Sy --needed $PACKAGES libdrm xorg-server-devel xorgproto
+            sudo pacman -Sy --needed $PACKAGES libdrm xorg-server-devel xorgproto libx11
             ;;
         opensuse|suse)
             echo "Installing dependencies for SuSE-based system..."
-            sudo zypper install -y $PACKAGES libdrm-devel xorg-x11-devel xorg-x11-proto-devel
+            sudo zypper install -y $PACKAGES libdrm-devel xorg-x11-devel xorg-x11-proto-devel libX11-devel
             ;;
         gentoo)
             echo "Installing dependencies for Gentoo system..."
-            sudo emerge --ask --verbose dev-vcs/git sys-devel/autoconf sys-devel/automake sys-devel/libtool dev-util/pkgconfig sys-devel/gcc x11-libs/libdrm x11-base/xorg-server dev-util/gettext sys-devel/flex sys-devel/bison
+            sudo emerge --ask --verbose dev-vcs/git sys-devel/autoconf sys-devel/automake sys-devel/libtool dev-util/pkgconfig sys-devel/gcc x11-libs/libdrm x11-base/xorg-server x11-libs/libX11 dev-util/gettext sys-devel/flex sys-devel/bison
             ;;
         alpine)
             echo "Installing dependencies for Alpine system..."
-            sudo apk add git autoconf automake libtool gettext pkgconfig make gcc g++ flex bison libdrm-dev xorg-server-dev
+            sudo apk add git autoconf automake libtool gettext pkgconfig make gcc g++ flex bison libdrm-dev xorg-server-dev libx11-dev
             ;;
         *)
             echo "Unknown distribution, checking for dependencies manually..."
