@@ -129,7 +129,6 @@ setup_libva() {
                 echo "Note: GPU hardware acceleration will not be available."
                 return 1
             fi
-        else
             # In non-interactive mode, automatically install
             echo "Running in non-interactive mode. Automatically installing libva..."
             install_libva
@@ -143,7 +142,6 @@ setup_libva() {
                 echo "Continuing with installation, but GPU acceleration may not work."
                 return 1
             fi
-        fi
     fi
 }
 
