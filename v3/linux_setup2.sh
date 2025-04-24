@@ -304,6 +304,10 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 info "Script is running with root privileges."
 
+info "Setting UDP Buffer size defaults"
+sysctl -w net.core.rmem_max=16777216 || true
+sysctl -w net.core.rmem_default=8388608 || true
+
 # Stop AgentDVR service if it's running
 if systemctl stop AgentDVR.service; then
     info "Stopped existing AgentDVR service."
