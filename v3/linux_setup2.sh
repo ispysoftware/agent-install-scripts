@@ -309,11 +309,7 @@ sysctl -w net.core.rmem_max=16777216 || true
 sysctl -w net.core.rmem_default=8388608 || true
 
 # Stop AgentDVR service if it's running
-if systemctl stop AgentDVR.service; then
-    info "Stopped existing AgentDVR service."
-else
-    info "AgentDVR service was not running or failed to stop. Continuing..."
-fi
+systemctl stop AgentDVR.service >> "$LOGFILE" 2>&1 || info "AgentDVR.service was not running."
 
 # Create installation directory
 mkdir -p "$INSTALL_PATH" || critical_error "Failed to create installation directory at $INSTALL_PATH."
