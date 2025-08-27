@@ -220,6 +220,50 @@ install_libva() {
     return 0
 }
 
+# Function to create desktop shortcuts
+create_desktop_shortcuts() {
+    local install_path="$1"
+    local username="$2"
+    
+    info "Creating desktop shortcuts..."
+    
+    # Define paths for desktop files
+    local desktop_browser_file="/usr/share/applications/agentdvr.desktop"
+    local user_desktop="/home/$username/Desktop"
+    
+    # Create the browser desktop file - calls launch_browser.sh
+    cat > "$desktop_browser_file" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Agent DVR
+Comment=Open Agent DVR web interface
+Exec=$install_path/launch_browser.sh
+Icon=$install_path/icon.png
+Terminal=false
+Categories=AudioVideo;Video;Security;
+Keywords=surveillance;camera;security;dvr;
+StartupNotify=true
+EOF
+
+    # Set permissions and create user shortcuts
+    chmod 644 "$desktop_browser_file"
+    
+    if [ -d "$user_desktop" ]; then
+        cp "$desktop_browser_file" "$user_desktop/agentdvr.desktop"
+        chown "$username:$username" "$user_desktop/agentdvr.desktop"
+        chmod +x "$user_desktop/agentdvr.desktop"
+        info "Desktop shortcut created in $user_desktop"
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database /usr/share/applications/ 2>/dev/null || true
+    fi
+    
+    info "Desktop shortcut created successfully"
+}
+
 # Main function to check and potentially install libva
 setup_libva() {
     if check_libva_installation; then
@@ -538,8 +582,11 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     systemctl start AgentDVR.service >> "$LOGFILE" 2>&1 || critical_error "Failed to start AgentDVR.service."
     info "AgentDVR service enabled and started successfully."
 
+    # Create desktop shortcut
+    create_desktop_shortcuts "$INSTALL_PATH" "$name"
+
     echo "Started AgentDVR service."
-    echo "Go to http://localhost:$available_port to configure AgentDVR."
+    echo "Use the application shortcuts or go to http://localhost:$available_port to configure AgentDVR."
     exit 0
 else
     info "User opted not to set up AgentDVR as a system service."
