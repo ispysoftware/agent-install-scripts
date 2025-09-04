@@ -224,15 +224,29 @@ install_libva() {
 create_desktop_shortcuts() {
     local install_path="$1"
     local username="$2"
-    
-    info "Creating desktop shortcuts..."
-    
-    # Define paths for desktop files
-    local desktop_browser_file="/usr/share/applications/agentdvr.desktop"
+    local desktop_filename="agentdvr.desktop"
+    local desktop_file="/usr/share/applications/$desktop_filename"
     local user_desktop="/home/$username/Desktop"
     
-    # Create the browser desktop file - calls launch_browser.sh
-    cat > "$desktop_browser_file" << EOF
+    # Simple logging function
+    info() {
+        echo "[INFO] $1"
+    }
+
+    error() {
+        echo "[ERROR] $1" 1>&2
+    }
+
+    # Verify root privileges for system-wide files
+    if [[ $EUID -ne 0 ]]; then
+       error "This script must be run with sudo or as root to create system-wide shortcuts."
+       return 1
+    fi
+    
+    info "Creating desktop shortcuts..."
+
+    # Create the system-wide .desktop file
+    cat > "$desktop_file" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -246,22 +260,31 @@ Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
 EOF
 
-    # Set permissions and create user shortcuts
-    chmod 644 "$desktop_browser_file"
-    
-    if [ -d "$user_desktop" ]; then
-        cp "$desktop_browser_file" "$user_desktop/agentdvr.desktop"
-        chown "$username:$username" "$user_desktop/agentdvr.desktop"
-        chmod +x "$user_desktop/agentdvr.desktop"
-        info "Desktop shortcut created in $user_desktop"
+    # Set correct permissions
+    chmod 644 "$desktop_file"
+
+    # Update the application database. Failures are ignored.
+    if command -v update-desktop-database &>/dev/null; then
+        info "Updating desktop database..."
+        update-desktop-database /usr/share/applications/ || true
+    else
+        info "update-desktop-database not found. Skipping."
     fi
-    
-    # Update desktop database
-    if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database /usr/share/applications/ 2>/dev/null || true
+
+    # Create a user desktop shortcut
+    if [[ -d "$user_desktop" ]]; then
+        info "Creating desktop shortcut for user '$username'..."
+        # Use sudo -u to ensure correct ownership and permissions
+        sudo -u "$username" cp -f "$desktop_file" "$user_desktop/$desktop_filename"
+        sudo -u "$username" chmod 644 "$user_desktop/$desktop_filename"
+        
+        info "Desktop shortcut created in $user_desktop. You may need to log out and log back in."
+    else
+        error "User desktop directory '$user_desktop' not found. Skipping user shortcut."
     fi
-    
-    info "Desktop shortcut created successfully"
+
+    info "Shortcut creation process complete."
+    return 0
 }
 
 # Main function to check and potentially install libva
