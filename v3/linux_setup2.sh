@@ -221,20 +221,18 @@ install_libva() {
 }
 
 # Function to create desktop shortcuts
-create_desktop_shortcuts() {
+create_system_shortcut() {
     local install_path="$1"
     local username="$2"
-    
-    info "Creating desktop shortcuts..."
+
+    info "Creating system-wide application launcher..."
     
     # Create protected launcher script in user space
     local user_launcher_dir="/home/$username/.local/bin"
     local user_launcher="$user_launcher_dir/agentdvr-launcher.sh"
     
-    # Create user's local bin directory if it doesn't exist
     mkdir -p "$user_launcher_dir"
     
-    # Copy the browser script to protected location
     if [ -f "$install_path/open_browser.sh" ]; then
         cp "$install_path/open_browser.sh" "$user_launcher"
         chown "$username:$username" "$user_launcher"
@@ -242,31 +240,14 @@ create_desktop_shortcuts() {
         info "Created protected launcher at $user_launcher"
     else
         error "open_browser.sh not found at $install_path - desktop shortcut may not work"
-        # Fallback to direct browser launch
         user_launcher="xdg-open http://localhost:8090"
     fi
     
-    # Define paths for desktop files
+    # Define path for system application file
     local desktop_browser_file="/usr/share/applications/agentdvr.desktop"
     
-    # Find user's actual desktop directory (handles localization)
-    local user_desktop
-    if command -v xdg-user-dir >/dev/null 2>&1; then
-        user_desktop=$(sudo -u "$username" xdg-user-dir DESKTOP 2>/dev/null)
-    fi
-    
-    # Fallback to common desktop directory names
-    if [ -z "$user_desktop" ] || [ ! -d "$user_desktop" ]; then
-        for desktop_name in "Desktop" "Escritorio" "Bureau" "Schreibtisch" "デスクトップ"; do
-            if [ -d "/home/$username/$desktop_name" ]; then
-                user_desktop="/home/$username/$desktop_name"
-                break
-            fi
-        done
-    fi
-    
     # Create the browser desktop file
-    cat > "$desktop_browser_file" << EOF
+    sudo tee "$desktop_browser_file" > /dev/null << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -278,43 +259,17 @@ Terminal=false
 Categories=AudioVideo;Video;Security;
 Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
-Trusted=true
 EOF
     
     # Set permissions for system desktop file
-    chmod 644 "$desktop_browser_file"
-    
-    # Create user desktop shortcut if Desktop directory exists
-    if [ -n "$user_desktop" ] && [ -d "$user_desktop" ]; then
-    # Instead of copying, create directly as user to avoid trust issues
-    sudo -u "$username" tee "$user_desktop/agentdvr.desktop" > /dev/null << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Agent DVR
-Comment=Open Agent DVR web interface
-Exec=$user_launcher
-Icon=$install_path/icon.png
-Terminal=false
-Categories=AudioVideo;Video;Security;
-Keywords=surveillance;camera;security;dvr;
-StartupNotify=true
-Trusted=true
-EOF
-    
-    sudo -u "$username" chmod +x "$user_desktop/agentdvr.desktop"
-    sudo -u "$username" gio set "$user_desktop/agentdvr.desktop" "metadata::x-gnome-is-trusted" true 2>/dev/null || true
-    info "Desktop shortcut created in $user_desktop"
-else
-    info "Desktop directory not found - shortcut available in applications menu"
-fi
+    sudo chmod 644 "$desktop_browser_file"
     
     # Update desktop database
     if command -v update-desktop-database >/dev/null 2>&1; then
         update-desktop-database /usr/share/applications/ 2>/dev/null || true
     fi
     
-    info "Desktop shortcut created successfully"
+    info "Application launcher created successfully in the applications menu."
 }
 
 # Main function to check and potentially install libva
@@ -645,7 +600,7 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     info "AgentDVR service enabled and started successfully."
 
     # Create desktop shortcut
-    create_desktop_shortcuts "$INSTALL_PATH" "$SUDO_USER"
+    create_system_shortcut "$INSTALL_PATH" "$SUDO_USER"
 
     echo "Started AgentDVR service."
     echo "Use the application shortcuts or go to http://localhost:$available_port to configure AgentDVR."
