@@ -278,6 +278,7 @@ Terminal=false
 Categories=AudioVideo;Video;Security;
 Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
+Trusted=true
 EOF
     
     # Set permissions for system desktop file
@@ -298,9 +299,11 @@ Terminal=false
 Categories=AudioVideo;Video;Security;
 Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
+Trusted=true
 EOF
     
     sudo -u "$username" chmod +x "$user_desktop/agentdvr.desktop"
+    sudo -u "$username" gio set "$user_desktop/agentdvr.desktop" "metadata::x-gnome-is-trusted" true 2>/dev/null || true
     info "Desktop shortcut created in $user_desktop"
 else
     info "Desktop directory not found - shortcut available in applications menu"
