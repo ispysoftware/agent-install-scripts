@@ -223,7 +223,9 @@ install_libva() {
 # Function to create desktop shortcuts
 create_desktop_shortcuts() {
     local install_path="$1"
-    local username="$2"
+    
+    # Determine the actual user who ran sudo, or default to current user
+    local username="${SUDO_USER:-$(whoami)}"
     local desktop_filename="agentdvr.desktop"
     local desktop_file="/usr/share/applications/$desktop_filename"
     local user_desktop="/home/$username/Desktop"
@@ -281,11 +283,13 @@ EOF
         info "Desktop shortcut created in $user_desktop. You may need to log out and log back in."
     else
         error "User desktop directory '$user_desktop' not found. Skipping user shortcut."
+        return 1
     fi
 
     info "Shortcut creation process complete."
     return 0
 }
+
 
 # Main function to check and potentially install libva
 setup_libva() {
