@@ -285,17 +285,26 @@ EOF
     
     # Create user desktop shortcut if Desktop directory exists
     if [ -n "$user_desktop" ] && [ -d "$user_desktop" ]; then
-        cp "$desktop_browser_file" "$user_desktop/agentdvr.desktop"
-        chown "$username:$username" "$user_desktop/agentdvr.desktop"
-        chmod +x "$user_desktop/agentdvr.desktop"
-        
-        # Try to mark as trusted (works on GNOME-based systems)
-        sudo -u "$username" gio set "$user_desktop/agentdvr.desktop" metadata::trusted true 2>/dev/null || true
-        
-        info "Desktop shortcut created in $user_desktop"
-    else
-        info "Desktop directory not found - shortcut available in applications menu"
-    fi
+    # Instead of copying, create directly as user to avoid trust issues
+    sudo -u "$username" tee "$user_desktop/agentdvr.desktop" > /dev/null << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Agent DVR
+Comment=Open Agent DVR web interface
+Exec=$user_launcher
+Icon=$install_path/icon.png
+Terminal=false
+Categories=AudioVideo;Video;Security;
+Keywords=surveillance;camera;security;dvr;
+StartupNotify=true
+EOF
+    
+    sudo -u "$username" chmod +x "$user_desktop/agentdvr.desktop"
+    info "Desktop shortcut created in $user_desktop"
+else
+    info "Desktop directory not found - shortcut available in applications menu"
+fi
     
     # Update desktop database
     if command -v update-desktop-database >/dev/null 2>&1; then
