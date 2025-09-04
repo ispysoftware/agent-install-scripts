@@ -374,8 +374,6 @@ if machine_has "apt-get"; then
         fontconfig \
         libva-drm2 >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
     info "Dependencies installed successfully using apt-get."
-	info "Installing optional math libraries for minimal systems..."
-	apt-get install --no-install-recommends -y liblapack3 libcblas3 libatlas3-base >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
 elif machine_has "dnf" || machine_has "yum"; then
     info "Detected yum/dnf package manager. Updating and installing dependencies..."
     if machine_has "dnf"; then
