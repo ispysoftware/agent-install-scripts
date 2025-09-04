@@ -223,73 +223,87 @@ install_libva() {
 # Function to create desktop shortcuts
 create_desktop_shortcuts() {
     local install_path="$1"
-    
-    # Determine the actual user who ran sudo, or default to current user
-    local username="${SUDO_USER:-$(whoami)}"
-    local desktop_filename="agentdvr.desktop"
-    local desktop_file="/usr/share/applications/$desktop_filename"
-    local user_desktop="/home/$username/Desktop"
-    
-    # Simple logging function
-    info() {
-        echo "[INFO] $1"
-    }
-
-    error() {
-        echo "[ERROR] $1" 1>&2
-    }
-
-    # Verify root privileges for system-wide files
-    if [[ $EUID -ne 0 ]]; then
-       error "This script must be run with sudo or as root to create system-wide shortcuts."
-       return 1
-    fi
+    local username="$2"
     
     info "Creating desktop shortcuts..."
-
-    # Create the system-wide .desktop file
-    cat > "$desktop_file" << EOF
+    
+    # Create protected launcher script in user space
+    local user_launcher_dir="/home/$username/.local/bin"
+    local user_launcher="$user_launcher_dir/agentdvr-launcher.sh"
+    
+    # Create user's local bin directory if it doesn't exist
+    mkdir -p "$user_launcher_dir"
+    
+    # Copy the browser script to protected location
+    if [ -f "$install_path/open_browser.sh" ]; then
+        cp "$install_path/open_browser.sh" "$user_launcher"
+        chown "$username:$username" "$user_launcher"
+        chmod +x "$user_launcher"
+        info "Created protected launcher at $user_launcher"
+    else
+        error "open_browser.sh not found at $install_path - desktop shortcut may not work"
+        # Fallback to direct browser launch
+        user_launcher="xdg-open http://localhost:8090"
+    fi
+    
+    # Define paths for desktop files
+    local desktop_browser_file="/usr/share/applications/agentdvr.desktop"
+    
+    # Find user's actual desktop directory (handles localization)
+    local user_desktop
+    if command -v xdg-user-dir >/dev/null 2>&1; then
+        user_desktop=$(sudo -u "$username" xdg-user-dir DESKTOP 2>/dev/null)
+    fi
+    
+    # Fallback to common desktop directory names
+    if [ -z "$user_desktop" ] || [ ! -d "$user_desktop" ]; then
+        for desktop_name in "Desktop" "Escritorio" "Bureau" "Schreibtisch" "デスクトップ"; do
+            if [ -d "/home/$username/$desktop_name" ]; then
+                user_desktop="/home/$username/$desktop_name"
+                break
+            fi
+        done
+    fi
+    
+    # Create the browser desktop file
+    cat > "$desktop_browser_file" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=Agent DVR
 Comment=Open Agent DVR web interface
-Exec=$install_path/launch_browser.sh
+Exec=$user_launcher
 Icon=$install_path/icon.png
 Terminal=false
 Categories=AudioVideo;Video;Security;
 Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
 EOF
-
-    # Set correct permissions
-    chmod 644 "$desktop_file"
-
-    # Update the application database. Failures are ignored.
-    if command -v update-desktop-database &>/dev/null; then
-        info "Updating desktop database..."
-        update-desktop-database /usr/share/applications/ || true
-    else
-        info "update-desktop-database not found. Skipping."
-    fi
-
-    # Create a user desktop shortcut
-    if [[ -d "$user_desktop" ]]; then
-        info "Creating desktop shortcut for user '$username'..."
-        # Use sudo -u to ensure correct ownership and permissions
-        sudo -u "$username" cp -f "$desktop_file" "$user_desktop/$desktop_filename"
-        sudo -u "$username" chmod 644 "$user_desktop/$desktop_filename"
+    
+    # Set permissions for system desktop file
+    chmod 644 "$desktop_browser_file"
+    
+    # Create user desktop shortcut if Desktop directory exists
+    if [ -n "$user_desktop" ] && [ -d "$user_desktop" ]; then
+        cp "$desktop_browser_file" "$user_desktop/agentdvr.desktop"
+        chown "$username:$username" "$user_desktop/agentdvr.desktop"
+        chmod +x "$user_desktop/agentdvr.desktop"
         
-        info "Desktop shortcut created in $user_desktop. You may need to log out and log back in."
+        # Try to mark as trusted (works on GNOME-based systems)
+        sudo -u "$username" gio set "$user_desktop/agentdvr.desktop" metadata::trusted true 2>/dev/null || true
+        
+        info "Desktop shortcut created in $user_desktop"
     else
-        error "User desktop directory '$user_desktop' not found. Skipping user shortcut."
-        return 1
+        info "Desktop directory not found - shortcut available in applications menu"
     fi
-
-    info "Shortcut creation process complete."
-    return 0
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database /usr/share/applications/ 2>/dev/null || true
+    fi
+    
+    info "Desktop shortcut created successfully"
 }
-
 
 # Main function to check and potentially install libva
 setup_libva() {
@@ -401,6 +415,7 @@ if machine_has "apt-get"; then
         fontconfig \
         libva-drm2 >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
     info "Dependencies installed successfully using apt-get."
+
 elif machine_has "dnf" || machine_has "yum"; then
     info "Detected yum/dnf package manager. Updating and installing dependencies..."
     if machine_has "dnf"; then
@@ -618,7 +633,7 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     info "AgentDVR service enabled and started successfully."
 
     # Create desktop shortcut
-    create_desktop_shortcuts "$INSTALL_PATH" "$name"
+    create_desktop_shortcuts "$INSTALL_PATH" "$SUDO_USER"
 
     echo "Started AgentDVR service."
     echo "Use the application shortcuts or go to http://localhost:$available_port to configure AgentDVR."
