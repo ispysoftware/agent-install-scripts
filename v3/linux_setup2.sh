@@ -224,6 +224,7 @@ install_libva() {
 create_system_shortcut() {
     local install_path="$1"
     local username="$2"
+    local port="$3"
 
     info "Creating system-wide application launcher..."
     
@@ -240,7 +241,7 @@ create_system_shortcut() {
         info "Created protected launcher at $user_launcher"
     else
         error "open_browser.sh not found at $install_path - desktop shortcut may not work"
-        user_launcher="xdg-open http://localhost:8090"
+        user_launcher="xdg-open http://localhost:$port"
     fi
     
     # Define path for system application file
@@ -266,7 +267,7 @@ EOF
     
     # Update desktop database
     if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database /usr/share/applications/ 2>/dev/null || true
+        sudo update-desktop-database /usr/share/applications/ 2>/dev/null || true
     fi
     
     info "Application launcher created successfully in the applications menu."
@@ -600,7 +601,7 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     info "AgentDVR service enabled and started successfully."
 
     # Create desktop shortcut
-    create_system_shortcut "$INSTALL_PATH" "$SUDO_USER"
+    create_system_shortcut "$INSTALL_PATH" "$SUDO_USER" "$available_port"
 
     echo "Started AgentDVR service."
     echo "Use the application shortcuts or go to http://localhost:$available_port to configure AgentDVR."
