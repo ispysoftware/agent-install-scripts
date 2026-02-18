@@ -3,7 +3,7 @@ Setup scripts for Agent DVR on macOS/ Linux
 For Windows download the installer from the website
 For Docker see the download page below
 
-https://www.ispyconnect.com/download.aspx
+https://www.ispyconnect.com/download
 
 You may need to install curl first:
 
