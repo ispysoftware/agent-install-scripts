@@ -8,16 +8,22 @@ LOGFILE="/var/log/agentdvr_setup.log"  # Log file path
 INSTALL_PATH="/opt/AgentDVR"
 
 USE_VERSION=0
+AUTO_YES=false
+INTERACTIVE=true # Set this explicitly so your libva check can use it
 
 # Array to collect any arguments to pass on to child scripts.
 ARGS=()
 
-# Parse command-line options. If -v is provided, update USE_VERSION and add it to ARGS.
-while getopts "v:" opt; do
+# Parse command-line options.
+while getopts "v:y" opt; do
     case "$opt" in
     v)
         USE_VERSION="$OPTARG"
         ARGS+=("-v" "$OPTARG")
+        ;;
+    y)
+        AUTO_YES=true
+        INTERACTIVE=false
         ;;
     *)
         ;;
@@ -444,7 +450,13 @@ fi
 # Check for existing AgentDVR installation
 AGENT_FILE="$INSTALL_PATH/Agent"
 if [ -f "$AGENT_FILE" ]; then
-    read -rp "Found Agent in $INSTALL_PATH. Would you like to update? (y/n): " REINSTALL </dev/tty
+    if [ "$AUTO_YES" = true ]; then
+        REINSTALL="y"
+        info "Unattended mode: Auto-updating existing AgentDVR installation."
+    else
+        read -rp "Found Agent in $INSTALL_PATH. Would you like to update? (y/n): " REINSTALL </dev/tty || REINSTALL="n"
+    fi
+    
     REINSTALL=${REINSTALL,,}  # Convert to lowercase
     if [[ "$REINSTALL" != "y" ]]; then
         info "Aborting installation as per user request."
@@ -553,10 +565,15 @@ echo "$available_port" > "port.txt"
 info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
 
 # Option to set up as a system service
-read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty
+if [ "$AUTO_YES" = true ]; then
+    answer="y"
+    info "Unattended mode: Auto-setting up AgentDVR as a system service."
+else
+    read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty || answer="n"
+fi
 answer=${answer,,}  # Convert to lowercase
 
-if [[ "$answer" == "y" || "$answer" == "yes" ]]; then 
+if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     info "User opted to set up AgentDVR as a system service."
 
     info "Downloading AgentDVR.service file..."
