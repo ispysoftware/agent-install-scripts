@@ -8,8 +8,13 @@ LOGFILE="/var/log/agentdvr_setup.log"  # Log file path
 INSTALL_PATH="/opt/AgentDVR"
 
 USE_VERSION=0
-AUTO_YES=false
-INTERACTIVE=true # Set this explicitly so your libva check can use it
+if { true < /dev/tty; } 2>/dev/null; then
+    AUTO_YES=false
+    INTERACTIVE=true
+else
+    AUTO_YES=true
+    INTERACTIVE=false
+fi
 
 # Array to collect any arguments to pass on to child scripts.
 ARGS=()
