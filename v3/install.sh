@@ -20,7 +20,7 @@ USE_BETA=${USE_BETA:-false}
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If darwin (macOS)
-  curl -H 'Cache-Control: no-cache, no-store' -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/macos_setup.sh" | USE_BETA=$USE_BETA bash -s -- "${ARGS[@]}"
+  echo "Use the MacOS installer on the download page - https://www.ispyconnect.com/download";
   exit
 fi
 
