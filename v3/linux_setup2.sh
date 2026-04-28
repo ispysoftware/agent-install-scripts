@@ -8,13 +8,12 @@ LOGFILE="/var/log/agentdvr_setup.log"  # Log file path
 INSTALL_PATH="/opt/AgentDVR"
 
 USE_VERSION=0
-if { true < /dev/tty; } 2>/dev/null; then
-    AUTO_YES=false
-    INTERACTIVE=true
-else
-    AUTO_YES=true
-    INTERACTIVE=false
-fi
+AUTO_YES=false
+INTERACTIVE=true # Set this explicitly so your libva check can use it
+USE_BETA=false   # Added to prevent undefined variable evaluation
+
+# Safely identify the real user running the script, falling back to root if run directly
+ACTUAL_USER="${SUDO_USER:-$(whoami)}"
 
 # Array to collect any arguments to pass on to child scripts.
 ARGS=()
@@ -48,8 +47,6 @@ fi
 if [ "$USE_VERSION" -gt 0 ]; then
     echo "Installing v$USE_VERSION"
 fi
-
-
 
 # Function to print info messages with timestamp
 info() {
@@ -102,11 +99,16 @@ find_port() {
     # Define the list of ports to check
     ports=(8090 8080 8100 8010 8123 8181 8222 8300 8400 8500 8600 8700 8800 8888 8899 8900 8989 9000 9080 9090 9100 9200 9300 9400 9500 9600 9700 9800 9900)
 
-
     # Function to check if a port is in use
     is_port_in_use() {
         local port=$1
-        ss -tuln | grep -E "LISTEN" | grep -qE "[: ]$port([^0-9]|$)"
+        if command -v ss > /dev/null 2>&1; then
+            ss -tuln | grep -E "LISTEN" | grep -qE "[: ]$port([^0-9]|$)"
+        elif command -v netstat > /dev/null 2>&1; then
+            netstat -tuln | grep -E "LISTEN" | grep -qE "[: ]$port([^0-9]|$)"
+        else
+            return 1 # Fallback: Assume port is free if we lack the tools to check
+        fi
     }
 
     # Iterate over the list and find the first available port
@@ -239,8 +241,12 @@ create_system_shortcut() {
 
     info "Creating system-wide application launcher..."
     
+    # Dynamically find the user's home directory
+    local user_home
+    user_home=$(eval echo "~$username")
+    
     # Create protected launcher script in user space
-    local user_launcher_dir="/home/$username/.local/bin"
+    local user_launcher_dir="$user_home/.local/bin"
     local user_launcher="$user_launcher_dir/agentdvr-launcher.sh"
     
     mkdir -p "$user_launcher_dir"
@@ -251,7 +257,7 @@ create_system_shortcut() {
         chmod +x "$user_launcher"
         info "Created protected launcher at $user_launcher"
     else
-        error "open_browser.sh not found at $install_path - desktop shortcut may not work"
+        error_log "open_browser.sh not found at $install_path - desktop shortcut may not work"
         user_launcher="xdg-open http://localhost:$port"
     fi
     
@@ -301,8 +307,10 @@ setup_libva() {
         
         # Check if we're running in a non-interactive mode
         if [ -z "$INTERACTIVE" ] || [ "$INTERACTIVE" = "true" ]; then
-            read -p "Would you like to install libva 2.22.0? (y/n) " -n 1 -r </dev/tty
-            echo
+            printf "\nWould you like to install libva 2.22.0? (y/n) " >/dev/tty
+            read -n 1 -r REPLY </dev/tty
+            echo >/dev/tty
+            
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 install_libva
                 # Verify installation was successful
@@ -459,7 +467,8 @@ if [ -f "$AGENT_FILE" ]; then
         REINSTALL="y"
         info "Unattended mode: Auto-updating existing AgentDVR installation."
     else
-        read -rp "Found Agent in $INSTALL_PATH. Would you like to update? (y/n): " REINSTALL </dev/tty || REINSTALL="n"
+        printf "\nFound Agent in %s. Would you like to update? (y/n): " "$INSTALL_PATH" >/dev/tty
+        read -r REINSTALL </dev/tty || REINSTALL="n"
     fi
     
     REINSTALL=${REINSTALL,,}  # Convert to lowercase
@@ -490,7 +499,6 @@ DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error
 version=$(echo "$DOWNLOAD_URL" | sed -E 's#.*/[^/]*_([0-9]+)_([0-9]+)_([0-9]+)_([0-9]+)\.zip$#\1\2\3\4#')
 
 info "Extracted version: $version"
-
 
 info "Using download URL: $DOWNLOAD_URL"
 
@@ -536,25 +544,21 @@ find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execut
 info "Execute permissions set successfully."
 
 # Add user to 'video' group for device access
-name=$(whoami)
-info "Adding user '$name' to 'video' group for local device access..."
+info "Adding user '$ACTUAL_USER' to 'video' group for local device access..."
 if machine_has "usermod"; then
-    usermod -a -G video "$name" >> "$LOGFILE" 2>&1 || critical_error "Failed to append user '$name' to 'video' group."
+    usermod -a -G video "$ACTUAL_USER" >> "$LOGFILE" 2>&1 || critical_error "Failed to append user '$ACTUAL_USER' to 'video' group."
 elif machine_has "adduser"; then
-    adduser "$name" video >> "$LOGFILE" 2>&1 || critical_error "Failed to add user '$name' to 'video' group."
+    adduser "$ACTUAL_USER" video >> "$LOGFILE" 2>&1 || critical_error "Failed to add user '$ACTUAL_USER' to 'video' group."
 else
     error_log "Neither 'usermod' nor 'adduser' command is available to modify user groups."
 fi
-info "User '$name' added to 'video' group successfully."
-
-
+info "User '$ACTUAL_USER' added to 'video' group successfully."
 
 setup_libva
 
-
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
 
-#write the port for the server
+# Write the port for the server
 available_port=$(find_port)
 
 if [[ $? -ne 0 ]]; then
@@ -562,19 +566,21 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-# Write port to file
+# Write port to file WITHOUT using `cd` so we don't break subsequent relative file paths
 mkdir -p "$INSTALL_PATH/Media/XML"
-cd "$INSTALL_PATH/Media/XML"
-
-echo "$available_port" > "port.txt"
+echo "$available_port" > "$INSTALL_PATH/Media/XML/port.txt"
 info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
+
+# Apply ownership to the actual user before any services or manual starts are triggered
+chown "$ACTUAL_USER" -R "$INSTALL_PATH" || critical_error "Failed to change ownership of $INSTALL_PATH to $ACTUAL_USER."
 
 # Option to set up as a system service
 if [ "$AUTO_YES" = true ]; then
     answer="y"
     info "Unattended mode: Auto-setting up AgentDVR as a system service."
 else
-    read -rp "Setup AgentDVR as a system service (y/n)? " answer </dev/tty || answer="n"
+    printf "\nSetup AgentDVR as a system service (y/n)? " >/dev/tty
+    read -r answer </dev/tty || answer="n"
 fi
 answer=${answer,,}  # Convert to lowercase
 
@@ -588,10 +594,10 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
         critical_error "Failed to download AgentDVR.service."
     fi
 
-    # Update the service file with installation path and username
+    # Update the service file with installation path and actual username
     info "Configuring AgentDVR.service file with installation path and username..."
     sed -i "s|AGENT_LOCATION|$INSTALL_PATH|g" AgentDVR.service || critical_error "Failed to update AGENT_LOCATION in AgentDVR.service."
-    sed -i "s|YOUR_USERNAME|$name|g" AgentDVR.service || critical_error "Failed to update YOUR_USERNAME in AgentDVR.service."
+    sed -i "s|YOUR_USERNAME|$ACTUAL_USER|g" AgentDVR.service || critical_error "Failed to update YOUR_USERNAME in AgentDVR.service."
 
     chmod 644 ./AgentDVR.service
     info "Set permissions for AgentDVR.service."
@@ -606,9 +612,6 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
         info "Removed existing /etc/systemd/system/AgentDVR.service."
     fi
 
-    # Change ownership of installation directory
-    chown "$name" -R "$INSTALL_PATH" || critical_error "Failed to change ownership of $INSTALL_PATH to $name."
-
     # Copy the service file to systemd directory
     cp AgentDVR.service /etc/systemd/system/AgentDVR.service || critical_error "Failed to copy AgentDVR.service to /etc/systemd/system/."
     rm -f AgentDVR.service
@@ -622,8 +625,8 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     systemctl start AgentDVR.service >> "$LOGFILE" 2>&1 || critical_error "Failed to start AgentDVR.service."
     info "AgentDVR service enabled and started successfully."
 
-    # Create desktop shortcut
-    create_system_shortcut "$INSTALL_PATH" "$SUDO_USER" "$available_port"
+    # Create desktop shortcut using ACTUAL_USER
+    create_system_shortcut "$INSTALL_PATH" "$ACTUAL_USER" "$available_port"
 
     echo "Started AgentDVR service."
     echo "Use the application shortcuts or go to http://localhost:$available_port to configure AgentDVR."
