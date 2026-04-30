@@ -10,7 +10,7 @@ INSTALL_PATH="/opt/AgentDVR"
 USE_VERSION=0
 AUTO_YES=false
 INTERACTIVE=true # Set this explicitly so your libva check can use it
-USE_BETA=false   # Added to prevent undefined variable evaluation
+USE_BETA=${USE_BETA:-false}   # Added to prevent undefined variable evaluation
 
 # Safely identify the real user running the script, falling back to root if run directly
 ACTUAL_USER="${SUDO_USER:-$(whoami)}"
