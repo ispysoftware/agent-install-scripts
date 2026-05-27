@@ -1,61 +1,76 @@
-# Scripted installs for Agent DVR on OSX, Linux and Raspberry Pi
-Setup scripts for Agent DVR on macOS/ Linux
-For Windows download the installer from the website
-For Docker see the download page below
+﻿# Agent DVR — Install Scripts
 
-https://www.ispyconnect.com/download
+[Agent DVR](https://www.ispyconnect.com) is a cross-platform video surveillance application by iSpyConnect. It supports IP cameras, ONVIF devices, RTSP streams, USB cameras, and audio devices. Free for private local use; remote access, cloud storage, mobile apps, and business use require a subscription from $7.95/month. Runs on Windows 10+, macOS 11+, Linux (glibc 2.28+: Ubuntu 20.04+, Debian 10+, Fedora 29+, Arch), Docker, and Raspberry Pi 4+. Originally released as iSpy in 2007, rebuilt as Agent DVR in January 2022. 2M+ users worldwide.
+
+**[Download Agent DVR](https://www.ispyconnect.com/download)** · [Features](https://www.ispyconnect.com/features) · [Documentation](https://www.ispyconnect.com/docs/agent/) · [Pricing](https://www.ispyconnect.com/buy)
+
+---
+
+This repository contains scripted installers for Agent DVR on macOS, Linux, and Raspberry Pi. For Windows, use the installer from the [download page](https://www.ispyconnect.com/download). For Docker, see the [Docker setup guide](https://www.ispyconnect.com/docs/agent/installation-docker).
+
+## Install
 
 You may need to install curl first:
 
-    sudo apt-get install curl
+```bash
+sudo apt-get install curl
+```
 
-To install on **OSX** (Requires: OSX >= 10.14) or **Linux** (x64, arm and raspberry pi) open a terminal and call:
+To install on **macOS** (requires macOS 11+) or **Linux** (x64, ARM, Raspberry Pi) open a terminal and run:
 
-    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/install.sh")
+```bash
+bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/install.sh")
+```
 
-# Updating Agent
+Once installed, Agent DVR is accessible at [http://localhost:8090](http://localhost:8090).
 
-If you have a license or a subscription you can update Agent to the latest version by clicking on the server menu and "Update Agent" (will only appear if an update is available).
+## Update
 
-To update Agent manually follow the following steps:
+If you have an active subscription you can update via the Agent DVR web UI: **Server menu → Update Agent** (only shown when an update is available).
 
-Backup your configuration (just in case!) - copy the xml files in Agent/Media/XML somewhere
+To update manually:
 
-Stop the Agent Service
+1. Back up your configuration — copy the XML files in `Agent/Media/XML` somewhere safe.
+2. Stop the service:
 
-Linux:
+   **Linux:**
+   ```bash
+   sudo systemctl stop AgentDVR.service
+   ```
+   **macOS:**
+   ```bash
+   sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+   ```
 
-    sudo systemctl stop AgentDVR.service
+3. Download the latest version:
+   ```bash
+   bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
+   ```
 
-OSX:
-    
-    sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+4. Unzip over the existing install directory (configuration is preserved), then:
+   ```bash
+   chmod +x Agent
+   ```
 
-Download the latest version (will detect your platform)
+5. Restart the service:
 
-    bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
-    
-Unzip that over the existing install location to update (it won't erase your config). When it is unzipped, change to the Agent directory and run
+   **Linux:**
+   ```bash
+   sudo systemctl start AgentDVR.service
+   ```
+   **macOS:**
+   ```bash
+   sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+   ```
 
-    chmod +x Agent
-    
-... and restart the service:
+## Run manually (debugging)
 
-Linux: 
-
-    sudo systemctl start AgentDVR.service
-
-OSX:
-
-    sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
-
-When Agent is installed you can access it on the local computer at http://localhost:8090
-
-
-If Agent doesn't start or you want to run Agent manually (provides console output for debugging):
-
+```bash
 ./Agent
+```
 
-**Known Issues:**
+This runs Agent DVR in the foreground with console output — useful for diagnosing startup issues.
 
-On Raspberry Pi please ensure you are using a recent OS - older versions of Raspbian do not support modern SSL certificates.
+## Known issues
+
+- **Raspberry Pi:** Use a recent OS release. Raspberry Pi OS Bullseye or earlier may not support modern SSL certificates. Raspberry Pi OS Bookworm (2023) or later is recommended.
