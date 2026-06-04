@@ -9,7 +9,7 @@ INSTALL_PATH="/opt/AgentDVR"
 
 USE_VERSION=0
 AUTO_YES=false
-INTERACTIVE=true # Set this explicitly so your libva check can use it
+INTERACTIVE=true
 USE_BETA=${USE_BETA:-false}   # Added to prevent undefined variable evaluation
 
 # Safely identify the real user running the script, falling back to root if run directly
@@ -122,117 +122,6 @@ find_port() {
    return 1
 }
 
-# Check if libva is installed and get its version
-check_libva_installation() {
-    echo "Checking for libva installation..."
-    
-    # Look for the actual library file to get the package version
-    echo "Checking actual libva library files..."
-    LIBVA_FILES=$(find /usr/lib* /usr/local/lib* -name "libva.so.2.*" 2>/dev/null | sort)
-    
-    if [ -z "$LIBVA_FILES" ]; then
-        echo "No libva.so.2.* files found"
-        return 1
-    fi
-    
-    echo "Found libva library files:"
-    echo "$LIBVA_FILES"
-    
-    # Track the highest version found
-    HIGHEST_MAJOR=0
-    HIGHEST_MINOR=0
-    HIGHEST_MICRO=0
-    HIGHEST_VERSION_FILE=""
-    
-    # Extract version from each filename and keep the highest
-    for LIB_FILE in $LIBVA_FILES; do
-        VERSION_STRING=$(echo "$LIB_FILE" | grep -oP "libva\.so\.2\.\K[0-9]+" || echo "")
-        
-        if [ -n "$VERSION_STRING" ]; then
-            # Handle different version number formats
-            if [ ${#VERSION_STRING} -eq 4 ]; then
-                # Format: 2200 → 2.22.0
-                CURRENT_MAJOR=2
-                CURRENT_MINOR=${VERSION_STRING:0:2}
-                CURRENT_MICRO=${VERSION_STRING:2:2}
-            else
-                # Direct format, try to parse it
-                PARTS=(${VERSION_STRING//./ })
-                CURRENT_MAJOR=2
-                CURRENT_MINOR=${PARTS[0]:-0}
-                CURRENT_MICRO=${PARTS[1]:-0}
-            fi
-            
-            # Convert to integers for comparison
-            CURRENT_MAJOR_INT=$((CURRENT_MAJOR))
-            CURRENT_MINOR_INT=$((CURRENT_MINOR))
-            CURRENT_MICRO_INT=$((CURRENT_MICRO))
-            
-            # Check if this version is higher than what we've seen before
-            if [ $CURRENT_MAJOR_INT -gt $HIGHEST_MAJOR ] || 
-               ([ $CURRENT_MAJOR_INT -eq $HIGHEST_MAJOR ] && [ $CURRENT_MINOR_INT -gt $HIGHEST_MINOR ]) ||
-               ([ $CURRENT_MAJOR_INT -eq $HIGHEST_MAJOR ] && [ $CURRENT_MINOR_INT -eq $HIGHEST_MINOR ] && [ $CURRENT_MICRO_INT -gt $HIGHEST_MICRO ]); then
-                HIGHEST_MAJOR=$CURRENT_MAJOR_INT
-                HIGHEST_MINOR=$CURRENT_MINOR_INT
-                HIGHEST_MICRO=$CURRENT_MICRO_INT
-                HIGHEST_VERSION_FILE=$LIB_FILE
-            fi
-        fi
-    done
-    
-    if [ -z "$HIGHEST_VERSION_FILE" ]; then
-        echo "Could not determine libva version from library files"
-        return 1
-    fi
-    
-    # Format the highest version found
-    LIBVA_VERSION="$HIGHEST_MAJOR.$HIGHEST_MINOR.$HIGHEST_MICRO"
-    
-    echo "Highest libva package version: $LIBVA_VERSION (from $HIGHEST_VERSION_FILE)"
-    
-    # Compare against required version
-    if [ "$HIGHEST_MAJOR" -gt 2 ] || ([ "$HIGHEST_MAJOR" -eq 2 ] && [ "$HIGHEST_MINOR" -ge 21 ]); then
-        echo "Suitable libva version detected (≥ 2.21)"
-        return 0
-    else
-        echo "libva version is too old (< 2.21)"
-        return 1
-    fi
-}
-
-# Download and run the libva installation script
-install_libva() {
-    echo "Downloading libva installation script..."
-    TEMP_SCRIPT=$(mktemp)
-    
-    if command -v curl &> /dev/null; then
-        # Bypass cache by adding a timestamp parameter
-        curl -H 'Cache-Control: no-cache, no-store' -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh?$(date +%s)" -o "$TEMP_SCRIPT"
-    elif command -v wget &> /dev/null; then
-        wget -q "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/libva.sh" -O "$TEMP_SCRIPT"
-    else
-        echo "Error: Neither curl nor wget is installed. Cannot download the script."
-        return 1
-    fi
-    
-    if [ ! -s "$TEMP_SCRIPT" ]; then
-        echo "Error: Failed to download the script or the downloaded file is empty."
-        return 1
-    fi
-    
-    echo "Making the script executable..."
-    chmod +x "$TEMP_SCRIPT"
-    
-    echo "Running libva installation script..."
-    bash "$TEMP_SCRIPT"
-    
-    # Clean up
-    rm -f "$TEMP_SCRIPT"
-    
-    echo "libva installation completed"
-    return 0
-}
-
 # Function to create desktop shortcuts
 create_system_shortcut() {
     local install_path="$1"
@@ -288,61 +177,6 @@ EOF
     fi
     
     info "Application launcher created successfully in the applications menu."
-}
-
-# Main function to check and potentially install libva
-setup_libva() {
-    if check_libva_installation; then
-        echo "libva ≥ 2.21 is already installed on the system."
-        echo "Continuing with installation..."
-        return 0
-    else
-        echo "--------------------------------------------------------------"
-        echo "GPU hardware acceleration support requires libva ≥ 2.21"
-        echo "This is needed for FFmpeg v7 to properly utilize your GPU for"
-        echo "video encoding/decoding, which can significantly improve"
-        echo "performance and reduce CPU usage."
-        echo "Warning: this may cause issues with other software running on your system."
-        echo "--------------------------------------------------------------"
-        
-        # Check if we're running in a non-interactive mode
-        if [ -z "$INTERACTIVE" ] || [ "$INTERACTIVE" = "true" ]; then
-            printf "\nWould you like to install libva 2.22.0? (y/n) " >/dev/tty
-            read -n 1 -r REPLY </dev/tty
-            echo >/dev/tty
-            
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                install_libva
-                # Verify installation was successful
-                if check_libva_installation; then
-                    echo "libva ≥ 2.21 was successfully installed."
-                    return 0
-                else
-                    echo "Warning: libva installation may not have completed successfully."
-                    echo "Continuing with installation, but GPU acceleration may not work."
-                    return 1
-                fi
-            else
-                echo "Skipping libva installation."
-                echo "Note: GPU hardware acceleration will not be available."
-                return 1
-            fi
-        else
-            # In non-interactive mode, automatically install
-            echo "Running in non-interactive mode. Automatically installing libva..."
-            install_libva
-            
-            # Verify installation was successful
-            if check_libva_installation; then
-                echo "libva ≥ 2.21 was successfully installed."
-                return 0
-            else
-                echo "Warning: libva installation may not have completed successfully."
-                echo "Continuing with installation, but GPU acceleration may not work."
-                return 1
-            fi
-        fi
-    fi
 }
 
 # Start of the script
@@ -403,6 +237,14 @@ if machine_has "apt-get"; then
         libva-drm2 >> "$LOGFILE" 2>&1 || critical_error "apt-get install failed."
     info "Dependencies installed successfully using apt-get."
 
+    # VAAPI GPU drivers (best-effort, non-fatal). FFmpeg ships its own libva;
+    # the GPU-specific driver must come from the distro.
+    info "Installing VAAPI GPU drivers..."
+    apt-get install --no-install-recommends -y mesa-va-drivers >> "$LOGFILE" 2>&1 || info "mesa-va-drivers unavailable - AMD VAAPI acceleration disabled."
+    apt-get install --no-install-recommends -y intel-media-va-driver-non-free >> "$LOGFILE" 2>&1 || \
+        apt-get install --no-install-recommends -y intel-media-va-driver >> "$LOGFILE" 2>&1 || info "Intel media driver unavailable - Intel QuickSync disabled."
+    apt-get install --no-install-recommends -y i965-va-driver >> "$LOGFILE" 2>&1 || true
+
 elif machine_has "dnf" || machine_has "yum"; then
     info "Detected yum/dnf package manager. Updating and installing dependencies..."
     if machine_has "dnf"; then
@@ -414,6 +256,8 @@ elif machine_has "dnf" || machine_has "yum"; then
             libXext-devel \
             fontconfig \
             libva >> "$LOGFILE" 2>&1 || critical_error "dnf install failed."
+        info "Installing VAAPI GPU drivers..."
+        dnf install -y mesa-va-drivers intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable - on Fedora, H.264/HEVC VAAPI requires RPM Fusion (mesa-va-drivers-freeworld)."
 		info "Installing optional math libraries for minimal systems..."
 		dnf install -y lapack blas atlas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
     else
@@ -425,6 +269,8 @@ elif machine_has "dnf" || machine_has "yum"; then
             libXext-devel \
             fontconfig \
             libva >> "$LOGFILE" 2>&1 || critical_error "yum install failed."
+        info "Installing VAAPI GPU drivers..."
+        yum install -y mesa-va-drivers intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable."
 		info "Installing optional math libraries for minimal systems..."
 		yum install -y lapack blas atlas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
     fi
@@ -439,6 +285,8 @@ elif machine_has "pacman"; then
         libxext \
         fontconfig \
         libva >> "$LOGFILE" 2>&1 || critical_error "pacman install failed."
+    info "Installing VAAPI GPU drivers..."
+    pacman -S --noconfirm libva-mesa-driver intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable."
     info "Dependencies installed successfully using pacman."
 	info "Installing optional math libraries for minimal systems..."
 	pacman -S --noconfirm lapack blas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
@@ -452,6 +300,8 @@ elif machine_has "apk"; then
         libxext-dev \
         fontconfig \
         libva >> "$LOGFILE" 2>&1 || critical_error "apk install failed."
+    info "Installing VAAPI GPU drivers..."
+    apk add --no-cache mesa-va-gallium intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable."
     info "Dependencies installed successfully using apk."
 	info "Installing optional math libraries for minimal systems..."
 	apk add --no-cache lapack openblas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
@@ -554,7 +404,17 @@ else
 fi
 info "User '$ACTUAL_USER' added to 'video' group successfully."
 
-setup_libva
+# Add user to 'render' group for GPU render node access (/dev/dri/renderD*)
+if getent group render > /dev/null 2>&1; then
+    if machine_has "usermod"; then
+        usermod -a -G render "$ACTUAL_USER" >> "$LOGFILE" 2>&1 || error_log "Failed to append user '$ACTUAL_USER' to 'render' group."
+    elif machine_has "adduser"; then
+        adduser "$ACTUAL_USER" render >> "$LOGFILE" 2>&1 || error_log "Failed to add user '$ACTUAL_USER' to 'render' group."
+    fi
+    info "User '$ACTUAL_USER' added to 'render' group."
+else
+    info "No 'render' group on this system - skipping."
+fi
 
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
 
