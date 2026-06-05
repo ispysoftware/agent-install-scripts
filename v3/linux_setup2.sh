@@ -71,28 +71,71 @@ critical_error() {
     exit 1
 }
 
-# Function to download AgentDVR with retry logic
+# GitHub mirror for AgentDVR builds. The primary CDN (files.ispyconnect.com)
+# sits behind Cloudflare, which some ISPs throttle (e.g. Russia, ~16KB/connection).
+# The release uploader publishes every build to a release tagged v{version}
+# with the same filenames as the CDN.
+GITHUB_RELEASES="https://github.com/ispysoftware/agent-install-scripts/releases/download"
+
+# Build the GitHub mirror URL for a CDN download URL.
+# Agent_Linux64_6_5_3_0.zip → {GITHUB_RELEASES}/v6.5.3.0/Agent_Linux64_6_5_3_0.zip
+# Returns 1 if the filename doesn't match the expected convention.
+github_mirror_url() {
+    local url="$1"
+    local filename="${url##*/}"
+    local version
+    version=$(echo "$filename" | sed -nE 's#^Agent_[A-Za-z0-9]+_([0-9]+)_([0-9]+)_([0-9]+)_([0-9]+)\.zip$#\1.\2.\3.\4#p')
+    if [ -z "$version" ]; then
+        return 1
+    fi
+    echo "$GITHUB_RELEASES/v$version/$filename"
+}
+
+# Function to download AgentDVR with retry logic and GitHub mirror fallback
 download_agentdvr() {
     local url="$1"
     local output="$2"
-    local max_attempts=3
-    local attempt=1
+    local max_rounds=3
+
+    local urls=("$url")
+    local mirror
+    if mirror=$(github_mirror_url "$url"); then
+        urls+=("$mirror")
+    fi
+
+    local total_attempts=$((max_rounds * ${#urls[@]}))
+    local n=0
+    local round=1
 
     info "Starting download of AgentDVR..."
-    while [ $attempt -le $max_attempts ]; do
-        info "Attempt $attempt of $max_attempts: Downloading from $url"
-        
-        # Print progress bar to terminal, log output only for errors
-        if curl --progress-bar --location "$url" -o "$output" 2> >(tee -a "$LOGFILE" >&2) > /dev/tty; then
-            info "AgentDVR downloaded successfully on attempt $attempt."
-            return 0
-        else
-            error_log "Download attempt $attempt failed."
-            attempt=$((attempt + 1))
-            sleep 2  # Wait before retrying
-        fi
+    while [ $round -le $max_rounds ]; do
+        for u in "${urls[@]}"; do
+            n=$((n + 1))
+
+            # Abort if the average rate stays below 16KB/s for 10s — catches
+            # ISP-level throttling that trickles instead of failing outright.
+            # Skipped on the very last attempt so a genuinely slow connection
+            # can still finish (slow success beats guaranteed failure).
+            local speed_opts=(--speed-limit 16384 --speed-time 10)
+            if [ $n -eq $total_attempts ]; then
+                speed_opts=()
+            fi
+
+            info "Attempt $n of $total_attempts: Downloading from $u"
+
+            # --fail prevents an HTML error page being saved as the zip.
+            # Print progress bar to terminal, log output only for errors
+            if curl --progress-bar --location --fail --connect-timeout 30 "${speed_opts[@]}" "$u" -o "$output" 2> >(tee -a "$LOGFILE" >&2) > /dev/tty; then
+                info "AgentDVR downloaded successfully on attempt $n."
+                return 0
+            else
+                error_log "Download attempt $n failed."
+                sleep 2  # Wait before retrying
+            fi
+        done
+        round=$((round + 1))
     done
-    critical_error "Failed to download AgentDVR after $max_attempts attempts."
+    critical_error "Failed to download AgentDVR after $total_attempts attempts."
 }
 
 find_port() {
@@ -332,19 +375,43 @@ fi
 
 # Determine the download URL based on architecture
 info "Determining download URL for architecture: $arch"
-DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=Linux64&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
 
+PLATFORM="Linux64"
 case "$arch" in
     'aarch64'|'arm64')
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=LinuxARM64&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        PLATFORM="LinuxARM64"
         ;;
     'arm'|'armv6l'|'armv7l')
-        DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=LinuxARM&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+        PLATFORM="LinuxARM"
         ;;
 esac
 
+DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=${PLATFORM}&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
+
 # Fetch the actual download URL
-DOWNLOAD_URL=$(curl -s --fail "$DOWNLOAD_URL_API" | tr -d '"') || critical_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
+DOWNLOAD_URL=$(curl -s --fail --connect-timeout 30 --speed-limit 1024 --speed-time 10 "$DOWNLOAD_URL_API" | tr -d '"')
+
+# The website is Cloudflare-fronted and may be unreachable where Cloudflare is
+# throttled. Fall back to discovering the latest version from GitHub releases.
+# Only possible for the default (latest) version — a specific -v version number
+# can't be mapped to a release tag without the website API.
+if [ -z "$DOWNLOAD_URL" ] && [ "$USE_VERSION" -eq 0 ]; then
+    error_log "Website API unreachable - discovering latest version from GitHub releases..."
+    latest_tag=$(curl -s --fail --connect-timeout 30 "https://api.github.com/repos/ispysoftware/agent-install-scripts/releases?per_page=20" \
+        | grep -oE '"tag_name": *"v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"' \
+        | head -n 1 \
+        | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+    if [ -n "$latest_tag" ]; then
+        v_underscore=$(echo "${latest_tag#v}" | tr '.' '_')
+        DOWNLOAD_URL="$GITHUB_RELEASES/$latest_tag/Agent_${PLATFORM}_${v_underscore}.zip"
+        info "Using GitHub release $latest_tag"
+        if [ "$USE_BETA" = "true" ]; then
+            info "Note: GitHub fallback installs the latest release; beta selection requires the website API."
+        fi
+    fi
+fi
+
+[ -n "$DOWNLOAD_URL" ] || critical_error "Failed to fetch download URL from $DOWNLOAD_URL_API."
 
 version=$(echo "$DOWNLOAD_URL" | sed -E 's#.*/[^/]*_([0-9]+)_([0-9]+)_([0-9]+)_([0-9]+)\.zip$#\1\2\3\4#')
 
