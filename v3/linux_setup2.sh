@@ -138,6 +138,58 @@ download_agentdvr() {
     critical_error "Failed to download AgentDVR after $total_attempts attempts."
 }
 
+# Public key that signs AgentDVR update/install zips. MUST match
+# SharedLogic SignatureVerifier.TrustedPublicKeysSpkiB64[0] (the update keyring).
+AGENT_UPDATE_PUBKEY="-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfDw9JHWE5hGBO35KjoaYXQCqog447U0a5jAmk9OJcIIZwP5RZAeT3hS2LmNgbK3JfReAxq2vdTwfJfkilXIqSg==
+-----END PUBLIC KEY-----"
+
+# When true, abort if the zip's signature is missing or can't be checked (openssl absent).
+# Keep true once every published zip has its .sig; set REQUIRE_SIGNATURE=false (env override)
+# only during rollout if older, unsigned builds must still install. A present-but-INVALID
+# signature always aborts regardless of this flag.
+REQUIRE_SIGNATURE="${REQUIRE_SIGNATURE:-true}"
+
+# First Agent build that publishes a .sig, as the concatenated version the script already
+# parses (e.g. 7.5.9.0 -> 7590). Anything older has no signature to check, so verification
+# is skipped for those versions; 7590+ must verify.
+SIG_MIN_VERSION=7590
+
+# Verify the downloaded zip against its detached ECDSA signature — the SAME .sig the agent's
+# auto-updater checks. The .sig is raw IEEE-P1363 r||s (64 bytes for P-256); openssl wants a
+# DER signature, so we rebuild SEQUENCE{INTEGER r, INTEGER s} with its ASN.1 generator (which
+# encodes the INTEGERs correctly), then verify. Returns: 0 = verified, 1 = signature present
+# but INVALID (tampered/corrupt), 2 = could not verify (openssl missing, or no .sig published).
+verify_agentdvr_zip() {
+    local zip="$1" zip_url="$2"
+    command -v openssl >/dev/null 2>&1 || return 3
+
+    local tmp; tmp=$(mktemp -d) || return 3
+    printf '%s\n' "$AGENT_UPDATE_PUBKEY" > "$tmp/update.pub"
+
+    # Detached signature: CDN first, then the GitHub mirror (same sources as the zip).
+    local sig="$tmp/sig.bin" mirror
+    if ! curl -s --fail --location --connect-timeout 30 "${zip_url}.sig" -o "$sig"; then
+        if mirror=$(github_mirror_url "$zip_url"); then
+            curl -s --fail --location --connect-timeout 30 "${mirror}.sig" -o "$sig" || { rm -rf "$tmp"; return 2; }
+        else
+            rm -rf "$tmp"; return 2
+        fi
+    fi
+
+    [ "$(wc -c < "$sig")" -eq 64 ] || { rm -rf "$tmp"; return 1; }
+    local rhex shex
+    rhex=$(dd if="$sig" bs=1 count=32 2>/dev/null | od -An -v -tx1 | tr -d ' \n')
+    shex=$(dd if="$sig" bs=1 skip=32 count=32 2>/dev/null | od -An -v -tx1 | tr -d ' \n')
+    printf 'asn1=SEQUENCE:seq\n[seq]\nf1=INTEGER:0x%s\nf2=INTEGER:0x%s\n' "$rhex" "$shex" > "$tmp/sig.asn1"
+    openssl asn1parse -genconf "$tmp/sig.asn1" -out "$tmp/sig.der" >/dev/null 2>&1 || { rm -rf "$tmp"; return 1; }
+
+    if openssl dgst -sha256 -verify "$tmp/update.pub" -signature "$tmp/sig.der" "$zip" >/dev/null 2>&1; then
+        rm -rf "$tmp"; return 0
+    fi
+    rm -rf "$tmp"; return 1
+}
+
 find_port() {
     # Define the list of ports to check
     ports=(8090 8080 8100 8010 8123 8181 8222 8300 8400 8500 8600 8700 8800 8888 8899 8900 8989 9000 9080 9090 9100 9200 9300 9400 9500 9600 9700 9800 9900)
@@ -352,6 +404,19 @@ else
     critical_error "Unsupported package manager. Please install dependencies manually."
 fi
 
+# openssl is needed to verify the downloaded zip's signature (below). Best-effort: if it
+# can't be installed, verification is skipped rather than failing the install.
+if ! machine_has openssl; then
+    info "Installing openssl (needed to verify the download signature)..."
+    if   machine_has apt-get; then apt-get install --no-install-recommends -y openssl >> "$LOGFILE" 2>&1 || true
+    elif machine_has dnf;     then dnf install -y openssl >> "$LOGFILE" 2>&1 || true
+    elif machine_has yum;     then yum install -y openssl >> "$LOGFILE" 2>&1 || true
+    elif machine_has pacman;  then pacman -S --noconfirm openssl >> "$LOGFILE" 2>&1 || true
+    elif machine_has apk;     then apk add --no-cache openssl >> "$LOGFILE" 2>&1 || true
+    fi
+    machine_has openssl || info "openssl still unavailable - zip signature verification will be skipped."
+fi
+
 
 # Check for existing AgentDVR installation
 AGENT_FILE="$INSTALL_PATH/Agent"
@@ -421,6 +486,26 @@ info "Using download URL: $DOWNLOAD_URL"
 
 # Download AgentDVR with retry logic
 download_agentdvr "$DOWNLOAD_URL" "$INSTALL_PATH/AgentDVR.zip"
+
+# Verify authenticity before extracting or running anything. Builds older than
+# SIG_MIN_VERSION predate signed releases and have no .sig to check, so they're skipped.
+if [[ "$version" =~ ^[0-9]+$ ]] && [ "$version" -lt "$SIG_MIN_VERSION" ]; then
+    info "Skipping signature verification: version $version predates signed builds (< $SIG_MIN_VERSION)."
+else
+    verify_agentdvr_zip "$INSTALL_PATH/AgentDVR.zip" "$DOWNLOAD_URL"
+    case $? in
+        0) info "AgentDVR.zip signature verified." ;;
+        3) info "Skipping signature verification: openssl is not available on this system." ;;
+        2) if [ "$REQUIRE_SIGNATURE" = "true" ]; then
+               rm -f "$INSTALL_PATH/AgentDVR.zip"
+               critical_error "AgentDVR.zip has no signature to verify, but version $version should have one. Set REQUIRE_SIGNATURE=false to install anyway."
+           else
+               info "Skipping signature verification (signature not available; REQUIRE_SIGNATURE=false)."
+           fi ;;
+        *) rm -f "$INSTALL_PATH/AgentDVR.zip"
+           critical_error "AgentDVR.zip FAILED signature verification - the download may be corrupted or tampered with. Aborting." ;;
+    esac
+fi
 
 # Extract the downloaded archive
 info "Extracting AgentDVR.zip..."
