@@ -1,0 +1,7 @@
+# Normalize line endings at the git level regardless of contributor settings.
+* text=auto eol=lf
+*.sh text eol=lf
+*.service text eol=lf
+
+# cmd.exe requires CRLF - a pure-LF .bat breaks GOTO/CALL label lookup
+*.bat text eol=crlf

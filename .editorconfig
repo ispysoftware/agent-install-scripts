@@ -1,0 +1,15 @@
+root = true
+
+# Linux-bound files: UTF-8 without BOM, LF, spaces.
+# In .editorconfig, "utf-8" means WITHOUT BOM ("utf-8-bom" is the with-BOM value).
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Batch files are the exception - cmd.exe requires CRLF
+[*.bat]
+end_of_line = crlf
