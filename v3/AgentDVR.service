@@ -1,5 +1,10 @@
 [Unit]
 Description=AgentDVR
+# Wait for the network (IP + routes) before starting - prevents startup DNS
+# failures ("Name or service not known") when Agent races the network stack.
+# Both lines are required: Wants= pulls the target in, After= orders on it.
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 WorkingDirectory=AGENT_LOCATION

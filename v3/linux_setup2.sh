@@ -353,8 +353,8 @@ elif machine_has "dnf" || machine_has "yum"; then
             libva >> "$LOGFILE" 2>&1 || critical_error "dnf install failed."
         info "Installing VAAPI GPU drivers..."
         dnf install -y mesa-va-drivers intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable - on Fedora, H.264/HEVC VAAPI requires RPM Fusion (mesa-va-drivers-freeworld)."
-		info "Installing optional math libraries for minimal systems..."
-		dnf install -y lapack blas atlas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
+        info "Installing optional math libraries for minimal systems..."
+        dnf install -y lapack blas atlas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
     else
         yum update -y >> "$LOGFILE" 2>&1 || critical_error "yum update failed."
         yum install -y \
@@ -366,8 +366,8 @@ elif machine_has "dnf" || machine_has "yum"; then
             libva >> "$LOGFILE" 2>&1 || critical_error "yum install failed."
         info "Installing VAAPI GPU drivers..."
         yum install -y mesa-va-drivers intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable."
-		info "Installing optional math libraries for minimal systems..."
-		yum install -y lapack blas atlas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
+        info "Installing optional math libraries for minimal systems..."
+        yum install -y lapack blas atlas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
     fi
     info "Dependencies installed successfully using yum/dnf."
 elif machine_has "pacman"; then
@@ -383,8 +383,8 @@ elif machine_has "pacman"; then
     info "Installing VAAPI GPU drivers..."
     pacman -S --noconfirm libva-mesa-driver intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable."
     info "Dependencies installed successfully using pacman."
-	info "Installing optional math libraries for minimal systems..."
-	pacman -S --noconfirm lapack blas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
+    info "Installing optional math libraries for minimal systems..."
+    pacman -S --noconfirm lapack blas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
 elif machine_has "apk"; then
     info "Detected apk package manager. Updating and installing dependencies..."
     apk update >> "$LOGFILE" 2>&1 || critical_error "apk update failed."
@@ -398,8 +398,8 @@ elif machine_has "apk"; then
     info "Installing VAAPI GPU drivers..."
     apk add --no-cache mesa-va-gallium intel-media-driver >> "$LOGFILE" 2>&1 || info "VAAPI drivers unavailable."
     info "Dependencies installed successfully using apk."
-	info "Installing optional math libraries for minimal systems..."
-	apk add --no-cache lapack openblas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
+    info "Installing optional math libraries for minimal systems..."
+    apk add --no-cache lapack openblas >> "$LOGFILE" 2>&1 || info "Math libraries installation failed - may not be needed on this system."
 else
     critical_error "Unsupported package manager. Please install dependencies manually."
 fi
@@ -628,6 +628,17 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     cp AgentDVR.service /etc/systemd/system/AgentDVR.service || critical_error "Failed to copy AgentDVR.service to /etc/systemd/system/."
     rm -f AgentDVR.service
     info "AgentDVR.service copied to /etc/systemd/system and local copy removed."
+
+    # The unit's network-online.target dependency is a no-op unless the distro's
+    # wait-online service is enabled. Enable whichever network manager is active
+    # (best-effort - not fatal if neither exists, e.g. WSL or containers).
+    if systemctl list-unit-files NetworkManager-wait-online.service --no-legend 2>/dev/null | grep -q .; then
+        systemctl enable NetworkManager-wait-online.service >> "$LOGFILE" 2>&1 || info "Warning: Failed to enable NetworkManager-wait-online."
+    elif systemctl list-unit-files systemd-networkd-wait-online.service --no-legend 2>/dev/null | grep -q .; then
+        systemctl enable systemd-networkd-wait-online.service >> "$LOGFILE" 2>&1 || info "Warning: Failed to enable systemd-networkd-wait-online."
+    else
+        info "No wait-online service found; network-online.target may not delay startup."
+    fi
 
     # Reload systemd daemon to recognize the new service
     systemctl daemon-reload >> "$LOGFILE" 2>&1 || info "Warning: Failed to reload systemd daemon."
