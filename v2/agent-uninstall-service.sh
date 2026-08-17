@@ -4,8 +4,16 @@
 # To execute: save and `chmod +x ./agent-uninstall-service.sh` then `./agent-uninstall-service.sh`
 
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
-  sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+  # Current installs run as a per-user LaunchAgent; older installs as a system LaunchDaemon.
+  # Remove whichever exists (both, if somehow both are present).
+  if [ -f ~/Library/LaunchAgents/com.ispy.agent.dvr.plist ]; then
+    echo "Removing user agent"
+    launchctl bootout "gui/$(id -u)" ~/Library/LaunchAgents/com.ispy.agent.dvr.plist 2>/dev/null || launchctl unload ~/Library/LaunchAgents/com.ispy.agent.dvr.plist 2>/dev/null
+    rm -f ~/Library/LaunchAgents/com.ispy.agent.dvr.plist
+  fi
   if [ -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist ]; then
+    echo "Removing system daemon"
+    sudo launchctl bootout system /Library/LaunchDaemons/com.ispy.agent.dvr.plist 2>/dev/null || sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist 2>/dev/null
     sudo rm -f /Library/LaunchDaemons/com.ispy.agent.dvr.plist
   fi
 else

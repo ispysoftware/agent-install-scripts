@@ -39,7 +39,11 @@ To update manually:
    ```
    **macOS:**
    ```bash
-   sudo launchctl unload -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+   launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.ispy.agent.dvr.plist
+   ```
+   On older installs the service is a system daemon instead — if that file doesn't exist, run:
+   ```bash
+   sudo launchctl bootout system /Library/LaunchDaemons/com.ispy.agent.dvr.plist
    ```
 
 3. Download the latest version:
@@ -60,7 +64,11 @@ To update manually:
    ```
    **macOS:**
    ```bash
-   sudo launchctl load -w /Library/LaunchDaemons/com.ispy.agent.dvr.plist
+   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.ispy.agent.dvr.plist
+   ```
+   (or on older system-service installs:)
+   ```bash
+   sudo launchctl bootstrap system /Library/LaunchDaemons/com.ispy.agent.dvr.plist
    ```
 
 ## Run manually (debugging)
