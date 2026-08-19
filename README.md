@@ -16,11 +16,13 @@ You may need to install curl first:
 sudo apt-get install curl
 ```
 
-To install on **macOS** (requires macOS 11+) or **Linux** (x64, ARM, Raspberry Pi) open a terminal and run:
+To install on **Linux** (x64, ARM, Raspberry Pi) open a terminal and run:
 
 ```bash
 bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/install.sh")
 ```
+
+For **macOS** (requires macOS 11+), use the installer from the [download page](https://www.ispyconnect.com/download).
 
 Once installed, Agent DVR is accessible at [http://localhost:8090](http://localhost:8090).
 
@@ -48,7 +50,7 @@ To update manually:
 
 3. Download the latest version:
    ```bash
-   bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/download.sh")
+   bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/download.sh")
    ```
 
 4. Unzip over the existing install directory (configuration is preserved), then:
