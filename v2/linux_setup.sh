@@ -6,8 +6,6 @@
 . /etc/*-release
 arch=`uname -m`
 
-ffmpeg_installed=false
-
 if [[ ("$OSTYPE" == "darwin"*) ]]; then
   # If arm64 AND darwin (macOS)
   echo "Use use osx_setup.sh instead"
@@ -26,68 +24,8 @@ mkdir AgentDVR
 cd AgentDVR
 
 
-if [ "$DISTRIB_ID" = "Ubuntu" ] ; then
-	if [ "$DISTRIB_RELEASE" = "22.10" ] ; then
-		read -p "Install ffmpeg from apt for Ubuntu 22.10 (y/n)? " answer
-		if [ "$answer" != "${answer#[Yy]}" ] ;then 
-			sudo apt-get install -y ffmpeg
-			ffmpeg_installed=true
-		fi
-	fi 
-	if [ "$ffmpeg_installed" = false ] ; then
-		read -p "Build ffmpeg v5 for Agent DVR (Ubuntu) (y/n)? " answer
-		if [ "$answer" != "${answer#[Yy]}" ] ;then 
-			sudo apt-get install -y alsa-utils build-essential xz-utils yasm cmake libtool libc6 libc6-dev unzip wget pkg-config libx264-dev libx265-dev libmp3lame-dev libopus-dev libvorbis-dev libfdk-aac-dev libvpx-dev libva-dev
-
-			wget https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.gz
-			tar xf ffmpeg-5.1.2.tar.gz
-
-	    		mkdir -p $ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace
-			cd ffmpeg-5.1.2
-
-			./configure --prefix=$ABSOLUTE_PATH/AgentDVR/ffmpeg-v5/workspace \
-			  --target-os=linux \
-			  --disable-debug \
-			  --disable-doc \
-			  --enable-shared \
-			  --enable-pthreads \
-			  --enable-hwaccels \
-			  --enable-hardcoded-tables \
-			  --enable-nonfree --disable-static --enable-gpl --enable-libx264 --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libfdk-aac --enable-libx265 --enable-libvpx \
-			  --enable-vaapi \
-
-
-			make -j 8
-			sudo make install
-			rm -rf $ABSOLUTE_PATH/AgentDVR/ffmpeg-5.1.2
-		fi
-	fi
-else
-	read -p "Build ffmpeg v5 for Agent DVR (y/n)? " answer
-	if [ "$answer" != "${answer#[Yy]}" ] ;then 
-		echo Yes
-		
-		
-		echo "Installing build tools"
-		if machine_has "apt-get"; then
-			sudo apt-get update \
-				&& sudo apt-get install --no-install-recommends -y unzip python3 curl make g++ build-essential libvlc-dev vlc libx11-dev libtbb-dev libc6-dev gss-ntlmssp libusb-1.0-0-dev apt-transport-https libatlas-base-dev alsa-utils libxext-dev
-		else
-			sudo yum update \
-				&& sudo yum install -y autoconf automake bzip2 bzip2-devel freetype-devel gcc gcc-c++ git libtool make pkgconfig zlib-devel libvlc-dev vlc libx11-dev libxext-dev
-		fi
-
-		
-		mkdir -p ffmpeg-v5
-		cd ffmpeg-v5
-		curl -H 'Cache-Control: no-cache, no-store' -s -L "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v2/ffmpeg_build.sh" | bash -s -- --build --enable-gpl-and-non-free
-		
-		subScriptExitCode="$?"
-		if [ "$subScriptExitCode" -ne 0 ]; then
-		    exit 1
-		fi
-	fi
-fi
+# Agent DVR downloads its own FFmpeg build on first run — no local
+# ffmpeg build or install is needed (the source-build path was removed).
 
 cd $ABSOLUTE_PATH/AgentDVR/
 #download latest version
