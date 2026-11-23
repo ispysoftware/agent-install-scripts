@@ -22,6 +22,15 @@ To install on **Linux** (x64, ARM, Raspberry Pi) open a terminal and run:
 bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/install.sh")
 ```
 
+Options go on the end of the command:
+
+- `-y` — unattended: answers yes to every question (update an existing install, set up the system service).
+- `-v <version>` — install a specific version, written without dots, e.g. `-v 8290` for 8.2.9.0.
+
+```bash
+bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/install.sh") -y
+```
+
 For **macOS** (requires macOS 11+), use the installer from the [download page](https://www.ispyconnect.com/download).
 
 Once installed, Agent DVR is accessible at [http://localhost:8090](http://localhost:8090).
