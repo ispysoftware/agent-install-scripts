@@ -27,4 +27,23 @@ if [[ ("$OSTYPE" == "darwin"*) ]]; then
   exit
 fi
 
-curl -H 'Cache-Control: no-cache, no-store' -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/linux_setup2.sh" | sudo USE_BETA=$USE_BETA bash -s -- "${ARGS[@]}"
+SETUP_URL="https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/linux_setup2.sh"
+SETUP_FILE=$(mktemp /tmp/agentdvr_setup.XXXXXX) || { echo "Could not create a temporary file."; exit 1; }
+trap 'rm -f "$SETUP_FILE"' EXIT
+
+if ! curl -H 'Cache-Control: no-cache, no-store' -sfL "$SETUP_URL" -o "$SETUP_FILE"; then
+  echo "Failed to download the setup script from $SETUP_URL"
+  exit 1
+fi
+
+# Run the setup from a file, never piped into sudo: under sudo-rs (Ubuntu 25.10+) a
+# piped stdin gets the script's output stopped after the first prompt, so the user
+# never sees the download progress or the final "open a browser at" message.
+# Skip sudo when already root (the documented command runs this script with sudo).
+# stdin is /dev/null, as non-interactive as the old pipe, so no apt/dpkg step can sit
+# waiting on the keyboard (its output goes to the log); prompts read /dev/tty directly.
+if [ "$EUID" -eq 0 ]; then
+  USE_BETA="$USE_BETA" bash "$SETUP_FILE" "${ARGS[@]}" </dev/null
+else
+  sudo env USE_BETA="$USE_BETA" bash -c 'exec bash "$@" </dev/null' _ "$SETUP_FILE" "${ARGS[@]}"
+fi

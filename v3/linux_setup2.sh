@@ -38,6 +38,9 @@ done
 touch "$LOGFILE" || { echo "Cannot write to $LOGFILE. Please check permissions."; exit 1; }
 chmod 644 "$LOGFILE"
 
+# Keep the original stdout on fd 3 so announce() can reach the user directly.
+exec 3>&1
+
 # Try to redirect output to both terminal and logfile; fall back to file-only if it fails
 if ! exec > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2); then
     echo "Warning: Process substitution failed. Logging only to $LOGFILE."
@@ -56,6 +59,45 @@ info() {
 # Function to print error messages with timestamp
 error_log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR]: $1" >&2
+}
+
+# Messages the user must see: written to the original stdout and the log, bypassing
+# the tee, so they still show if the tee'd output stalls (seen under sudo-rs).
+announce() {
+    echo "$1" >&3
+    echo "$1" >> "$LOGFILE"
+}
+
+# Tell the user where to open Agent DVR. Waits up to 30s for the port to listen.
+show_ready() {
+    local port="$1" ip i
+    for i in $(seq 1 30); do
+        if command -v ss > /dev/null 2>&1; then
+            ss -tln 2>/dev/null | grep -qE "[: ]$port([^0-9]|$)" && break
+        elif command -v netstat > /dev/null 2>&1; then
+            netstat -tln 2>/dev/null | grep -qE "[: ]$port([^0-9]|$)" && break
+        else
+            break
+        fi
+        sleep 1
+    done
+
+    ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [ -z "$ip" ] && command -v ip > /dev/null 2>&1; then
+        ip=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<NF;i++) if($i=="src"){print $(i+1); exit}}')
+    fi
+
+    announce ""
+    announce "========================================================"
+    if [ "$i" -ge 30 ]; then
+        announce " Agent DVR is still starting up."
+    else
+        announce " Agent DVR is running."
+    fi
+    announce " Open a browser at: http://localhost:$port"
+    [ -n "$ip" ] && announce " From another device: http://$ip:$port"
+    announce "========================================================"
+    announce ""
 }
 
 # Function to check if a command exists
@@ -570,18 +612,28 @@ fi
 
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
 
-# Write the port for the server
-available_port=$(find_port)
+# Write the port for the server. On an update keep the existing port.txt: Agent writes
+# it when the port is changed in its settings, so overwriting it would reset that.
+PORT_FILE="$INSTALL_PATH/Media/XML/port.txt"
+existing_port=""
+[ -f "$PORT_FILE" ] && existing_port=$(tr -dc '0-9' < "$PORT_FILE")
 
-if [[ $? -ne 0 ]]; then
-    error_log "No available ports found. Exiting."
-    exit 1
+if [[ -n "$existing_port" ]] && [ "$existing_port" -ge 1 ] && [ "$existing_port" -le 65534 ]; then
+    available_port="$existing_port"
+    info "Keeping existing port $available_port from $PORT_FILE"
+else
+    available_port=$(find_port)
+
+    if [[ $? -ne 0 ]]; then
+        error_log "No available ports found. Exiting."
+        exit 1
+    fi
+
+    # Write port to file WITHOUT using `cd` so we don't break subsequent relative file paths
+    mkdir -p "$INSTALL_PATH/Media/XML"
+    echo "$available_port" > "$PORT_FILE"
+    info "Port saved to $PORT_FILE"
 fi
-
-# Write port to file WITHOUT using `cd` so we don't break subsequent relative file paths
-mkdir -p "$INSTALL_PATH/Media/XML"
-echo "$available_port" > "$INSTALL_PATH/Media/XML/port.txt"
-info "Port saved to $INSTALL_PATH/Media/XML/port.txt"
 
 # Apply ownership to the actual user before any services or manual starts are triggered
 chown "$ACTUAL_USER" -R "$INSTALL_PATH" || critical_error "Failed to change ownership of $INSTALL_PATH to $ACTUAL_USER."
@@ -651,8 +703,8 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     # Create desktop shortcut using ACTUAL_USER
     create_system_shortcut "$INSTALL_PATH" "$ACTUAL_USER" "$available_port"
 
-    echo "Started AgentDVR service."
-    echo "Use the application shortcuts or go to http://localhost:$available_port to configure AgentDVR."
+    info "===== AgentDVR Linux Setup Script Completed ====="
+    show_ready "$available_port"
     exit 0
 else
     info "User opted not to set up AgentDVR as a system service."
@@ -662,11 +714,12 @@ else
     sleep 2  # Give it a moment to start
     if pgrep -f "Agent" > /dev/null; then
         info "AgentDVR started successfully."
-        echo "AgentDVR is running. Visit http://localhost:$available_port to configure."
+        info "===== AgentDVR Linux Setup Script Completed ====="
+        show_ready "$available_port"
     else
         error_log "Failed to start AgentDVR."
+        announce "Agent DVR failed to start - check $LOGFILE"
     fi
 fi
 
-info "===== AgentDVR Linux Setup Script Completed ====="
 exit 0
