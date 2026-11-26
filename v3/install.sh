@@ -42,8 +42,14 @@ fi
 # Skip sudo when already root (the documented command runs this script with sudo).
 # stdin is /dev/null, as non-interactive as the old pipe, so no apt/dpkg step can sit
 # waiting on the keyboard (its output goes to the log); prompts read /dev/tty directly.
+#
+# Service account: when already root, SUDO_USER is cleared so the setup runs Agent as
+# root. That is what installs from the download page (`sudo bash install_agent.sh`) have
+# always done - the old nested sudo set SUDO_USER=root - and changing it would change
+# device access and file ownership for new installs. Run without sudo, the sudo below
+# sets SUDO_USER to the caller, so Agent runs as that user, as before.
 if [ "$EUID" -eq 0 ]; then
-  USE_BETA="$USE_BETA" bash "$SETUP_FILE" "${ARGS[@]}" </dev/null
+  env -u SUDO_USER USE_BETA="$USE_BETA" bash "$SETUP_FILE" "${ARGS[@]}" </dev/null
 else
   sudo env USE_BETA="$USE_BETA" bash -c 'exec bash "$@" </dev/null' _ "$SETUP_FILE" "${ARGS[@]}"
 fi

@@ -610,9 +610,9 @@ find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execut
 info "Execute permissions set successfully."
 
 # On an update, keep the account the existing service runs as. Installs from the download
-# page ran it as root until 2026-11 (a nested sudo in install.sh reset SUDO_USER); moving
-# such an install to another account would leave media folders outside $INSTALL_PATH
-# owned by root, so recording into them would fail. Reads the unit and its drop-ins
+# page run it as root (install.sh clears SUDO_USER when already root), others as the user
+# who ran the installer; moving an install to another account would leave media folders
+# outside $INSTALL_PATH owned by the old one, so recording into them would fail. Reads the unit and its drop-ins
 # (last User= wins, as in systemd; none means root) - systemctl show can't be trusted
 # when systemd isn't running, e.g. WSL or a container.
 SERVICE_UNIT="/etc/systemd/system/AgentDVR.service"
