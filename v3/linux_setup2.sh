@@ -3,6 +3,10 @@
 # Install script for AgentDVR on Linux
 # To execute: save and `chmod +x ./linux_setup2.sh` then `./linux_setup2.sh`
 
+# usermod, sysctl and friends live in sbin, which isn't on PATH when root came from a
+# plain `su` (Debian) rather than sudo.
+export PATH="/usr/local/sbin:/usr/sbin:/sbin:$PATH"
+
 # Define constants
 LOGFILE="/var/log/agentdvr_setup.log"  # Log file path
 INSTALL_PATH="/opt/AgentDVR"
@@ -259,61 +263,56 @@ find_port() {
    return 1
 }
 
-# Function to create desktop shortcuts
+# Add Agent DVR to the desktop's applications menu (the app grid). Clicking it runs
+# open_browser.sh from the install folder, which reads the port from Media/XML/port.txt
+# next to it; Agent's updater replaces the script and keeps it executable.
 create_system_shortcut() {
     local install_path="$1"
     local username="$2"
-    local port="$3"
+    local launcher="$install_path/open_browser.sh"
+    local desktop_file="/usr/share/applications/agentdvr.desktop"
 
-    info "Creating system-wide application launcher..."
-    
-    # Dynamically find the user's home directory
+    # Older installers copied open_browser.sh into the user's home, where it couldn't find
+    # port.txt (always opened port 8090), or into /root when run through a nested sudo.
     local user_home
-    user_home=$(eval echo "~$username")
-    
-    # Create protected launcher script in user space
-    local user_launcher_dir="$user_home/.local/bin"
-    local user_launcher="$user_launcher_dir/agentdvr-launcher.sh"
-    
-    mkdir -p "$user_launcher_dir"
-    
-    if [ -f "$install_path/open_browser.sh" ]; then
-        cp "$install_path/open_browser.sh" "$user_launcher"
-        chown "$username:$username" "$user_launcher"
-        chmod +x "$user_launcher"
-        info "Created protected launcher at $user_launcher"
-    else
-        error_log "open_browser.sh not found at $install_path - desktop shortcut may not work"
-        user_launcher="xdg-open http://localhost:$port"
+    user_home=$(getent passwd "$username" | cut -d: -f6)
+    [ -n "$user_home" ] && rm -f "$user_home/.local/bin/agentdvr-launcher.sh"
+    rm -f /root/.local/bin/agentdvr-launcher.sh
+
+    if [ ! -f "$launcher" ]; then
+        error_log "open_browser.sh not found in $install_path - not adding Agent DVR to the applications menu."
+        return 0
     fi
-    
-    # Define path for system application file
-    local desktop_browser_file="/usr/share/applications/agentdvr.desktop"
-    
-    # Create the browser desktop file
-    sudo tee "$desktop_browser_file" > /dev/null << EOF
+    # 755, not +x: the line-ending fix above rewrites scripts via mktemp (mode 600), and
+    # whoever clicks the icon must be able to read it, not just the service account.
+    chmod 755 "$launcher"
+
+    if [ ! -d /usr/share/applications ]; then
+        info "No /usr/share/applications (no desktop installed) - skipping the applications menu entry."
+        return 0
+    fi
+
+    info "Adding Agent DVR to the applications menu..."
+    cat > "$desktop_file" << EOF || { error_log "Failed to write $desktop_file"; return 0; }
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=Agent DVR
 Comment=Open Agent DVR web interface
-Exec=$user_launcher
+Exec=$launcher
 Icon=$install_path/icon.png
 Terminal=false
 Categories=AudioVideo;Video;Security;
 Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
 EOF
-    
-    # Set permissions for system desktop file
-    sudo chmod 644 "$desktop_browser_file"
-    
-    # Update desktop database
+    chmod 644 "$desktop_file"
+
     if command -v update-desktop-database >/dev/null 2>&1; then
-        sudo update-desktop-database /usr/share/applications/ 2>/dev/null || true
+        update-desktop-database /usr/share/applications/ 2>/dev/null || true
     fi
-    
-    info "Application launcher created successfully in the applications menu."
+
+    info "Agent DVR added to the applications menu."
 }
 
 # Start of the script
@@ -459,6 +458,29 @@ if ! machine_has openssl; then
     machine_has openssl || info "openssl still unavailable - zip signature verification will be skipped."
 fi
 
+# Agent (.NET) needs ICU and aborts at startup without it ("Couldn't find a valid ICU
+# package"). Desktop installs nearly always have it; minimal/server installs often don't.
+has_icu() {
+    local f
+    for f in /usr/lib/libicuuc.so.* /usr/lib64/libicuuc.so.* /usr/lib/*/libicuuc.so.* /lib/*/libicuuc.so.*; do
+        [ -e "$f" ] && return 0
+    done
+    return 1
+}
+if ! has_icu; then
+    info "Installing ICU (needed by Agent DVR)..."
+    if machine_has apt-get; then
+        # Debian/Ubuntu only ship versioned names (libicu72, libicu74, ...): take the newest.
+        icu_pkg=$(apt-cache pkgnames libicu 2>/dev/null | grep -E '^libicu[0-9]+$' | sort -V | tail -n 1)
+        [ -n "$icu_pkg" ] && apt-get install --no-install-recommends -y "$icu_pkg" >> "$LOGFILE" 2>&1 || true
+    elif machine_has dnf;    then dnf install -y libicu >> "$LOGFILE" 2>&1 || true
+    elif machine_has yum;    then yum install -y libicu >> "$LOGFILE" 2>&1 || true
+    elif machine_has pacman; then pacman -S --noconfirm icu >> "$LOGFILE" 2>&1 || true
+    elif machine_has apk;    then apk add --no-cache icu-libs >> "$LOGFILE" 2>&1 || true
+    fi
+    has_icu || error_log "Could not install ICU - Agent DVR won't start until your distro's libicu (icu-libs) package is installed."
+fi
+
 
 # Check for existing AgentDVR installation
 AGENT_FILE="$INSTALL_PATH/Agent"
@@ -587,6 +609,27 @@ info "Line endings and BOM fixed successfully."
 find . -name "*.sh" -exec chmod +x {} \; || critical_error "Failed to set execute permissions for scripts."
 info "Execute permissions set successfully."
 
+# On an update, keep the account the existing service runs as. Installs from the download
+# page ran it as root until 2026-11 (a nested sudo in install.sh reset SUDO_USER); moving
+# such an install to another account would leave media folders outside $INSTALL_PATH
+# owned by root, so recording into them would fail. Reads the unit and its drop-ins
+# (last User= wins, as in systemd; none means root) - systemctl show can't be trusted
+# when systemd isn't running, e.g. WSL or a container.
+SERVICE_UNIT="/etc/systemd/system/AgentDVR.service"
+if [ -f "$SERVICE_UNIT" ]; then
+    unit_user=$(cat "$SERVICE_UNIT" "$SERVICE_UNIT".d/*.conf 2>/dev/null \
+        | sed -n 's/^[[:space:]]*User=[[:space:]]*//p' | tail -n 1 | tr -d '[:space:]')
+    [ -n "$unit_user" ] || unit_user="root"
+    if id "$unit_user" > /dev/null 2>&1; then
+        if [ "$unit_user" != "$ACTUAL_USER" ]; then
+            info "Existing AgentDVR service runs as '$unit_user' - keeping that account."
+        fi
+        ACTUAL_USER="$unit_user"
+    else
+        info "Existing AgentDVR service user '$unit_user' no longer exists - using '$ACTUAL_USER'."
+    fi
+fi
+
 # Add user to 'video' group for device access
 info "Adding user '$ACTUAL_USER' to 'video' group for local device access..."
 if machine_has "usermod"; then
@@ -608,6 +651,19 @@ if getent group render > /dev/null 2>&1; then
     info "User '$ACTUAL_USER' added to 'render' group."
 else
     info "No 'render' group on this system - skipping."
+fi
+
+# Add user to 'audio' group for microphones (/dev/snd/*). Desktop sessions get access
+# through a seat ACL only while that user is logged in; a service needs the group.
+if getent group audio > /dev/null 2>&1; then
+    if machine_has "usermod"; then
+        usermod -a -G audio "$ACTUAL_USER" >> "$LOGFILE" 2>&1 || error_log "Failed to append user '$ACTUAL_USER' to 'audio' group."
+    elif machine_has "adduser"; then
+        adduser "$ACTUAL_USER" audio >> "$LOGFILE" 2>&1 || error_log "Failed to add user '$ACTUAL_USER' to 'audio' group."
+    fi
+    info "User '$ACTUAL_USER' added to 'audio' group."
+else
+    info "No 'audio' group on this system - skipping."
 fi
 
 echo "To run AgentDVR either call $INSTALL_PATH/Agent from the terminal or install it as a system service."
@@ -637,6 +693,9 @@ fi
 
 # Apply ownership to the actual user before any services or manual starts are triggered
 chown "$ACTUAL_USER" -R "$INSTALL_PATH" || critical_error "Failed to change ownership of $INSTALL_PATH to $ACTUAL_USER."
+
+# Applications menu entry, whether or not Agent runs as a service
+create_system_shortcut "$INSTALL_PATH" "$ACTUAL_USER"
 
 # Option to set up as a system service
 if [ "$AUTO_YES" = true ]; then
@@ -699,9 +758,6 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     systemctl enable AgentDVR.service >> "$LOGFILE" 2>&1 || critical_error "Failed to enable AgentDVR.service."
     systemctl start AgentDVR.service >> "$LOGFILE" 2>&1 || critical_error "Failed to start AgentDVR.service."
     info "AgentDVR service enabled and started successfully."
-
-    # Create desktop shortcut using ACTUAL_USER
-    create_system_shortcut "$INSTALL_PATH" "$ACTUAL_USER" "$available_port"
 
     info "===== AgentDVR Linux Setup Script Completed ====="
     show_ready "$available_port"
