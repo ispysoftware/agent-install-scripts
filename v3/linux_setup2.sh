@@ -13,6 +13,7 @@ INSTALL_PATH="/opt/AgentDVR"
 
 USE_VERSION=0
 AUTO_YES=false
+TRAY_WANTED=false   # the tray icon (AgentTray): asked below when there's a desktop
 INTERACTIVE=true
 USE_BETA=${USE_BETA:-false}   # Added to prevent undefined variable evaluation
 
@@ -292,6 +293,27 @@ create_system_shortcut() {
         return 0
     fi
 
+    # The tray app (Agent 8.4+): the icon's right-click actions, like the Windows jump list,
+    # and started in every desktop session. Older versions (-v) don't have it.
+    local tray="$install_path/AgentTray"
+    local actions="" tray_actions=""
+    if [ -f "$tray" ]; then
+        chmod 755 "$tray"
+        actions="Actions=open;arm;disarm;"
+        tray_actions="
+[Desktop Action open]
+Name=Open Agent DVR
+Exec=$tray --openlocal
+
+[Desktop Action arm]
+Name=Arm
+Exec=$tray --arm
+
+[Desktop Action disarm]
+Name=Disarm
+Exec=$tray --disarm"
+    fi
+
     info "Adding Agent DVR to the applications menu..."
     cat > "$desktop_file" << EOF || { error_log "Failed to write $desktop_file"; return 0; }
 [Desktop Entry]
@@ -305,6 +327,8 @@ Terminal=false
 Categories=AudioVideo;Video;Security;
 Keywords=surveillance;camera;security;dvr;
 StartupNotify=true
+$actions
+$tray_actions
 EOF
     chmod 644 "$desktop_file"
 
@@ -313,6 +337,88 @@ EOF
     fi
 
     info "Agent DVR added to the applications menu."
+
+    # Tray icon at login, for every desktop user (the XDG autostart folder), when they asked for it
+    local autostart="/etc/xdg/autostart/agentdvr-tray.desktop"
+    if [ -f "$tray" ] && [ "$TRAY_WANTED" = true ]; then
+        mkdir -p /etc/xdg/autostart
+        cat > "$autostart" << EOF || { error_log "Failed to write $autostart"; return 0; }
+[Desktop Entry]
+Type=Application
+Name=Agent DVR Tray
+Comment=Agent DVR status and alerts in the system tray
+Exec=$tray
+Icon=$install_path/icon.png
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5
+EOF
+        chmod 644 "$autostart"
+        info "Agent DVR tray icon will start at each desktop login."
+    else
+        rm -f "$autostart"
+    fi
+}
+
+# Running in a container (Docker, Podman, LXC...): no desktop to put a tray icon on.
+in_container() {
+    if [ -f /.dockerenv ] || [ -f /run/.containerenv ]; then
+        return 0
+    fi
+    if machine_has systemd-detect-virt && systemd-detect-virt --container --quiet 2>/dev/null; then
+        return 0
+    fi
+    grep -qaE 'docker|containerd|kubepods|libpod|lxc' /proc/1/cgroup 2>/dev/null
+}
+
+# A desktop environment is installed (its session files), not just the odd .desktop file a
+# server package leaves in /usr/share/applications.
+has_desktop() {
+    [ -n "$(ls -A /usr/share/xsessions /usr/share/wayland-sessions 2>/dev/null)" ]
+}
+
+# Start the tray now for whoever is at the desktop (the active session on seat0), so the icon
+# shows without logging out and back in. Through their own systemd user manager, which has the
+# desktop's display, and not as a child of this script, so closing the terminal doesn't end it.
+# KillMode=process: the tray restarts itself after an update, and the new copy must outlive the
+# unit's first process. Best effort: anything missing (no seat, the login screen, no user
+# manager or display) leaves it to the autostart entry at the next login.
+start_tray_now() {
+    local tray="$1"
+    local later="The tray icon starts at the next desktop login."
+    [ -f "$tray" ] || return 0
+    local cmd
+    for cmd in loginctl systemd-run runuser; do
+        machine_has "$cmd" || { info "$later"; return 0; }
+    done
+
+    local session user type class uid
+    session=$(loginctl show-seat seat0 -p ActiveSession --value 2>/dev/null)
+    if [ -z "$session" ]; then
+        info "No one is logged in to the desktop. $later"
+        return 0
+    fi
+    user=$(loginctl show-session "$session" -p Name --value 2>/dev/null)
+    type=$(loginctl show-session "$session" -p Type --value 2>/dev/null)
+    class=$(loginctl show-session "$session" -p Class --value 2>/dev/null)
+    # Class "greeter" is the login screen; tty sessions have no desktop to show an icon in
+    if [ -z "$user" ] || [ "$class" != "user" ] || { [ "$type" != "x11" ] && [ "$type" != "wayland" ]; }; then
+        info "No desktop session is active. $later"
+        return 0
+    fi
+    uid=$(id -u "$user" 2>/dev/null) || { info "$later"; return 0; }
+
+    local run=(runuser -u "$user" -- env XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus")
+    if ! "${run[@]}" systemctl --user show-environment 2>/dev/null | grep -qE '^(DISPLAY|WAYLAND_DISPLAY)='; then
+        info "$user's desktop isn't reachable from here. $later"
+        return 0
+    fi
+    if "${run[@]}" systemd-run --user --quiet --collect -p KillMode=process "$tray" >> "$LOGFILE" 2>&1; then
+        info "Started the Agent DVR tray icon for $user."
+    else
+        info "Couldn't start the tray icon now. $later"
+    fi
 }
 
 # Start of the script
@@ -571,7 +677,10 @@ else
     esac
 fi
 
-# Extract the downloaded archive
+# Extract the downloaded archive. The tray app may be running in a desktop session:
+# overwriting a running program fails ("Text file busy") and overwriting its libraries crashes
+# it, so delete them first - the running tray keeps its copy and restarts on the new one.
+rm -f "$INSTALL_PATH/AgentTray" "$INSTALL_PATH/libSkiaSharp.so" "$INSTALL_PATH/libHarfBuzzSharp.so"
 info "Extracting AgentDVR.zip..."
 if unzip -o "AgentDVR.zip" -d "$INSTALL_PATH" >> "$LOGFILE" 2>&1; then
     info "AgentDVR extracted successfully."
@@ -594,6 +703,7 @@ fi
 info "Setting execute permissions for Agent and scripts..."
 chmod +x ./Agent || critical_error "Failed to set execute permission for Agent."
 chmod +x ./TURN/turnserver 2>/dev/null
+[ -f ./AgentTray ] && chmod 755 ./AgentTray
 
 # Fix line endings and remove BOM for all .sh files
 find . -name "*.sh" -exec bash -c '
@@ -694,6 +804,25 @@ fi
 # Apply ownership to the actual user before any services or manual starts are triggered
 chown "$ACTUAL_USER" -R "$INSTALL_PATH" || critical_error "Failed to change ownership of $INSTALL_PATH to $ACTUAL_USER."
 
+# The tray icon: only with a desktop, never in a container, and only if they want it
+if [ -f "$INSTALL_PATH/AgentTray" ]; then
+    if in_container; then
+        info "Running in a container - not setting up the tray icon."
+    elif ! has_desktop; then
+        info "No desktop environment installed - not setting up the tray icon."
+    elif [ "$AUTO_YES" = true ]; then
+        TRAY_WANTED=true
+        info "Unattended mode: setting up the tray icon."
+    else
+        printf "\nShow Agent DVR in the desktop's system tray (y/n)? " >/dev/tty
+        read -r tray_answer </dev/tty || tray_answer="n"
+        tray_answer=${tray_answer,,}
+        if [[ "$tray_answer" == "y" || "$tray_answer" == "yes" ]]; then
+            TRAY_WANTED=true
+        fi
+    fi
+fi
+
 # Applications menu entry, whether or not Agent runs as a service
 create_system_shortcut "$INSTALL_PATH" "$ACTUAL_USER"
 
@@ -759,6 +888,7 @@ if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
     systemctl start AgentDVR.service >> "$LOGFILE" 2>&1 || critical_error "Failed to start AgentDVR.service."
     info "AgentDVR service enabled and started successfully."
 
+    [ "$TRAY_WANTED" = true ] && start_tray_now "$INSTALL_PATH/AgentTray"
     info "===== AgentDVR Linux Setup Script Completed ====="
     show_ready "$available_port"
     exit 0
@@ -770,6 +900,7 @@ else
     sleep 2  # Give it a moment to start
     if pgrep -f "Agent" > /dev/null; then
         info "AgentDVR started successfully."
+        [ "$TRAY_WANTED" = true ] && start_tray_now "$INSTALL_PATH/AgentTray"
         info "===== AgentDVR Linux Setup Script Completed ====="
         show_ready "$available_port"
     else
