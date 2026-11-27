@@ -4,16 +4,19 @@
 # To execute: save and `chmod +x ./install.sh` then `./install.sh`
 
 # Install script for AgentDVR/ Linux
-# Usage: ./install.sh [-v version] [-y]
+# Usage: ./install.sh [-v version] [-y] [-z zip]
 #   -v version  install a specific version, e.g. -v 8290 for 8.2.9.0
 #   -y          unattended: answer yes to every question
+#   -z zip      install from a local Agent_<platform>_<version>.zip instead of downloading
+#               (testing a build before it's published; its signature is not checked)
 
 # Build an array of extra arguments to pass on.
 ARGS=()
-while getopts "v:y" opt; do
+while getopts "v:yz:" opt; do
   case "$opt" in
     v) ARGS+=("-v" "$OPTARG") ;;
     y) ARGS+=("-y") ;;
+    z) ARGS+=("-z" "$(readlink -f -- "$OPTARG" 2>/dev/null || echo "$OPTARG")") ;;
     *) ;;
   esac
 done

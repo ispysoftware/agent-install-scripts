@@ -24,7 +24,12 @@ ACTUAL_USER="${SUDO_USER:-$(whoami)}"
 ARGS=()
 
 # Parse command-line options.
-while getopts "v:y" opt; do
+#   -v VERSION  install a specific version (e.g. 8290 for 8.2.9.0)
+#   -y          unattended: answer yes to every question
+#   -z ZIP      install from a local Agent_<platform>_<version>.zip instead of downloading
+#               (for testing a build before it's published; its signature is not checked)
+LOCAL_ZIP=""
+while getopts "v:yz:" opt; do
     case "$opt" in
     v)
         USE_VERSION="$OPTARG"
@@ -34,10 +39,23 @@ while getopts "v:y" opt; do
         AUTO_YES=true
         INTERACTIVE=false
         ;;
+    z)
+        LOCAL_ZIP="$OPTARG"
+        ;;
     *)
         ;;
     esac
 done
+
+# Resolve the local zip now: the script changes directory before it's used
+if [ -n "$LOCAL_ZIP" ]; then
+    zip_arg="$LOCAL_ZIP"
+    LOCAL_ZIP=$(readlink -f -- "$LOCAL_ZIP" 2>/dev/null)
+    if [ -z "$LOCAL_ZIP" ] || [ ! -f "$LOCAL_ZIP" ]; then
+        echo "No such file: $zip_arg"
+        exit 1
+    fi
+fi
 
 # Ensure the log file exists and is writable
 touch "$LOGFILE" || { echo "Cannot write to $LOGFILE. Please check permissions."; exit 1; }
@@ -609,7 +627,7 @@ if [ -f "$AGENT_FILE" ]; then
 fi
 
 # Determine the download URL based on architecture
-info "Determining download URL for architecture: $arch"
+info "Determining the package for architecture: $arch"
 
 PLATFORM="Linux64"
 case "$arch" in
@@ -620,6 +638,18 @@ case "$arch" in
         PLATFORM="LinuxARM"
         ;;
 esac
+
+if [ -n "$LOCAL_ZIP" ]; then
+    # -z: a local package (a build being tested before it's published). Refuse another
+    # platform's package; its signature is deliberately not checked.
+    zip_platform=$(basename "$LOCAL_ZIP" | sed -nE 's#^Agent_([A-Za-z0-9]+)_[0-9]+_[0-9]+_[0-9]+_[0-9]+\.zip$#\1#p')
+    if [ -n "$zip_platform" ] && [ "$zip_platform" != "$PLATFORM" ]; then
+        critical_error "$(basename "$LOCAL_ZIP") is the $zip_platform package, but this machine ($arch) needs $PLATFORM."
+    fi
+    info "Installing from the local file $LOCAL_ZIP - its signature is not checked."
+    # A copy: the extraction below deletes AgentDVR.zip, and the original is the user's
+    cp -f "$LOCAL_ZIP" "$INSTALL_PATH/AgentDVR.zip" || critical_error "Failed to copy $LOCAL_ZIP to $INSTALL_PATH."
+else
 
 DOWNLOAD_URL_API="https://www.ispyconnect.com/api/Agent/DownloadLocation5?platform=${PLATFORM}&useVersion=${USE_VERSION}&useBeta=$( [ "$USE_BETA" = "true" ] && echo "True" || echo "False" )"
 
@@ -676,6 +706,8 @@ else
            critical_error "AgentDVR.zip FAILED signature verification - the download may be corrupted or tampered with. Aborting." ;;
     esac
 fi
+
+fi  # end of download (not -z)
 
 # Extract the downloaded archive. The tray app may be running in a desktop session:
 # overwriting a running program fails ("Text file busy") and overwriting its libraries crashes

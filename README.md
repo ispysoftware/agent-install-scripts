@@ -26,6 +26,7 @@ Options go on the end of the command:
 
 - `-y` — unattended: answers yes to every question (update an existing install, set up the system service).
 - `-v <version>` — install a specific version, written without dots, e.g. `-v 8290` for 8.2.9.0.
+- `-z <zip>` — install from a local package (`Agent_<platform>_<version>.zip`) instead of downloading one, e.g. to test a build before it's published. Its signature is not checked, and a package for another platform is refused.
 
 ```bash
 bash <(curl -s "https://raw.githubusercontent.com/ispysoftware/agent-install-scripts/main/v3/install.sh") -y
